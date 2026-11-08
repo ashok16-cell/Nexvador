@@ -2,53 +2,71 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function isAdmin() {
+    function own(uid) { return signedIn() && request.auth.uid == uid; }
+    function activeUser() {
       return signedIn() &&
-        exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
+    }
+    function companyUser() {
+      return activeUser() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'company';
+    }
+    function workerUser() {
+      return activeUser() &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'worker';
     }
 
-    match /profiles/{uid} {
-      allow read: if signedIn();
-      allow create, update: if signedIn() && request.auth.uid == uid;
-      allow delete: if isAdmin() || (signedIn() && request.auth.uid == uid);
+    match /users/{uid} {
+      allow create: if own(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.active == true
+        && request.resource.data.role in ['worker', 'company'];
+      allow read: if own(uid) || activeUser();
+      allow update: if own(uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.active == resource.data.active;
+      allow delete: if false;
     }
 
-    match /posts/{postId} {
-      allow read: if signedIn();
-      allow create: if signedIn()
+    match /jobs/{jobId} {
+      allow read: if activeUser() &&
+        (resource.data.status == 'published' || resource.data.ownerId == request.auth.uid);
+      allow create: if companyUser()
         && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'published'
         && request.resource.data.title is string
         && request.resource.data.title.size() > 0
         && request.resource.data.title.size() <= 90;
-      allow update: if isAdmin() ||
-        (signedIn() && resource.data.ownerId == request.auth.uid
-         && request.resource.data.ownerId == request.auth.uid);
-      allow delete: if isAdmin() || (signedIn() && resource.data.ownerId == request.auth.uid);
+      allow update: if companyUser()
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == request.auth.uid;
+      allow delete: if false;
     }
 
-    match /chats/{chatId}/messages/{messageId} {
-      allow read: if signedIn() && request.auth.uid in resource.data.participants;
-      allow create: if signedIn()
-        && request.auth.uid == request.resource.data.senderId
-        && request.auth.uid in request.resource.data.participants
-        && request.resource.data.text is string
-        && request.resource.data.text.size() > 0
-        && request.resource.data.text.size() <= 1000;
-      allow update, delete: if false;
+    match /applications/{applicationId} {
+      allow read: if activeUser() &&
+        (resource.data.workerId == request.auth.uid ||
+         resource.data.employerId == request.auth.uid);
+      allow create: if workerUser()
+        && request.resource.data.workerId == request.auth.uid
+        && request.resource.data.employerId is string
+        && request.resource.data.jobId is string
+        && request.resource.data.status == 'applied';
+      allow update: if companyUser()
+        && resource.data.employerId == request.auth.uid
+        && request.resource.data.workerId == resource.data.workerId
+        && request.resource.data.employerId == resource.data.employerId
+        && request.resource.data.jobId == resource.data.jobId
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['status', 'updatedAt'])
+        && request.resource.data.status in ['Shortlisted', 'Rejected'];
+      allow delete: if false;
     }
 
-    match /notifications/{notificationId} {
-      allow read: if signedIn() && resource.data.recipientId == request.auth.uid;
-      allow create: if signedIn()
-        && request.resource.data.senderId == request.auth.uid
-        && request.resource.data.recipientId is string
-        && request.resource.data.title is string;
-      allow update, delete: if false;
-    }
-
-    match /admins/{uid} {
-      allow read: if signedIn() && request.auth.uid == uid;
-      allow write: if false;
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
