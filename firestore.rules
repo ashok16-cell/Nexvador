@@ -2,71 +2,47 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function own(uid) { return signedIn() && request.auth.uid == uid; }
-    function activeUser() {
-      return signedIn() &&
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.active == true;
-    }
-    function companyUser() {
-      return activeUser() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'company';
-    }
-    function workerUser() {
-      return activeUser() &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'worker';
-    }
+    function userDoc() { return get(/databases/$(database)/documents/users/$(request.auth.uid)); }
+    function activeUser() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && userDoc().data.active == true; }
+    function adminUser() { return activeUser() && userDoc().data.role == 'admin'; }
+    function companyUser() { return activeUser() && userDoc().data.role == 'company'; }
+    function workerUser() { return activeUser() && userDoc().data.role == 'worker'; }
 
     match /users/{uid} {
-      allow create: if own(uid)
-        && request.resource.data.uid == uid
-        && request.resource.data.active == true
-        && request.resource.data.role in ['worker', 'company'];
-      allow read: if own(uid) || activeUser();
-      allow update: if own(uid)
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.active == resource.data.active;
+      allow create: if signedIn() && request.auth.uid == uid && request.resource.data.uid == uid && request.resource.data.active == true && request.resource.data.role in ['worker', 'company'];
+      allow get: if signedIn() && (request.auth.uid == uid || adminUser());
+      allow list: if adminUser();
+      allow update: if adminUser()
+        ? request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt'])
+        : signedIn() && request.auth.uid == uid && request.resource.data.uid == resource.data.uid && request.resource.data.role == resource.data.role && request.resource.data.active == resource.data.active;
       allow delete: if false;
     }
 
     match /jobs/{jobId} {
-      allow read: if activeUser() &&
-        (resource.data.status == 'published' || resource.data.ownerId == request.auth.uid);
-      allow create: if companyUser()
-        && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.status == 'published'
-        && request.resource.data.title is string
-        && request.resource.data.title.size() > 0
-        && request.resource.data.title.size() <= 90;
-      allow update: if companyUser()
-        && resource.data.ownerId == request.auth.uid
-        && request.resource.data.ownerId == request.auth.uid;
-      allow delete: if false;
+      allow read: if activeUser() && (adminUser() || resource.data.status == 'published' || resource.data.ownerId == request.auth.uid);
+      allow create: if companyUser() && request.resource.data.ownerId == request.auth.uid && request.resource.data.status == 'published' && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 90;
+      allow update: if adminUser() || (companyUser() && resource.data.ownerId == request.auth.uid && request.resource.data.ownerId == request.auth.uid);
+      allow delete: if adminUser();
     }
 
     match /applications/{applicationId} {
-      allow read: if activeUser() &&
-        (resource.data.workerId == request.auth.uid ||
-         resource.data.employerId == request.auth.uid);
-      allow create: if workerUser()
-        && request.resource.data.workerId == request.auth.uid
-        && request.resource.data.employerId is string
-        && request.resource.data.jobId is string
-        && request.resource.data.status == 'applied';
-      allow update: if companyUser()
-        && resource.data.employerId == request.auth.uid
-        && request.resource.data.workerId == resource.data.workerId
-        && request.resource.data.employerId == resource.data.employerId
-        && request.resource.data.jobId == resource.data.jobId
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['status', 'updatedAt'])
-        && request.resource.data.status in ['Shortlisted', 'Rejected'];
-      allow delete: if false;
+      allow read: if activeUser() && (adminUser() || resource.data.workerId == request.auth.uid || resource.data.employerId == request.auth.uid);
+      allow create: if workerUser() && request.resource.data.workerId == request.auth.uid && request.resource.data.employerId is string && request.resource.data.jobId is string && request.resource.data.status == 'applied';
+      allow update: if adminUser() || (companyUser() && resource.data.employerId == request.auth.uid && request.resource.data.workerId == resource.data.workerId && request.resource.data.employerId == resource.data.employerId && request.resource.data.jobId == resource.data.jobId && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt']) && request.resource.data.status in ['Shortlisted', 'Rejected']);
+      allow delete: if adminUser();
     }
 
-    match /{document=**} {
-      allow read, write: if false;
+    match /workerBookings/{bookingId} {
+      allow create: if activeUser() && request.resource.data.workerId == request.auth.uid && request.resource.data.status == 'Pending' && request.resource.data.workerCount is int && request.resource.data.workerCount >= 1 && request.resource.data.workerCount <= 500;
+      allow read: if activeUser() && (adminUser() || resource.data.workerId == request.auth.uid);
+      allow update, delete: if adminUser();
     }
+
+    match /locations/{uid} {
+      allow read, create, update: if activeUser() && request.auth.uid == uid && request.resource.data.uid == uid;
+      allow delete: if activeUser() && request.auth.uid == uid;
+    }
+
+    match /{document=**} { allow read, write: if false; }
   }
 }
