@@ -1,0 +1,55 @@
+name: Build NEXVADORAQ HireHub APK
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "worker-booking/**"
+      - ".github/workflows/hirehub-android-apk.yml"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install app dependencies
+        working-directory: worker-booking
+        run: npm install
+
+      - name: Prepare web assets
+        working-directory: worker-booking
+        run: |
+          mkdir -p www
+          cp index.html manifest.webmanifest service-worker.js www/
+          npx cap add android
+
+      - name: Sync Android project
+        working-directory: worker-booking
+        run: npx cap sync android
+
+      - name: Build debug APK
+        working-directory: worker-booking/android
+        run: ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEXVADORAQ-HireHub-debug-APK
+          path: worker-booking/android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
