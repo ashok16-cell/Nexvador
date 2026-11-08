@@ -53,7 +53,6 @@ jobs:
           npx cap add android
           npx cap sync android
       - name: Configure Play Store signing when secrets are present
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
         working-directory: worker-booking/android
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -61,14 +60,15 @@ jobs:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
-          cat >> gradle.properties <<EOF
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 --decode > app/upload-keystore.jks
+            cat >> gradle.properties <<EOF
           NEXVADORAQ_STORE_FILE=upload-keystore.jks
           NEXVADORAQ_STORE_PASSWORD=$KEYSTORE_PASSWORD
           NEXVADORAQ_KEY_ALIAS=$KEY_ALIAS
           NEXVADORAQ_KEY_PASSWORD=$KEY_PASSWORD
           EOF
-          python3 - <<'PY'
+            python3 - <<'PY'
           from pathlib import Path
           p=Path("app/build.gradle")
           s=p.read_text()
@@ -81,14 +81,17 @@ jobs:
                   keyPassword project.findProperty("NEXVADORAQ_KEY_PASSWORD")
               }
           }
-  
-  '''
+
+          '''
           if marker not in s:
               raise SystemExit("Could not find Android buildTypes block")
           s=s.replace(marker, signing+marker, 1)
           s=s.replace("        release {", "        release {\\n            signingConfig signingConfigs.release", 1)
           p.write_text(s)
           PY
+          else
+            echo "Signing secrets not configured; building unsigned release AAB plus debug APK."
+          fi
       - name: Set Android version code
         working-directory: worker-booking/android
         env:
