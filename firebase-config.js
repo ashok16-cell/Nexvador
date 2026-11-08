@@ -6,5 +6,4 @@ window.NEXVADORAQ_FIREBASE = {
   projectId: "nexvadoraq",
   storageBucket: "nexvadoraq.firebasestorage.app",
   messagingSenderId: "759393901892",
-  appId: "1:759393901892:web:79cb58a786259adbd18b11"
 };
