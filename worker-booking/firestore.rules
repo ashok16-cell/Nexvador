@@ -34,6 +34,17 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /locations/{userId} {
+      allow create, update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.role == 'worker'
+        && request.resource.data.sharing is bool;
+      allow read: if hasRole('company')
+        || (signedIn() && request.auth.uid == userId);
+      allow delete: if signedIn() && request.auth.uid == userId;
+    }
+
     match /jobs/{jobId} {
       allow read: if resource.data.status == 'published'
         || (signedIn() && resource.data.ownerId == request.auth.uid);
