@@ -1,106 +1,57 @@
-name: Build NEXVADORAQ HireHub Android
+name: NEXVADORAQ HireHub Android Release
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - "worker-booking/**"
-      - ".github/workflows/hirehub-android-apk.yml"
+      - 'worker-booking/**'
+      - '.github/workflows/hirehub-android-apk.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-
-      - name: Set up Java
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
-
-      - name: Install Android SDK packages
+          java-version: '21'
+      - name: Install Android SDK
         run: |
           SDKMANAGER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | head -n 1)"
-          if [ -z "$SDKMANAGER" ]; then echo "sdkmanager not found"; exit 1; fi
           yes | "$SDKMANAGER" --licenses
-          "$SDKMANAGER" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
-
-      - name: Install app dependencies
+          "$SDKMANAGER" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Install Capacitor
         working-directory: worker-booking
         run: npm install
-
-      - name: Prepare web assets
+      - name: Prepare Android project
         working-directory: worker-booking
         run: |
           mkdir -p www
           cp index.html manifest.webmanifest service-worker.js www/
           npx cap add android
-
-      - name: Sync Android project
-        working-directory: worker-booking
-        run: npx cap sync android
-
-      - name: Set Android release version
-        working-directory: worker-booking/android
-        run: |
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("app/build.gradle")
-          s=p.read_text()
-          s=s.replace("versionCode 1", "versionCode 1")
-          s=s.replace('versionName "1.0"', 'versionName "1.0.0"')
-          p.write_text(s)
-          PY
-
-      - name: Configure Play Store signing
-        working-directory: worker-booking/android
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
-            echo "Signing secrets not configured; building an unsigned release AAB for validation only."
-            exit 0
-          fi
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/upload-key.jks
-          printf '\\nRELEASE_STORE_FILE=upload-key.jks\\nRELEASE_KEY_ALIAS=%s\\nRELEASE_STORE_PASSWORD=%s\\nRELEASE_KEY_PASSWORD=%s\\n' "$ANDROID_KEY_ALIAS" "$ANDROID_KEYSTORE_PASSWORD" "$ANDROID_KEY_PASSWORD" >> gradle.properties
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path("app/build.gradle")
-          s=p.read_text()
-          marker="    buildTypes {"
-          signing='''    signingConfigs {
-              release {
-                  storeFile file(RELEASE_STORE_FILE)
-                  storePassword RELEASE_STORE_PASSWORD
-                  keyAlias RELEASE_KEY_ALIAS
-                  keyPassword RELEASE_KEY_PASSWORD
-              }
-          }
-
-'''
-          if marker in s and "signingConfigs {" not in s:
-              s=s.replace(marker, signing+marker, 1)
-          s=s.replace("        release {", "        release {\n            signingConfig signingConfigs.release", 1)
-          p.write_text(s)
-          PY
-
-      - name: Build release Android App Bundle
+          npx cap sync android
+      - name: Build release AAB (unsigned)
         working-directory: worker-booking/android
         run: ./gradlew bundleRelease
-
-      - name: Upload Android App Bundle
+      - name: Upload release AAB
         uses: actions/upload-artifact@v4
         with:
-          name: NEXVADORAQ-HireHub-release-AAB
+          name: NEXVADORAQ-HireHub-release-AAB-unsigned
           path: worker-booking/android/app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+      - name: Build debug APK
+        working-directory: worker-booking/android
+        run: ./gradlew assembleDebug
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: NEXVADORAQ-HireHub-debug-APK
+          path: worker-booking/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
