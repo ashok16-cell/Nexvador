@@ -29,3 +29,5 @@ Do not use this demo to collect sensitive identity or payment information.
 Android APK build setup updated on 2026-11-08.
 
 APK build retry after Android SDK package fix.
+
+Build config updated to Java 21 for Capacitor Android.
