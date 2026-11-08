@@ -1,0 +1,11 @@
+{
+  "name": "NEXVADORAQ Worker Booking",
+  "short_name": "NEXVADORAQ Work",
+  "description": "Daily, hourly and monthly work opportunities across Karnataka.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f3f6fb",
+  "theme_color": "#101827",
+  "icons": []
+}
