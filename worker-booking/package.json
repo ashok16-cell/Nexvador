@@ -1,0 +1,16 @@
+{
+  "name": "nexvadoraq-hirehub",
+  "version": "1.0.0",
+  "private": true,
+  "description": "NEXVADORAQ HireHub Android wrapper",
+  "scripts": {
+    "build": "node -e \"require('fs').cpSync('.', 'www', {recursive:true, filter:(s)=>!s.includes('node_modules')&&!s.includes('/www')&&!s.includes('/android')})\""
+  },
+  "dependencies": {
+    "@capacitor/core": "^7.4.3"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3",
+    "@capacitor/android": "^7.4.3"
+  }
+}
