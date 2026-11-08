@@ -1,0 +1,11 @@
+{
+  "appId": "in.nexvadoraq.hirehub",
+  "appName": "NEXVADORAQ HireHub",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  }
+}
