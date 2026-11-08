@@ -1,13 +1,13 @@
 # NEXVADORAQ Worker Booking
 
-A separate Worker + HR/Company booking web app for Karnataka.
+A separate Worker + HR/Company booking web app for all of India (Pan India).
 
 ## Preview
 https://ashok16-cell.github.io/Nexvador/worker-booking/
 
 ## Included in this starter
 - Worker and HR/Company role selection
-- Daily, hourly and monthly job categories
+- Daily, hourly and monthly job categories across Indian states and cities
 - Job posting and worker applications (browser-local demo storage)
 - Responsive mobile-first interface
 - Basic PWA manifest and offline shell
