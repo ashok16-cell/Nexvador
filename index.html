@@ -1,1 +1,95 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090d1b">
+  <meta name="description" content="NEXVADORAQ connects founders, entrepreneurs, investors and professionals to build meaningful business opportunities.">
+  <title>NEXVADORAQ — Build. Connect. Grow.</title>
+  <style>
+    :root{--bg:#090d1b;--panel:#11182b;--panel2:#151e35;--text:#f4f6ff;--muted:#aab4cb;--line:rgba(255,255,255,.11);--violet:#9b8cff;--cyan:#63e0d2;--max:1160px}
+    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}a{color:inherit;text-decoration:none}.wrap{width:min(var(--max),calc(100% - 40px));margin:auto}
+    .nav{position:sticky;top:0;z-index:10;background:rgba(9,13,27,.86);backdrop-filter:blur(16px);border-bottom:1px solid var(--line)}.navin{height:76px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px;font-weight:850;letter-spacing:.13em;font-size:17px}.mark{width:36px;height:36px;border-radius:11px;background:linear-gradient(135deg,var(--violet),var(--cyan));display:grid;place-items:center;color:#08101d;font-weight:950;letter-spacing:0}.links{display:flex;gap:28px;align-items:center;color:var(--muted);font-size:14px}.links a:hover{color:white}.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 19px;border-radius:12px;background:linear-gradient(110deg,var(--violet),var(--cyan));color:#07111e;font-weight:800;border:0;cursor:pointer;box-shadow:0 10px 35px rgba(99,224,210,.12)}.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line);box-shadow:none}.menu{display:none;background:none;border:1px solid var(--line);color:white;border-radius:9px;padding:8px 11px;font-size:20px}
+    .hero{position:relative;overflow:hidden;padding:105px 0 94px}.hero:before,.hero:after{content:"";position:absolute;border-radius:50%;filter:blur(2px);pointer-events:none}.hero:before{width:460px;height:460px;right:-90px;top:-170px;background:radial-gradient(circle,rgba(155,140,255,.22),transparent 68%)}.hero:after{width:400px;height:400px;left:-230px;bottom:-220px;background:radial-gradient(circle,rgba(99,224,210,.16),transparent 68%)}.heroGrid{display:grid;grid-template-columns:1.2fr .8fr;gap:55px;align-items:center;position:relative}.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:7px 12px;border:1px solid var(--line);border-radius:99px;color:#c9c2ff;font-size:12px;letter-spacing:.12em;text-transform:uppercase}.dot{width:7px;height:7px;border-radius:50%;background:var(--cyan);box-shadow:0 0 13px var(--cyan)}h1{font-size:clamp(44px,6.5vw,76px);line-height:1.04;letter-spacing:-.055em;margin:24px 0 22px;max-width:760px}h1 span{background:linear-gradient(100deg,#b6aaff,#70e6d8);background-clip:text;color:transparent}.lead{color:var(--muted);font-size:18px;max-width:620px;margin:0 0 30px}.actions{display:flex;gap:13px;flex-wrap:wrap}.visual{min-height:360px;position:relative;display:grid;place-items:center}.orbit{width:min(340px,80vw);aspect-ratio:1;border-radius:50%;border:1px solid rgba(180,174,255,.24);display:grid;place-items:center;position:relative;background:radial-gradient(circle,rgba(155,140,255,.12),transparent 66%);box-shadow:inset 0 0 70px rgba(99,224,210,.05),0 0 90px rgba(155,140,255,.08)}.orbit:before,.orbit:after{content:"";position:absolute;border:1px solid rgba(99,224,210,.2);border-radius:50%;inset:28px}.orbit:after{inset:62px;border-color:rgba(155,140,255,.25)}.core{width:128px;height:128px;border-radius:34px;background:linear-gradient(145deg,#a99bff,#60dfd2);display:grid;place-items:center;color:#08101d;font-size:27px;font-weight:950;letter-spacing:-.06em;box-shadow:0 20px 70px rgba(99,224,210,.2);z-index:1}.float{position:absolute;padding:11px 14px;border-radius:13px;background:#151e35;border:1px solid var(--line);font-size:13px;color:#e6eaff;box-shadow:0 12px 35px rgba(0,0,0,.2)}.f1{top:12%;left:0}.f2{right:-2%;top:27%}.f3{bottom:12%;left:8%}.f4{right:2%;bottom:13%}
+    section{padding:82px 0}.sectionHead{max-width:680px;margin-bottom:35px}.kicker{color:var(--cyan);font-size:12px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.sectionHead h2{font-size:clamp(30px,4vw,46px);letter-spacing:-.04em;line-height:1.13;margin:12px 0}.sectionHead p{color:var(--muted);margin:0}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:17px}.card{background:linear-gradient(145deg,rgba(21,30,53,.95),rgba(15,22,40,.95));border:1px solid var(--line);border-radius:19px;padding:25px;min-height:210px}.ico{width:43px;height:43px;border-radius:13px;background:rgba(155,140,255,.13);display:grid;place-items:center;font-size:21px;margin-bottom:19px}.card h3{margin:0 0 8px;font-size:19px}.card p{color:var(--muted);font-size:14px;margin:0}.band{background:linear-gradient(110deg,rgba(155,140,255,.12),rgba(99,224,210,.07));border-block:1px solid var(--line)}.split{display:grid;grid-template-columns:1fr 1fr;gap:55px;align-items:center}.steps{display:grid;gap:18px}.step{display:flex;gap:16px;padding:17px 0;border-bottom:1px solid var(--line)}.num{flex:0 0 38px;height:38px;border-radius:12px;background:rgba(99,224,210,.12);color:var(--cyan);display:grid;place-items:center;font-weight:850}.step h3{font-size:16px;margin:0 0 4px}.step p{margin:0;color:var(--muted);font-size:14px}.statement{padding:30px;border:1px solid var(--line);border-radius:22px;background:rgba(17,24,43,.7)}.statement blockquote{font-size:25px;line-height:1.35;letter-spacing:-.03em;margin:0 0 16px}.statement p{color:var(--muted);margin:0}.join{border:1px solid rgba(155,140,255,.28);background:linear-gradient(120deg,rgba(155,140,255,.13),rgba(99,224,210,.09));border-radius:25px;padding:42px;display:flex;align-items:center;justify-content:space-between;gap:25px}.join h2{font-size:clamp(27px,4vw,40px);line-height:1.15;letter-spacing:-.04em;margin:8px 0}.join p{color:var(--muted);margin:0;max-width:610px}.footer{padding:30px 0;border-top:1px solid var(--line);color:var(--muted);font-size:13px}.footin{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}.notice{font-size:12px;color:#8995af;margin-top:16px}
+    @media(max-width:800px){.hero{padding:75px 0 60px}.heroGrid,.split{grid-template-columns:1fr;gap:25px}.visual{min-height:300px}.cards{grid-template-columns:1fr 1fr}.links{display:none;position:absolute;top:76px;left:0;right:0;padding:18px 22px;background:#0d1426;border-bottom:1px solid var(--line);flex-direction:column;align-items:flex-start}.links.open{display:flex}.menu{display:block}.navCta{display:none}.join{align-items:flex-start;flex-direction:column}}
+    @media(max-width:540px){.wrap{width:min(var(--max),calc(100% - 30px))}.brand{font-size:14px}.cards{grid-template-columns:1fr}.hero{padding-top:58px}.lead{font-size:16px}.visual{min-height:270px}.orbit{width:260px}.float{font-size:11px;padding:8px 10px}.f2,.f4{right:0}.join{padding:27px}.sectionHead{margin-bottom:25px}section{padding:65px 0}}
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="wrap navin">
+      <a class="brand" href="#home" aria-label="NEXVADORAQ home"><span class="mark">N</span><span>NEXVADORAQ</span></a>
+      <nav class="links" id="navLinks" aria-label="Main navigation">
+        <a href="#about">About</a><a href="#network">Our Network</a><a href="#how">How It Works</a><a href="#join">Get Involved</a>
+      </nav>
+      <div style="display:flex;align-items:center;gap:12px"><a class="btn navCta" href="#join">Explore the Network</a><button class="menu" id="menuBtn" aria-label="Toggle navigation" aria-expanded="false">☰</button></div>
+    </div>
+  </header>
+  <main>
+    <section class="hero" id="home">
+      <div class="wrap heroGrid">
+        <div>
+          <div class="eyebrow"><span class="dot"></span> A growing business network</div>
+          <h1>Where business minds <span>connect and grow.</span></h1>
+          <p class="lead">NEXVADORAQ is a business networking initiative bringing entrepreneurs, founders, investors and professionals closer to meaningful connections and new opportunities.</p>
+          <div class="actions"><a class="btn" href="#network">Discover the Network <span aria-hidden="true">↗</span></a><a class="btn ghost" href="#about">Learn About Us</a></div>
+        </div>
+        <div class="visual" aria-label="NEXVADORAQ network illustration">
+          <div class="orbit"><div class="core">NXQ</div><span class="float f1">Founders</span><span class="float f2">Investors</span><span class="float f3">Ideas</span><span class="float f4">Partners</span></div>
+        </div>
+      </div>
+    </section>
+    <section id="about">
+      <div class="wrap">
+        <div class="sectionHead"><div class="kicker">About NEXVADORAQ</div><h2>Turning individual connections into collective progress.</h2><p>Good businesses grow faster when the right people find each other. We are building a shared space for people with ideas, experience, resources and ambition.</p></div>
+        <div class="cards">
+          <article class="card"><div class="ico">◎</div><h3>Our Vision</h3><p>Build an inclusive business ecosystem where people can discover each other, exchange knowledge and create opportunities.</p></article>
+          <article class="card"><div class="ico">✦</div><h3>Our Mission</h3><p>Make business networking more accessible by connecting entrepreneurs, professionals, founders and potential collaborators.</p></article>
+          <article class="card"><div class="ico">↗</div><h3>Our Approach</h3><p>Start with meaningful conversations, understand real needs and encourage transparent, responsible collaboration.</p></article>
+        </div>
+      </div>
+    </section>
+    <section class="band" id="network">
+      <div class="wrap">
+        <div class="sectionHead"><div class="kicker">The network</div><h2>One network. Many possibilities.</h2><p>Connect with people and explore areas where your goals and experience can meet.</p></div>
+        <div class="cards">
+          <article class="card"><div class="ico">🚀</div><h3>Founders & Startups</h3><p>Meet people building new ventures, share challenges and explore potential partnerships.</p></article>
+          <article class="card"><div class="ico">🤝</div><h3>Business Owners</h3><p>Build relationships with other businesses, discover services and explore collaboration opportunities.</p></article>
+          <article class="card"><div class="ico">💡</div><h3>Investors</h3><p>Discover early conversations with founders and business projects. All investment decisions require independent due diligence.</p></article>
+          <article class="card"><div class="ico">🌐</div><h3>Professionals</h3><p>Share your expertise, meet peers and find opportunities to contribute to growing ventures.</p></article>
+          <article class="card"><div class="ico">📣</div><h3>Opportunities</h3><p>Bring visibility to business requirements, ideas, partnerships and relevant announcements.</p></article>
+          <article class="card"><div class="ico">🧩</div><h3>Community</h3><p>Learn from one another and build a stronger ecosystem through trust and shared knowledge.</p></article>
+        </div>
+      </div>
+    </section>
+    <section id="how">
+      <div class="wrap split">
+        <div><div class="sectionHead"><div class="kicker">How it works</div><h2>Start with a connection. Build from there.</h2><p>NEXVADORAQ is being developed step by step, with clarity and trust at the centre of every interaction.</p></div>
+          <div class="statement"><blockquote>“The right conversation can become the beginning of something bigger.”</blockquote><p>Connect with purpose. Collaborate with clarity. Grow together.</p></div>
+        </div>
+        <div class="steps">
+          <div class="step"><span class="num">01</span><div><h3>Introduce yourself</h3><p>Share who you are, what you do and what kind of connection you are looking for.</p></div></div>
+          <div class="step"><span class="num">02</span><div><h3>Discover people</h3><p>Explore founders, businesses, investors and professionals with aligned interests.</p></div></div>
+          <div class="step"><span class="num">03</span><div><h3>Start a conversation</h3><p>Discuss expectations, capabilities, terms and next steps directly and transparently.</p></div></div>
+          <div class="step"><span class="num">04</span><div><h3>Build responsibly</h3><p>Verify information and make independent decisions before entering any agreement or investment.</p></div></div>
+        </div>
+      </div>
+    </section>
+    <section class="band" id="join">
+      <div class="wrap">
+        <div class="join"><div><div class="kicker">Be part of the journey</div><h2>Have an idea, a business or expertise to share?</h2><p>NEXVADORAQ is at an early stage. Get ready to connect with a growing community of business-minded people.</p></div><a class="btn" href="https://github.com/ashok16-cell/Nexvador" target="_blank" rel="noopener">Follow Our Progress ↗</a></div>
+        <p class="notice">Note: Membership registration, investor matching and funding services are not yet active on this website. No funding or investment outcome is guaranteed.</p>
+      </div>
+    </section>
+  </main>
+  <footer class="footer"><div class="wrap footin"><div><strong style="color:#f4f6ff;letter-spacing:.12em">NEXVADORAQ</strong><div>Build. Connect. Grow.</div></div><div>© <span id="year"></span> NEXVADORAQ. All rights reserved.</div></div></footer>
+  <script>
+    const menuBtn=document.getElementById('menuBtn');
+    const navLinks=document.getElementById('navLinks');
+    menuBtn.addEventListener('click',()=>{const open=navLinks.classList.toggle('open');menuBtn.setAttribute('aria-expanded',String(open));menuBtn.textContent=open?'×':'☰';});
+    navLinks.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{navLinks.classList.remove('open');menuBtn.setAttribute('aria-expanded','false');menuBtn.textContent='☰';}));
+    document.getElementById('year').textContent=new Date().getFullYear();
+  </script>
+</body>
+</html>
