@@ -19,7 +19,14 @@
 <section id="public"><div class="row"><div><h2>Latest opportunities</h2><p class="muted">Explore sample listings or join to get started.</p></div><span class="pill">Pan-India launch</span></div><div id="publicjobs" class="grid"></div></section>
 <div class="notice">Preview version: India-wide location entry is enabled. Listings and applications are stored on this device only. Do not enter sensitive personal information. Live multi-user booking, OTP login, payments and admin controls require secure backend integration before public launch.</div>
 </main><footer class="foot">© 2026 NEXVADORAQ • India-wide Worker & Hiring Platform</footer>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script>
+const firebaseConfig={apiKey:"AIzaSyDUPXoCs1yODhtiHDqgKuUNEtAcxvmyOuA",authDomain:"nexvadoraq-hirehub.firebaseapp.com",projectId:"nexvadoraq-hirehub",storageBucket:"nexvadoraq-hirehub.firebasestorage.app",messagingSenderId:"663892197062",appId:"1:663892197062:web:e04e6ebd9bac9b8f9361c7",measurementId:"G-2DSV5QC74S"};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+const auth=firebase.auth(),cloud=firebase.firestore();
+let confirmation=null,recaptcha=null,otpStage=false;
 const KEY='nexvadoraq_work_v1';let user=null,role='worker',page='home',jobQuery='',jobType='All',jobState='All';
 const seed=[{id:1,title:'Warehouse Helper',company:'Sample Logistics',city:'Bengaluru, Karnataka',type:'Daily',pay:'₹700 / day',skills:'Loading, packing',desc:'Day shift. Contact company after shortlisting.'},{id:2,title:'Security Staff',company:'Sample Facility Services',city:'Tumakuru, Karnataka',type:'Monthly',pay:'₹16,000 / month',skills:'Security, basic communication',desc:'Full-time position.'},{id:3,title:'Event Support Staff',company:'Sample Events',city:'Mysuru, Karnataka',type:'Hourly',pay:'₹120 / hour',skills:'Event setup, customer support',desc:'Flexible shift work.'}];
 function data(){try{return JSON.parse(localStorage.getItem(KEY))||{jobs:seed,apps:[]}}catch(e){return{jobs:seed,apps:[]}}}function save(d){localStorage.setItem(KEY,JSON.stringify(d))}
