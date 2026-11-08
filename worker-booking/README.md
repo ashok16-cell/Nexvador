@@ -24,3 +24,6 @@ This is a front-end prototype, not a production booking service. User profiles, 
 6. Build/sign the Android app and complete Google Play Console testing and policy declarations.
 
 Do not use this demo to collect sensitive identity or payment information.
+
+
+Android APK build setup updated on 2026-11-08.
