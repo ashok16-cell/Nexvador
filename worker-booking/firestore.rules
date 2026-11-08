@@ -67,11 +67,13 @@ service cloud.firestore {
         && request.resource.data.status == 'applied'
         && request.resource.data.jobId is string
         && exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId))
-        && get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.status == 'published';
+        && get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.status == 'published'
+        && request.resource.data.employerId == get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.ownerId;
       allow read: if signedIn()
         && (resource.data.workerId == request.auth.uid
-          || ownsJob(resource.data.jobId));
-      allow update: if signedIn()
+          || (hasRole('company') && resource.data.employerId == request.auth.uid));
+      allow update: if hasRole('company')
+        && resource.data.employerId == request.auth.uid
         && ownsJob(resource.data.jobId)
         && request.resource.data.workerId == resource.data.workerId
         && request.resource.data.jobId == resource.data.jobId;
