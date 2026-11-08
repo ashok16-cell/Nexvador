@@ -1,7 +1,6 @@
 // Firebase Web app configuration for NEXVADORAQ.
-// Generated from the registered NEXVADORAQ Website web app in Firebase Console.
 window.NEXVADORAQ_FIREBASE = {
-  apiKey: "AIzaSyCKdYmY0uL5ZQQFS0aHtpQqbUpG9wsv3Dw",
+  apiKey: "AIzaSyCKdYmYOul5ZQQFSOaHtpQqbUpG9wsv3Dw",
   authDomain: "nexvadoraq.firebaseapp.com",
   projectId: "nexvadoraq",
   storageBucket: "nexvadoraq.firebasestorage.app",
