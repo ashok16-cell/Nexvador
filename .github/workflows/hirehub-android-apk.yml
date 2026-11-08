@@ -60,7 +60,6 @@ jobs:
           PY
 
       - name: Configure Play Store signing
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' && secrets.ANDROID_KEY_ALIAS != '' && secrets.ANDROID_KEYSTORE_PASSWORD != '' && secrets.ANDROID_KEY_PASSWORD != '' }}
         working-directory: worker-booking/android
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
@@ -68,13 +67,12 @@ jobs:
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
         run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ] || [ -z "$ANDROID_KEY_ALIAS" ] || [ -z "$ANDROID_KEYSTORE_PASSWORD" ] || [ -z "$ANDROID_KEY_PASSWORD" ]; then
+            echo "Signing secrets not configured; building an unsigned release AAB for validation only."
+            exit 0
+          fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > app/upload-key.jks
-          cat >> gradle.properties <<'EOF'
-          RELEASE_STORE_FILE=upload-key.jks
-          RELEASE_KEY_ALIAS=$ANDROID_KEY_ALIAS
-          RELEASE_STORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD
-          RELEASE_KEY_PASSWORD=$ANDROID_KEY_PASSWORD
-          EOF
+          printf '\\nRELEASE_STORE_FILE=upload-key.jks\\nRELEASE_KEY_ALIAS=%s\\nRELEASE_STORE_PASSWORD=%s\\nRELEASE_KEY_PASSWORD=%s\\n' "$ANDROID_KEY_ALIAS" "$ANDROID_KEYSTORE_PASSWORD" "$ANDROID_KEY_PASSWORD" >> gradle.properties
           python3 - <<'PY'
           from pathlib import Path
           p=Path("app/build.gradle")
