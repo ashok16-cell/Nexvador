@@ -1,0 +1,80 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function myUser() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function hasRole(roleName) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && myUser().role == roleName
+        && myUser().active == true;
+    }
+
+    function ownsJob(jobId) {
+      return signedIn()
+        && get(/databases/$(database)/documents/jobs/$(jobId)).data.ownerId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow create: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role in ['worker', 'company']
+        && request.resource.data.active == true;
+      allow read: if signedIn() && request.auth.uid == userId;
+      allow update: if signedIn()
+        && request.auth.uid == userId
+        && request.resource.data.role == resource.data.role
+        && request.resource.data.active == resource.data.active;
+      allow delete: if false;
+    }
+
+    match /jobs/{jobId} {
+      allow read: if resource.data.status == 'published'
+        || (signedIn() && resource.data.ownerId == request.auth.uid);
+      allow create: if hasRole('company')
+        && request.resource.data.ownerId == request.auth.uid
+        && request.resource.data.status == 'published'
+        && request.resource.data.title is string
+        && request.resource.data.city is string
+        && request.resource.data.state is string;
+      allow update: if hasRole('company')
+        && resource.data.ownerId == request.auth.uid
+        && request.resource.data.ownerId == resource.data.ownerId;
+      allow delete: if hasRole('company')
+        && resource.data.ownerId == request.auth.uid;
+    }
+
+    match /applications/{applicationId} {
+      allow create: if hasRole('worker')
+        && request.resource.data.workerId == request.auth.uid
+        && request.resource.data.status == 'applied'
+        && request.resource.data.jobId is string
+        && exists(/databases/$(database)/documents/jobs/$(request.resource.data.jobId))
+        && get(/databases/$(database)/documents/jobs/$(request.resource.data.jobId)).data.status == 'published';
+      allow read: if signedIn()
+        && (resource.data.workerId == request.auth.uid
+          || ownsJob(resource.data.jobId));
+      allow update: if signedIn()
+        && ownsJob(resource.data.jobId)
+        && request.resource.data.workerId == resource.data.workerId
+        && request.resource.data.jobId == resource.data.jobId;
+      allow delete: if false;
+    }
+
+    // Booking and payment permissions stay closed until their workflows
+    // and validation rules are implemented and security-reviewed.
+    match /bookings/{bookingId} {
+      allow read, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
