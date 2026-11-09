@@ -2,18 +2,18 @@
 
 ## Current app architecture
 - One Android app / one web app: `worker-app/`
-- One sign-in screen with Worker, Company and Admin roles.
+- Current HireHub sign-in supports Worker and Company roles only. Admin provisioning notes below are not an active HireHub UI feature.
 - Firebase Authentication (Email/Password) and Cloud Firestore.
 - Android build workflow: `.github/workflows/separate-apps-android.yml`
 
 ## Firebase project
-The client currently points to Firebase project `nexvadoraq-hirehub`.
+The client currently points to Firebase project `nexvadoraq`.
 Before production, verify that this is the intended project and that billing, Authentication and Firestore are configured.
 
 ## Deploy Firestore rules
 Install Firebase CLI, sign in with an authorized Firebase account, then run:
 ```bash
-firebase use nexvadoraq-hirehub
+firebase use nexvadoraq
 firebase deploy --only firestore:rules
 ```
 The repository contains `firebase.json` and `firestore.rules`. A GitHub commit does not automatically deploy rules to Firebase.
@@ -23,7 +23,7 @@ The repository contains `firebase.json` and `firestore.rules`. A GitHub commit d
 
 A manual workflow is available at **Actions → NEXVADORAQ Firebase Deploy → Run workflow**. Before using it:
 
-1. In Firebase Console / Google Cloud IAM for `nexvadoraq-hirehub`, create a dedicated service account for CI deployment. Grant only the permissions needed to deploy Firebase Hosting and Firestore Security Rules (Firebase Hosting Admin and Firebase Rules Admin, subject to your project's IAM setup).
+1. In Firebase Console / Google Cloud IAM for `nexvadoraq`, create a dedicated service account for CI deployment. Grant only the permissions needed to deploy Firebase Hosting and Firestore Security Rules (Firebase Hosting Admin and Firebase Rules Admin, subject to your project's IAM setup).
 2. Create a JSON key for that service account and add the complete JSON contents as a GitHub Actions repository secret named `FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB`.
 3. Keep this key private. Never commit it to the repository, paste it into the app, or share it in chat. Rotate/revoke it if exposed.
 4. Open the repository's Actions tab, select **NEXVADORAQ Firebase Deploy**, choose `hosting-and-rules`, and run it only after reviewing the rules and testing accounts.
@@ -42,7 +42,7 @@ The app intentionally blocks Admin self-registration. Because Firestore rules al
    ```bash
    GOOGLE_APPLICATION_CREDENTIALS="/secure/path/service-account.json" ADMIN_UID="FIREBASE_AUTH_UID" node scripts/bootstrap-admin.mjs
    ```
-6. Sign in through the app's Admin tab using that Auth account. Admin self-registration remains disabled.
+6. The current `worker-app/` UI does not include an Admin tab or admin dashboard. Do not expect this account to sign in through the current HireHub interface; admin tooling must be implemented separately before this bootstrap flow is useful.
 
 The script verifies the Auth account and refuses to silently promote an existing non-admin profile. Protect and revoke service-account keys when no longer needed.
 
@@ -51,7 +51,7 @@ The script verifies the Auth account and refuses to silently promote an existing
 - Create the Cloud Firestore database in production mode.
 - Deploy `firestore.rules` before allowing public registrations.
 - Test Worker and Company accounts separately with two test email addresses.
-- Test job create/list/apply, employer application review, worker profile, booking submission and admin moderation.
+- Test job create/list/apply, employer application review, worker profile and booking submission. Admin moderation is not included in the current HireHub UI.
 - Verify rules with the Firebase Emulator / Rules Playground before production.
 
 ## Release checklist
