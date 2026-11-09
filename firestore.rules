@@ -28,10 +28,10 @@ service cloud.firestore {
    allow delete:if admin();
   }
   match /workerBookings/{id}{
-   allow create:if worker()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.status in ['Pending','pending'];
-   allow read:if admin()||(worker()&&resource.data.workerId==request.auth.uid)||company();
-   allow update:if admin()||(company()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Confirmed','Rejected','Completed']);
-   allow delete:if admin();
+   allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.status=='Pending'&&request.resource.data.category is string&&request.resource.data.count is int&&request.resource.data.count>=1&&request.resource.data.count<=500;
+   allow read:if admin()||(company()&&resource.data.companyId==request.auth.uid)||(worker()&&resource.data.workerId==request.auth.uid);
+   allow update:if admin()||(company()&&resource.data.companyId==request.auth.uid&&request.resource.data.companyId==resource.data.companyId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Confirmed','Rejected','Completed']);
+   allow delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
   }
   match /notifications/{id}{
    allow create:if active()&&request.resource.data.actorId==request.auth.uid&&request.resource.data.recipientId is string&&request.resource.data.recipientId!=request.auth.uid&&request.resource.data.title is string&&request.resource.data.message is string&&request.resource.data.message.size()<=500;
