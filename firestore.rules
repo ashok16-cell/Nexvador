@@ -11,7 +11,7 @@ service cloud.firestore {
   function staffAdmin(){return active()&&profile(request.auth.uid).role=='admin'&&profile(request.auth.uid).adminLevel=='staff';}
   function staffCan(permission){return staffAdmin()&&profile(request.auth.uid).permissions is list&&profile(request.auth.uid).permissions.hasAny([permission]);}
   match /users/{uid}{
-   allow create:if signedIn()&&request.auth.uid==uid&&request.resource.data.role in ['worker','company']&&request.resource.data.active==true&&request.resource.data.email is string&&request.resource.data.name is string;
+   allow create:if signedIn()&&request.auth.uid==uid&&request.resource.data.role in ['worker','company','customer']&&request.resource.data.active==true&&request.resource.data.email is string&&request.resource.data.name is string;
    allow read:if signedIn()&&(request.auth.uid==uid||admin()||staffCan('users'));
    allow update:if signedIn()&&request.auth.uid==uid&&request.resource.data.role==resource.data.role&&request.resource.data.active==resource.data.active&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','mobile','city','photoURL','skills','experience','about','preference','state','phone','email','updatedAt']);
    allow update:if admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']);
@@ -30,8 +30,8 @@ service cloud.firestore {
    allow delete:if admin();
   }
   match /workerBookings/{id}{
-   allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.status=='Pending'&&request.resource.data.category is string&&request.resource.data.count is int&&request.resource.data.count>=1&&request.resource.data.count<=500;
-   allow read:if admin()||staffCan('users')||(company()&&resource.data.companyId==request.auth.uid)||(worker()&&(resource.data.status=='Pending'||resource.data.workerId==request.auth.uid));
+   allow create:if (company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.status=='Pending'&&request.resource.data.category is string&&request.resource.data.count is int&&request.resource.data.count>=1&&request.resource.data.count<=500)||(active()&&profile(request.auth.uid).role=='customer'&&request.resource.data.requesterId==request.auth.uid&&request.resource.data.requesterRole=='customer'&&request.resource.data.status=='Pending'&&request.resource.data.category is string&&request.resource.data.count is int&&request.resource.data.count>=1&&request.resource.data.count<=50&&request.resource.data.bookingType in ['Hourly','Daily']);
+   allow read:if admin()||staffCan('users')||(company()&&resource.data.companyId==request.auth.uid)||(active()&&profile(request.auth.uid).role=='customer'&&resource.data.requesterId==request.auth.uid)||(worker()&&(resource.data.status=='Pending'||resource.data.workerId==request.auth.uid));
    allow update:if admin()||(company()&&resource.data.companyId==request.auth.uid&&request.resource.data.companyId==resource.data.companyId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Confirmed','Rejected','Completed'])||(worker()&&resource.data.status=='Pending'&&request.resource.data.status=='Worker Accepted'&&request.resource.data.workerId==request.auth.uid&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['workerId','workerName','status','acceptedAt','updatedAt']));
    allow delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
   }
