@@ -32,6 +32,7 @@ jobs:
         run: |
           mkdir -p www
           cp index.html www/
+          cp firebase-config.js www/
           cat > package.json <<'EOF'
           {
             "name": "nexvadoraq-mobile",
