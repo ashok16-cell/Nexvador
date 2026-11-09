@@ -33,7 +33,9 @@ The repository root `firebase.json` points to `firestore.rules` and `storage.rul
 - Company job posting and worker applications
 - Application status updates
 - Worker-initiated, opt-in live GPS sharing; company live-worker map
-- Profile photo upload to Firebase Storage
+- Profile photo upload to Firebase Storage (photo reads restricted to the account owner by the Storage rules)
+- Installable web-app manifest, home-screen icon, and a clear offline connection screen
+- Published Privacy Policy and Terms of Use pages
 - Cloud notifications and account-scoped cloud data syncing
 
 ## Required tests before public launch
@@ -47,6 +49,8 @@ Use two different email accounts and two phones/browsers:
 7. Test photo upload, then test location sharing only after the Worker explicitly opts in; press Stop and confirm the location disappears.
 8. Test that one account cannot edit another account's job/profile/application.
 9. Test on Android Chrome and the installed Android build, if applicable.
+10. Verify the Privacy Policy and Terms of Use links from the app footer.
+11. Confirm the app can be installed from Android Chrome; test that offline mode shows the connection notice and that the app refreshes to the newest online release.
 
 ## Important production gaps / cautions
 - Email/password is not phone OTP or identity verification.
