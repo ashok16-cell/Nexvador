@@ -473,8 +473,31 @@ function job(j,canApply,canDelete=false){return '<article class="job"><span clas
 async function setApplicationStatus(id,status){try{const target=(db().apps||[]).find(x=>String(x.id)===String(id));await fbDb.collection('applications').doc(String(id)).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(target?.workerId||target?.worker)await fbDb.collection('notifications').add({actorId:me.id,recipientId:target.workerId||target.worker,title:'Application status updated',message:'ನಿಮ್ಮ '+(target.title||'job')+' ಅರ್ಜಿಯ ಸ್ಥಿತಿ: '+status,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});const d=db();d.apps=(d.apps||[]).map(x=>String(x.id)===String(id)?{...x,status}:x);d.notifications=d.notifications||[];d.notifications.unshift({title:'Application updated',message:'Status: '+status,createdAt:Date.now()});saveLocal(d);render()}catch(err){alert('Status update failed: '+err.message)}}
 let notificationUnsub=null;let notificationSeenIds=new Set(),notificationFirstSnapshot=true;
 async function enableBrowserNotifications(){
- if(!('Notification'in window)){alert('ಈ Browser ನಲ್ಲಿ notification support ಇಲ್ಲ.');return}
- try{const p=await Notification.requestPermission();const el=document.getElementById('notificationPermissionStatus');if(el)el.textContent=p==='granted'?'Browser alerts ON':'Permission: '+p;if(p==='granted')alert('Browser notifications ON ಆಯಿತು. App ತೆರೆದಿರುವಾಗ ಹೊಸ alerts ಬರುತ್ತವೆ.')}catch(e){alert('Notification permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+e.message)}
+ const el=document.getElementById('notificationPermissionStatus');
+ try{
+  const nativePush=window.Capacitor?.Plugins?.PushNotifications;
+  if(nativePush){
+   const permission=await nativePush.requestPermissions();
+   if(permission.receive!=='granted'){if(el)el.textContent='Notification permission: denied';alert('Android Settings ನಲ್ಲಿ NEXVADORAQ Notifications Allow ಮಾಡಿ.');return}
+   if(!window.__nexPushListeners){
+    window.__nexPushListeners=true;
+    await nativePush.addListener('registration',async token=>{
+     try{if(fbAuth.currentUser)await fbDb.collection('users').doc(fbAuth.currentUser.uid).set({fcmToken:token.value,fcmTokenUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});if(el)el.textContent='Android push notifications enabled'}
+     catch(err){console.warn('FCM token save failed',err)}
+    });
+    await nativePush.addListener('registrationError',err=>{console.warn('Push registration error',err);if(el)el.textContent='Push registration failed'});
+    await nativePush.addListener('pushNotificationReceived',n=>{if(el)el.textContent='New notification received';if(n?.title)alert((n.title||'NEXVADORAQ')+'\\n'+(n.body||''))});
+    await nativePush.addListener('pushNotificationActionPerformed',()=>{window.focus();go('notifications')});
+   }
+   await nativePush.register();
+   if(el)el.textContent='Android notification permission granted; registering device…';
+   return;
+  }
+  if(!('Notification'in window)){alert('ಈ Browser ನಲ್ಲಿ notification support ಇಲ್ಲ.');return}
+  const p=await Notification.requestPermission();
+  if(el)el.textContent=p==='granted'?'Browser alerts ON':'Permission: '+p;
+  if(p==='granted')alert('Browser notifications ON ಆಯಿತು. App ತೆರೆದಿರುವಾಗ alerts ಬರುತ್ತವೆ.');
+ }catch(e){if(el)el.textContent='Notification setup failed';alert('Notification permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+e.message)}
 }
 function showAppNotification(n){
  if(!('Notification'in window)||Notification.permission!=='granted'||document.visibilityState==='visible')return;
