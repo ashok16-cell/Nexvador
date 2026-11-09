@@ -1,4 +1,4 @@
-const CACHE='nexvadoraq-worker-platform-v63';
+const CACHE='nexvadoraq-worker-platform-v64';
 const SHELL=['./','./index.html','./manifest.webmanifest','./icons/icon.svg','./privacy.html','./terms.html','./offline.html'];
 self.addEventListener('message',event=>{if(event.data&&event.data.type==='SKIP_WAITING')self.skipWaiting()});
 self.addEventListener('install',event=>{event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(SHELL)).then(()=>self.skipWaiting()))});
