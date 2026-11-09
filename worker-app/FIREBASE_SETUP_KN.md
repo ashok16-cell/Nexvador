@@ -2,12 +2,12 @@
 
 ## Firebase project used by this repository
 The web app reads its configuration from `worker-app/firebase-config.js`.
-Current configured project ID: `nexvadoraq-hirehub`.
+Current configured project ID: `nexvadoraq`.
 
 Before deploying, open Firebase Console and confirm that this is the intended project. Do not replace it with another project unless you deliberately want to move the app and its user data.
 
 ## One-time Firebase Console setup
-1. Open https://console.firebase.google.com/ and select `nexvadoraq-hirehub`.
+1. Open https://console.firebase.google.com/ and select `nexvadoraq`.
 2. **Authentication → Sign-in method**: enable **Email/Password**.
 3. **Authentication → Settings → Authorized domains**: add `ashok16-cell.github.io`. Add any custom domain used by the app as well.
 4. **Firestore Database**: create the database in the intended region. Do not use test mode.
@@ -20,7 +20,7 @@ Run these commands from the repository root on a computer with Node.js and Fireb
 ```bash
 npm install -g firebase-tools
 firebase login
-firebase use nexvadoraq-hirehub
+firebase use nexvadoraq
 firebase deploy --only firestore:rules,storage
 ```
 
