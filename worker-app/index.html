@@ -330,15 +330,5 @@ fbAuth.onAuthStateChanged(async user=>{if(authSubmitting)return;if(user){try{con
 // Expose handlers and bind the three landing choices directly for mobile browsers.
 window.authOpen=authOpen;window.authOpenAdmin=authOpenAdmin;window.closeAuth=closeAuth;window.setMode=setMode;
 [['openCustomerAuth','customer'],['openWorkerAuth','worker'],['openCompanyAuth','company']].forEach(([id,r])=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('click',e=>{e.preventDefault();authOpen(r);document.getElementById('auth').scrollIntoView({behavior:'smooth',block:'start'})})}});
-// Continue service worker setup below
-if('serviceWorker' in navigator (inline handlers remain as fallback).
-window.authOpen=authOpen;window.authOpenAdmin=authOpenAdmin;window.closeAuth=closeAuth;window.setMode=setMode;
-['reg','log'].forEach(id=>{const tab=document.getElementById(id);if(tab&&!tab.dataset.safeBound){tab.dataset.safeBound='yes';tab.addEventListener('click',()=>setMode(id==='reg'?'register':'login'))}});
-
-function bindLandingActions(){
- const actions=[['openCustomerAuth','customer'],['openWorkerAuth','worker'],['openCompanyAuth','company']];
- actions.forEach(([id,accountRole])=>{const button=document.getElementById(id);if(!button||button.dataset.bound==='yes')return;button.dataset.bound='yes';button.addEventListener('click',function(event){event.preventDefault();event.stopPropagation();authOpen(accountRole)},{passive:false})});
-}
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bindLandingActions);else bindLandingActions();
 if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('Offline app setup unavailable:',err.message)))}
 </script></body></html>
