@@ -39,6 +39,12 @@ let cloudUnsubs=[];
 function startCloudSync(){cloudUnsubs.forEach(fn=>fn());cloudUnsubs=[];if(!fbAuth.currentUser||!me)return;
  const attach=(query,localKey,transform=x=>x)=>cloudUnsubs.push(query.onSnapshot(snap=>{const cloud=snap.docs.map(doc=>transform({id:doc.id,...doc.data()}));const d=db();const ids=new Set(cloud.map(x=>String(x.id)));d[localKey]=[...cloud,...(d[localKey]||[]).filter(x=>!ids.has(String(x.id))&&!String(x.id).startsWith('s'))];saveLocal(d);if(document.getElementById('dash')&&!document.getElementById('dash').classList.contains('hidden'))render()},err=>console.warn(localKey+' sync',err)));
  attach(fbDb.collection('jobs').where('status','==','published'),'jobs');
+ // Automatically republish every existing job owned by the signed-in company, including older paused/draft posts.
+ if(me.role==='company'){
+  const autoPublishOwned=query=>query.get().then(snap=>{const batch=fbDb.batch();let changed=0;snap.docs.forEach(doc=>{const data=doc.data()||{};if(data.status!=='published'){batch.update(doc.ref,{status:'published',approvalRequired:false,publishedAt:data.publishedAt||firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});changed++}});return changed?batch.commit():null}).catch(err=>console.warn('Auto-publish blocked by Firestore Rules:',err));
+  autoPublishOwned(fbDb.collection('jobs').where('ownerId','==',me.id));
+  autoPublishOwned(fbDb.collection('jobs').where('owner','==',me.id));
+ }
  if(me.role==='company'){attach(fbDb.collection('jobs').where('ownerId','==',me.id),'jobs');attach(fbDb.collection('applications').where('employerId','==',me.id),'apps',x=>({...x,worker:x.workerId||x.worker}));attach(fbDb.collection('workerBookings').where('companyId','==',me.id),'bookings',x=>({...x,user:x.companyId}))}
  else if(me.role==='worker'){attach(fbDb.collection('applications').where('workerId','==',me.id),'apps',x=>({...x,worker:x.workerId||x.worker}));attach(fbDb.collection('workerBookings').where('status','==','Pending'),'openBookings');attach(fbDb.collection('workerBookings').where('workerId','==',me.id),'bookings',x=>({...x,user:x.workerId||x.user}))}else{attach(fbDb.collection('workerBookings').where('requesterId','==',me.id),'bookings')}
 }
