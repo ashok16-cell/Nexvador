@@ -99,7 +99,7 @@ function adminDetailFields(x){return Object.entries(x||{}).filter(([k,v])=>!['pa
 function adminAllowed(permission){return me&&me.role==='admin'&&(me.adminLevel==='super'||(Array.isArray(me.permissions)&&me.permissions.includes(permission)));}
 function renderAdminPanel(){
  const superUser=me.adminLevel==='super';
- const nav=[['adminHome','Overview','dashboard'],['adminUsers','Workers & Companies','users'],['adminAssignments','Work Assignments','assignments'],['adminJobs','Jobs','jobs'],['adminApps','Applications','applications'],['adminPayments','Payments','payments'],['adminReports','Reports & Export','reports'],['adminStaff','Staff Access','staff']];
+ const nav=[['adminHome','Overview','dashboard'],['adminUsers','Workers & Companies','users'],['adminAssignments','Work Assignments','users'],['adminJobs','Jobs','jobs'],['adminApps','Applications','applications'],['adminPayments','Payments','payments'],['adminReports','Reports & Export','reports'],['adminStaff','Staff Access','staff']];
  const visible=nav.filter(x=>superUser||adminAllowed(x[2]));
  document.getElementById('nav').innerHTML=visible.map(([k,v])=>'<button class="'+(page===k?'tab active':'')+'" onclick="go(\''+k+'\')">'+v+'</button>').join('');
  const el=document.getElementById('panel');
