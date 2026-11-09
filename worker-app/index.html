@@ -47,6 +47,40 @@
 #landing>h2{font-size:23px;color:#10283f;margin:28px 0 12px}
 #publicJobs .job{margin:0;border-radius:13px}
 @media(max-width:760px){.wrap{padding:15px}.top{padding:13px 15px}#landing>.hero{padding:23px 18px;border-radius:17px}#landing>.hero .grid{grid-template-columns:1fr}#landing>.hero .card{min-height:0;padding:17px}#landing>.grid{grid-template-columns:1fr;gap:10px}#landing>.hero h1{font-size:32px}}
+
+/* Final mobile-first corporate landing page refinement */
+#landing{max-width:100%;margin:0 auto}
+#landing>.hero{padding:clamp(22px,4vw,44px);border-radius:20px;min-height:0}
+#landing>.hero h1{font-size:clamp(30px,4.2vw,44px);line-height:1.22;max-width:760px;letter-spacing:-.55px}
+#landing>.hero>p{font-size:clamp(15px,1.65vw,17px);line-height:1.72;max-width:790px}
+#landing>.hero .grid{margin-top:25px}
+#landing>.hero .card{min-height:210px}
+#landing>.hero .card h2{font-size:19px}
+#landing>.hero .card button{font-size:14px;min-height:44px}
+#landing>div:nth-child(2){padding:0 2px}
+#landing>.grid .card{min-height:118px}
+#landing>h2{display:flex;align-items:center;gap:10px}
+#landing>h2:after{content:"";height:1px;background:#dce6ed;flex:1}
+@media(max-width:680px){
+ .top{padding:12px 14px}
+ .top .row{gap:12px;align-items:center}
+ .top .brand{font-size:16px}
+ .top select{font-size:12px;padding:7px!important}
+ .wrap{padding:13px}
+ #landing>.hero{padding:23px 17px;border-radius:17px;margin-bottom:16px}
+ #landing>.hero h1{font-size:clamp(29px,8vw,35px);line-height:1.2;margin:15px 0}
+ #landing>.hero>p{font-size:14px;line-height:1.72;margin-bottom:19px}
+ #landing>.hero .grid{grid-template-columns:1fr;gap:10px;margin-top:19px}
+ #landing>.hero .card{min-height:0;padding:16px;border-radius:13px}
+ #landing>.hero .card h2{font-size:18px;margin-bottom:6px}
+ #landing>.hero .card p{font-size:13px;line-height:1.6;margin-bottom:12px}
+ #landing>.hero .card button{width:100%;text-align:center}
+ #landing>div:nth-child(2){margin:0 0 17px!important}
+ #landing>div:nth-child(2) button{width:100%!important;text-align:center}
+ #landing>.grid{grid-template-columns:1fr;gap:9px;margin:14px 0 23px}
+ #landing>.grid .card{padding:15px;min-height:0}
+ #landing>h2{font-size:20px;margin:23px 0 10px}
+}
 </style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head><body><header class="top"><div class="row" style="margin:0"><div class="brand">NEXVADORAQ <small>WORK • PAN INDIA</small></div><div style="min-width:155px"><label for="appLanguage" style="font-size:11px;color:#d6edf0">App Language / ಭಾಷೆ</label><select id="appLanguage" onchange="setAppLanguage(this.value)" style="width:100%;padding:8px;border-radius:9px"><option value="kn">ಕನ್ನಡ + English</option><option value="hi">हिन्दी + English</option><option value="ta">தமிழ் + English</option><option value="te">తెలుగు + English</option><option value="ml">മലയാളം + English</option><option value="mr">मराठी + English</option><option value="gu">ગુજરાતી + English</option><option value="bn">বাংলা + English</option><option value="pa">ਪੰਜਾਬੀ + English</option><option value="ur">اردو + English</option><option value="or">ଓଡ଼ିଆ + English</option><option value="as">অসমীয়া + English</option><option value="sa">संस्कृतम् + English</option><option value="ks">कॉशुर + English</option><option value="sd">سنڌي + English</option><option value="kok">कोंकणी + English</option><option value="mni">মৈতৈলোন্ + English</option><option value="doi">डोगरी + English</option><option value="brx">बड़ो + English</option><option value="sat">संताली + English</option><option value="ne">नेपाली + English</option><option value="en">English + English</option></select></div></div></header><main class="wrap">
 <section id="landing"><div class="hero"><span class="pill">NEXVADORAQ • WORKER PLATFORM</span><h1>ನಿಮ್ಮ ಕೆಲಸ. ನಿಮ್ಮ ಜನ. ಒಂದೇ ವೇದಿಕೆ.</h1><p>ಕೆಲಸ ಹುಡುಕುವವರಿಗೆ ಉದ್ಯೋಗ ಅವಕಾಶಗಳು. ಕಂಪನಿಗಳಿಗೆ ನಂಬಿಕಸ್ಥ ಕೆಲಸಗಾರರು. Daily, Hourly, Monthly ಮತ್ತು Contract hiring — ಒಂದೇ ವೇದಿಕೆಯಲ್ಲಿ.</p><div class="grid"><div class="card" style="background:#ffffff;color:#173744"><h2>ನನಗೆ Worker ಬೇಕು</h2><p>ಮನೆ, ಅಂಗಡಿ, ಕಾರ್ಯಕ್ರಮ ಅಥವಾ ಸ್ಥಳೀಯ ಕೆಲಸಕ್ಕೆ Hourly / Daily ಆಧಾರದ ಮೇಲೆ ಕೆಲಸಗಾರರನ್ನು ಬುಕ್ ಮಾಡಿ.</p><button id="openCustomerAuth" class="primary" type="button" onclick="window.authOpen('customer')">Book a Worker</button></div><div class="card" style="background:#ffffff;color:#173744"><h2>ನಾನು ಕೆಲಸ ಹುಡುಕುತ್ತಿದ್ದೇನೆ</h2><p>ಪ್ರೊಫೈಲ್ ರಚಿಸಿ, ಹತ್ತಿರದ ಕೆಲಸಗಳನ್ನು ಹುಡುಕಿ ಮತ್ತು ಅರ್ಜಿ ಸಲ್ಲಿಸಿ.</p><button id="openWorkerAuth" class="primary" type="button" onclick="window.authOpen('worker')">Worker Join / Login</button></div><div class="card" style="background:#ffffff;color:#173744"><h2>ನಾನು HR / ಕಂಪನಿ ಪ್ರತಿನಿಧಿ</h2><p>HR ಖಾತೆ ತೆರೆಯಿರಿ, ಉದ್ಯೋಗ ಪ್ರಕಟಿಸಿ, Workers ಹುಡುಕಿ ಮತ್ತು ಅರ್ಜಿಗಳನ್ನು ನಿರ್ವಹಿಸಿ.</p><button id="openCompanyAuth" type="button" onclick="window.authOpen('company')">HR / Company Login / Join</button></div></div></div><div style="margin:14px 0 22px;text-align:center"><button class="primary" style="display:block;width:100%;max-width:420px;margin:0 auto;padding:16px;font-size:17px;border:2px solid #ffffff;box-shadow:0 4px 14px #092b3a33" type="button" onclick="authOpenAdmin()">🔐 Super Admin Login</button></div><div class="grid"><div class="card"><h3>ಕೆಲಸ ಹುಡುಕಿ</h3><p>ನಗರ, ಕೌಶಲ್ಯ ಮತ್ತು ಕೆಲಸದ ಪ್ರಕಾರದ ಆಧಾರದ ಮೇಲೆ ಅವಕಾಶಗಳನ್ನು ನೋಡಿ.</p></div><div class="card"><h3>ಕೆಲಸಗಾರರನ್ನು ನೇಮಿಸಿ</h3><p>ಕಂಪನಿಗಳು ಕೆಲಸ ಪ್ರಕಟಿಸಿ ಅರ್ಜಿಗಳನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.</p></div><div class="card"><h3>Worker Requests</h3><p>ಅಗತ್ಯವಿರುವ ಕೆಲಸಗಾರರ ಸಂಖ್ಯೆಯನ್ನು ತಿಳಿಸಿ ಮತ್ತು ಪ್ರತಿಕ್ರಿಯೆ ಪಡೆಯಿರಿ.</p></div></div><h2>ಹೊಸ ಉದ್ಯೋಗ ಅವಕಾಶಗಳು</h2><div id="publicJobs" class="grid"></div></section>
 <section id="auth" class="card hidden"><div class="row"><h2 id="authTitle">Worker Account</h2><button onclick="closeAuth()">✕</button></div><p class="pill" id="accountRoleLabel">Worker account</p><div class="tabs"><button id="reg" type="button" class="tab active" onclick="setMode('register')">Create account</button><button id="log" type="button" class="tab" onclick="setMode('login')">Login</button></div><form id="authForm"><div id="regFields"><div class="field"><label>ನಿಮ್ಮ ಹೆಸರು / ಕಂಪನಿ ಹೆಸರು</label><input id="name" required></div><div class="field"><label>Mobile</label><input id="mobile" maxlength="10"></div><div class="field"><label>City</label><input id="city" required></div></div><div class="field"><label>Email</label><input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required></div><div class="field"><label>Password (6+ characters)</label><input id="password" type="password" minlength="6" required></div><button class="primary" id="submitAuth" type="submit">Create account</button></form><button id="forgotBtn" type="button" onclick="forgotPassword()">Forgot password?</button><p class="muted" style="font-size:12px">Login ಸಮಸ್ಯೆ ಬಂದರೆ Internet ಪರಿಶೀಲಿಸಿ. Firebase ನಲ್ಲಿ Email/Password sign-in ಮತ್ತು Authorized domain enable ಆಗಿರಬೇಕು.</p><p id="authMsg" class="muted" role="status" aria-live="polite"></p></section>
