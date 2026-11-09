@@ -1,0 +1,64 @@
+name: NEXVADORAQ Firebase Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: "What should be deployed?"
+        required: true
+        type: choice
+        options:
+          - hosting-and-rules
+          - hosting-only
+          - rules-only
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate deployment files
+        run: |
+          test -f firebase.json
+          test -f firestore.rules
+          test -f worker-app/index.html
+          node --check <(sed -n '/^<script>$/,/^<\/script>$/p' worker-app/index.html | sed '1d;$d') || true
+
+      - name: Authenticate to Firebase
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
+        run: |
+          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
+            echo "::error::Add FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB in GitHub Actions secrets."
+            exit 1
+          fi
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
+          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+
+      - name: Install Firebase CLI
+        run: npm install --global firebase-tools
+
+      - name: Deploy selected Firebase resources
+        env:
+          TARGET: ${{ inputs.deploy_target }}
+        run: |
+          case "$TARGET" in
+            hosting-and-rules) firebase deploy --project nexvadoraq-hirehub --only hosting,firestore:rules --non-interactive ;;
+            hosting-only) firebase deploy --project nexvadoraq-hirehub --only hosting --non-interactive ;;
+            rules-only) firebase deploy --project nexvadoraq-hirehub --only firestore:rules --non-interactive ;;
+            *) echo "::error::Unknown deploy target"; exit 1 ;;
+          esac
+
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
