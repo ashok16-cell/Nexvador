@@ -55,3 +55,4 @@ service cloud.firestore {
   match /{document=**}{allow read,write:if false;}
  }
 }
+// Deploy trigger: synchronize Firebase rules after worker booking access compatibility update.
