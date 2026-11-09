@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - 'firestore.rules'
-      - 'storage.rules'
   workflow_dispatch:
     inputs:
       deploy_target:
@@ -36,13 +35,12 @@ jobs:
         run: |
           test -f firebase.json
           test -f firestore.rules
-          test -f storage.rules
           test -f worker-app/index.html
           python3 - <<'PY'
           from pathlib import Path
           import re
           html = Path("worker-app/index.html").read_text()
-          scripts = re.findall(r"<script>([\s\S]*?)</script>", html)
+          scripts = re.findall(r"<script>([\\s\\S]*?)</script>", html)
           if not scripts:
               raise SystemExit("No inline application script found")
           Path("/tmp/nexvadoraq-app.js").write_text(scripts[-1])
@@ -74,7 +72,7 @@ jobs:
           case "$TARGET" in
             hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
             hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
-            rules-only) firebase deploy --project nexvadoraq --only firestore:rules,storage --non-interactive ;;
+            rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
             *) echo "::error::Unknown deploy target"; exit 1 ;;
           esac
 
