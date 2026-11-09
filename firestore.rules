@@ -39,6 +39,13 @@ service cloud.firestore {
    allow create:if active()&&request.resource.data.actorId==request.auth.uid&&request.resource.data.recipientId is string&&request.resource.data.recipientId!=request.auth.uid&&request.resource.data.title is string&&request.resource.data.message is string&&request.resource.data.message.size()<=500;
    allow read,update,delete:if active()&&resource.data.recipientId==request.auth.uid;
   }
+  match /workerBookings/{bookingId}/tracking/{workerId}{
+   function booking(){return get(/databases/$(database)/documents/workerBookings/$(bookingId)).data;}
+   function assigned(){return booking().acceptedWorkerIds is list&&booking().acceptedWorkerIds.hasAny([request.auth.uid])||booking().workerId==request.auth.uid;}
+   allow create,update:if worker()&&request.auth.uid==workerId&&assigned()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
+   allow read:if admin()||staffCan('users')||(active()&&profile(request.auth.uid).role=='customer'&&booking().requesterId==request.auth.uid)||(company()&&booking().companyId==request.auth.uid)||(worker()&&assigned());
+   allow delete:if admin()||(worker()&&request.auth.uid==workerId);
+  }
   match /locations/{uid}{
    allow create,update:if (worker()||company())&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.role==profile(request.auth.uid).role&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
    allow read:if admin()||company()||(staffCan('users'))||(worker()&&resource.data.role=='company')||(worker()&&request.auth.uid==uid);
