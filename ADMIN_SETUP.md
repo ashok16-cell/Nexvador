@@ -18,6 +18,18 @@ firebase deploy --only firestore:rules
 ```
 The repository contains `firebase.json` and `firestore.rules`. A GitHub commit does not automatically deploy rules to Firebase.
 
+
+## One-click GitHub deployment
+
+A manual workflow is available at **Actions → NEXVADORAQ Firebase Deploy → Run workflow**. Before using it:
+
+1. In Firebase Console / Google Cloud IAM for `nexvadoraq-hirehub`, create a dedicated service account for CI deployment. Grant only the permissions needed to deploy Firebase Hosting and Firestore Security Rules (Firebase Hosting Admin and Firebase Rules Admin, subject to your project's IAM setup).
+2. Create a JSON key for that service account and add the complete JSON contents as a GitHub Actions repository secret named `FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB`.
+3. Keep this key private. Never commit it to the repository, paste it into the app, or share it in chat. Rotate/revoke it if exposed.
+4. Open the repository's Actions tab, select **NEXVADORAQ Firebase Deploy**, choose `hosting-and-rules`, and run it only after reviewing the rules and testing accounts.
+
+The workflow validates the app's inline JavaScript and deployment files, then deploys the selected resources. A successful workflow run is the evidence that deployment completed. Until that run succeeds, hosting/rules deployment remains pending.
+
 ## Create the first administrator safely
 1. Create the administrator's email/password account in Firebase Authentication.
 2. Copy that user's Firebase Authentication UID.
