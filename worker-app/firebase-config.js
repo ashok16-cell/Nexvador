@@ -1,10 +1,11 @@
-// Firebase Web app configuration for NEXVADORAQ.
+// Shared Firebase Web app configuration for NEXVADORAQ HireHub.
+// Worker and HR apps must use this same Firebase project.
 window.NEXVADORAQ_FIREBASE = {
-  apiKey: "AIzaSyCKdYmYOul5ZQQFSOaHtpQqbUpG9wsv3Dw",
-  authDomain: "nexvadoraq.firebaseapp.com",
-  projectId: "nexvadoraq",
-  storageBucket: "nexvadoraq.firebasestorage.app",
-  messagingSenderId: "759393901892",
-  appId: "1:759393901892:web:ed8d080d0e89f6ded18b11",
-  measurementId: "G-6Q4R34EDRP"
+  apiKey: "AIzaSyDUPXoCs1yODhtiHDqgKuUNEtAcxvmyOuA",
+  authDomain: "nexvadoraq-hirehub.firebaseapp.com",
+  projectId: "nexvadoraq-hirehub",
+  storageBucket: "nexvadoraq-hirehub.firebasestorage.app",
+  messagingSenderId: "663892197062",
+  appId: "1:663892197062:web:e04e6ebd9bac9b8f9361c7",
+  measurementId: "G-2DSV5QC74S"
 };
