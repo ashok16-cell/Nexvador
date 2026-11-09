@@ -16,6 +16,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   deploy:
@@ -46,16 +47,13 @@ jobs:
           node --check /tmp/nexvadoraq-app.js
           node --check scripts/bootstrap-admin.mjs
 
-      - name: Authenticate to Firebase
-        env:
-          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
-        run: |
-          if [ -z "$FIREBASE_SERVICE_ACCOUNT" ]; then
-            echo "::error::Add FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB in GitHub Actions secrets."
-            exit 1
-          fi
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
-          echo "GOOGLE_APPLICATION_CREDENTIALS=$RUNNER_TEMP/firebase-service-account.json" >> "$GITHUB_ENV"
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
+          create_credentials_file: true
+          export_environment_variables: true
+          cleanup_credentials: true
 
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
