@@ -113,9 +113,9 @@ function renderWorkerLocation(el){
 }
 function handleWorkerPosition(pos){
  const d=db();d.liveLocations=d.liveLocations||[];
- const item={worker:me.id,name:me.name,city:me.city,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:Math.round(pos.coords.accuracy),updatedAt:Date.now(),sharing:true};
+ const item={worker:me.id,role:'worker',name:me.name,city:me.city,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:Math.round(pos.coords.accuracy),updatedAt:Date.now(),sharing:true};
  d.liveLocations=d.liveLocations.filter(x=>x.worker!==me.id);d.liveLocations.push(item);save(d);
- fbDb.collection('locations').doc(me.id).set({uid:me.id,name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),sharing:true},{merge:true}).catch(err=>{const st=document.getElementById('locStatus');if(st)st.innerHTML='<b>Online sync failed</b><p>'+esc(err.message)+'</p>'});
+ fbDb.collection('locations').doc(me.id).set({uid:me.id,role:'worker',name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),sharing:true},{merge:true}).catch(err=>{const st=document.getElementById('locStatus');if(st)st.innerHTML='<b>Online sync failed</b><p>'+esc(err.message)+'</p>'});
  const s=document.getElementById('locStatus');if(s)s.innerHTML='<b><span class="locdot"></span>Live location sharing ON</b><p>'+item.lat.toFixed(5)+', '+item.lng.toFixed(5)+' • Accuracy about '+item.accuracy+' m</p>';
  const details=document.getElementById('myLocDetails');if(details)details.innerHTML='<a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+item.lat+'&mlon='+item.lng+'#map=16/'+item.lat+'/'+item.lng+'">Open My Location Map</a>';
 }
@@ -173,7 +173,7 @@ let nearbyCompanyUnsub=null;
 function renderNearbyCompanies(el){
  if(nearbyCompanyUnsub){nearbyCompanyUnsub();nearbyCompanyUnsub=null}
  el.innerHTML='<h3>Nearby HR / Companies – Live Map</h3><p class="muted">GPS ಹಂಚಿಕೆಯನ್ನು ಸ್ವತಃ ON ಮಾಡಿದ ಕಂಪನಿಗಳ ಸ್ಥಳ ಮಾತ್ರ ಇಲ್ಲಿ ಕಾಣುತ್ತದೆ.</p><div id="companyMap" class="mapcanvas"></div><div id="companyMapList"></div>';
- nearbyCompanyUnsub=fbDb.collection('locations').where('sharing','==',true).onSnapshot(snap=>{
+ nearbyCompanyUnsub=fbDb.collection('locations').where('sharing','==',true).where('role','==','company').onSnapshot(snap=>{
   const rows=snap.docs.map(x=>({id:x.id,...x.data()})).filter(x=>x.role==='company'&&Date.now()-(x.updatedAt?.toMillis?x.updatedAt.toMillis():Number(x.updatedAt||0))<120000);
   const list=document.getElementById('companyMapList');if(!list)return;
   list.innerHTML=rows.length?rows.map(x=>'<div class="card"><b>'+esc(x.name||'Company')+'</b><p>'+esc(x.city||'')+'</p><a class="maplink" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+x.lat+','+x.lng+'">Open Company Map</a></div>').join(''):'<div class="locbox">ಈಗ GPS ಹಂಚುತ್ತಿರುವ HR / Company ಇಲ್ಲ.</div>';
