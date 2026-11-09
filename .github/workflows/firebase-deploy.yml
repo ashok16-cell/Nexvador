@@ -42,6 +42,7 @@ jobs:
           Path("/tmp/nexvadoraq-app.js").write_text(scripts[-1])
           PY
           node --check /tmp/nexvadoraq-app.js
+          node --check scripts/bootstrap-admin.mjs
 
       - name: Authenticate to Firebase
         env:
