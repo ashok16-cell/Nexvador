@@ -25,8 +25,7 @@ service cloud.firestore {
     }
 
     match /jobs/{jobId} {
-      allow read: if (active() && resource.data.status == 'published')
-        || (company() && resource.data.ownerId == request.auth.uid) || admin();
+      allow read: if active() || admin();
       allow create: if company() && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.status == 'published';
       allow update: if (company() && resource.data.ownerId == request.auth.uid
@@ -39,7 +38,7 @@ service cloud.firestore {
 
     match /applications/{id} {
       allow create: if worker() && request.resource.data.workerId == request.auth.uid
-        && request.resource.data.status == 'applied';
+        && request.resource.data.status == 'Applied';
       allow read: if admin()
         || (worker() && resource.data.workerId == request.auth.uid)
         || (company() && resource.data.employerId == request.auth.uid);
@@ -52,7 +51,7 @@ service cloud.firestore {
     match /workerBookings/{id} {
       allow create: if worker() && request.resource.data.workerId == request.auth.uid
         && request.resource.data.status == 'Pending';
-      allow read: if admin() || (worker() && resource.data.workerId == request.auth.uid);
+      allow read: if admin() || (worker() && resource.data.workerId == request.auth.uid) || company();
       allow update, delete: if admin();
     }
 
