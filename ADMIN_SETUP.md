@@ -31,16 +31,20 @@ A manual workflow is available at **Actions → NEXVADORAQ Firebase Deploy → R
 The workflow validates the app's inline JavaScript and deployment files, then deploys the selected resources. A successful workflow run is the evidence that deployment completed. Until that run succeeds, hosting/rules deployment remains pending.
 
 ## Create the first administrator safely
-1. Create the administrator's email/password account in Firebase Authentication.
-2. Copy that user's Firebase Authentication UID.
-3. In Cloud Firestore, create `users/{UID}` with fields:
-   - `uid`: same UID string
-   - `email`: administrator email
-   - `name`: administrator display name
-   - `role`: `admin`
-   - `active`: `true`
-4. Sign in through the app's Admin tab. Admin self-registration is disabled.
-5. Keep administrator credentials private. Never put service-account keys in the app or repository.
+
+The app intentionally blocks Admin self-registration. Because Firestore rules also block client-side creation of an `admin` profile, provision the first administrator with the trusted Firebase Admin SDK (not the browser console):
+
+1. Create the administrator account in Firebase Authentication using Email/Password.
+2. Copy that account's Firebase Authentication UID.
+3. On a trusted computer, install the Admin SDK dependency in a temporary working folder: `npm install firebase-admin`.
+4. Download a service-account JSON with narrowly scoped project access. Keep it outside this repository; never commit it or paste it into chat.
+5. Run the repository script from the project root:
+   ```bash
+   GOOGLE_APPLICATION_CREDENTIALS="/secure/path/service-account.json" ADMIN_UID="FIREBASE_AUTH_UID" node scripts/bootstrap-admin.mjs
+   ```
+6. Sign in through the app's Admin tab using that Auth account. Admin self-registration remains disabled.
+
+The script verifies the Auth account and refuses to silently promote an existing non-admin profile. Protect and revoke service-account keys when no longer needed.
 
 ## Required Firebase checks
 - Enable Email/Password under Authentication > Sign-in method.
