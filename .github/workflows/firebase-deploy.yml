@@ -1,6 +1,10 @@
 name: NEXVADORAQ Firebase Deploy
 
 on:
+  push:
+    paths:
+      - 'firestore.rules'
+      - 'storage.rules'
   workflow_dispatch:
     inputs:
       deploy_target:
@@ -65,7 +69,7 @@ jobs:
 
       - name: Deploy selected Firebase resources
         env:
-          TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
+          TARGET: ${{ github.event_name == 'push' && 'rules-only' || inputs.deploy_target || 'hosting-and-rules' }}
         run: |
           case "$TARGET" in
             hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
