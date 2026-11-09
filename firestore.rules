@@ -17,9 +17,10 @@ service cloud.firestore {
         && request.resource.data.role in ['worker', 'company']
         && request.resource.data.active == true;
       allow read: if signedIn() && (request.auth.uid == uid || admin());
-      allow update: if signedIn() && request.auth.uid == uid
+      allow update: if (signedIn() && request.auth.uid == uid
         && request.resource.data.role == resource.data.role
-        && request.resource.data.active == resource.data.active;
+        && request.resource.data.active == resource.data.active)
+        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']));
       allow delete: if admin();
     }
 
@@ -28,10 +29,11 @@ service cloud.firestore {
         || (company() && resource.data.ownerId == request.auth.uid) || admin();
       allow create: if company() && request.resource.data.ownerId == request.auth.uid
         && request.resource.data.status == 'published';
-      allow update: if company() && resource.data.ownerId == request.auth.uid
+      allow update: if (company() && resource.data.ownerId == request.auth.uid
         && request.resource.data.ownerId == resource.data.ownerId
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['title','company','city','state','type','pay','skills','desc','status','updatedAt']);
+          .hasOnly(['title','company','city','state','type','pay','skills','desc','status','updatedAt']))
+        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
       allow delete: if (company() && resource.data.ownerId == request.auth.uid) || admin();
     }
 
