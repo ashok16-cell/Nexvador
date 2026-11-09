@@ -62,7 +62,7 @@ jobs:
 
       - name: Deploy selected Firebase resources
         env:
-          TARGET: ${{ inputs.deploy_target }}
+          TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
         run: |
           case "$TARGET" in
             hosting-and-rules) firebase deploy --project nexvadoraq-hirehub --only hosting,firestore:rules --non-interactive ;;
