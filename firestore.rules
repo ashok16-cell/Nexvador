@@ -7,29 +7,31 @@ service cloud.firestore {
   function active(){return signedIn()&&hasProfile(request.auth.uid)&&profile(request.auth.uid).active==true;}
   function worker(){return active()&&profile(request.auth.uid).role=='worker';}
   function company(){return active()&&profile(request.auth.uid).role=='company';}
-  function admin(){return active()&&profile(request.auth.uid).role=='admin';}
+  function admin(){return active()&&profile(request.auth.uid).role=='admin'&&profile(request.auth.uid).adminLevel=='super';}
+  function staffAdmin(){return active()&&profile(request.auth.uid).role=='admin'&&profile(request.auth.uid).adminLevel=='staff';}
+  function staffCan(permission){return staffAdmin()&&profile(request.auth.uid).permissions is list&&profile(request.auth.uid).permissions.hasAny([permission]);}
   match /users/{uid}{
    allow create:if signedIn()&&request.auth.uid==uid&&request.resource.data.role in ['worker','company']&&request.resource.data.active==true&&request.resource.data.email is string&&request.resource.data.name is string;
-   allow read:if signedIn()&&(request.auth.uid==uid||admin());
+   allow read:if signedIn()&&(request.auth.uid==uid||admin()||staffCan('users'));
    allow update:if signedIn()&&request.auth.uid==uid&&request.resource.data.role==resource.data.role&&request.resource.data.active==resource.data.active&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','mobile','city','photoURL','skills','experience','about','preference','state','phone','email','updatedAt']);
    allow update:if admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']);
    allow delete:if admin();
   }
   match /jobs/{id}{
-   allow read:if active()||admin();
+   allow read:if active()||admin()||staffCan('jobs');
    allow create:if company()&&request.resource.data.ownerId==request.auth.uid&&request.resource.data.status=='published'&&request.resource.data.title is string&&request.resource.data.title.size()>0&&request.resource.data.title.size()<=120&&request.resource.data.city is string;
    allow update:if (company()&&resource.data.ownerId==request.auth.uid&&request.resource.data.ownerId==resource.data.ownerId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','company','city','state','type','pay','skills','desc','details','status','updatedAt']))||(admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
    allow delete:if (company()&&resource.data.ownerId==request.auth.uid)||admin();
   }
   match /applications/{id}{
    allow create:if worker()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.status in ['Applied','applied']&&request.resource.data.title is string;
-   allow read:if admin()||(worker()&&resource.data.workerId==request.auth.uid)||(company()&&resource.data.employerId==request.auth.uid);
+   allow read:if admin()||staffCan('applications')||(worker()&&resource.data.workerId==request.auth.uid)||(company()&&resource.data.employerId==request.auth.uid);
    allow update:if company()&&resource.data.employerId==request.auth.uid&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Shortlisted','Rejected','Accepted','Completed','applied'];
    allow delete:if admin();
   }
   match /workerBookings/{id}{
    allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.status=='Pending'&&request.resource.data.category is string&&request.resource.data.count is int&&request.resource.data.count>=1&&request.resource.data.count<=500;
-   allow read:if admin()||(company()&&resource.data.companyId==request.auth.uid)||(worker()&&(resource.data.status=='Pending'||resource.data.workerId==request.auth.uid));
+   allow read:if admin()||staffCan('users')||(company()&&resource.data.companyId==request.auth.uid)||(worker()&&(resource.data.status=='Pending'||resource.data.workerId==request.auth.uid));
    allow update:if admin()||(company()&&resource.data.companyId==request.auth.uid&&request.resource.data.companyId==resource.data.companyId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Confirmed','Rejected','Completed'])||(worker()&&resource.data.status=='Pending'&&request.resource.data.status=='Worker Accepted'&&request.resource.data.workerId==request.auth.uid&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['workerId','workerName','status','acceptedAt','updatedAt']));
    allow delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
   }
@@ -39,7 +41,7 @@ service cloud.firestore {
   }
   match /locations/{uid}{
    allow create,update:if (worker()||company())&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.role==profile(request.auth.uid).role&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
-   allow read:if admin()||company()||(worker()&&resource.data.role=='company')||(worker()&&request.auth.uid==uid);
+   allow read:if admin()||company()||(staffCan('users'))||(worker()&&resource.data.role=='company')||(worker()&&request.auth.uid==uid);
    allow delete:if admin()||(active()&&request.auth.uid==uid);
   }
   match /{document=**}{allow read,write:if false;}
