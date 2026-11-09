@@ -44,26 +44,31 @@ function renderWorkerLocation(el){
  el.innerHTML='<div class="card"><h3>My Live Location</h3><p>ನಿಮ್ಮ GPS location ಹಂಚಲು ಕೆಳಗಿನ Start ಬಟನ್ ಒತ್ತಿ ಮತ್ತು location permission ನೀಡಿ. Stop ಒತ್ತಿದರೆ ಹಂಚಿಕೆ ನಿಲ್ಲುತ್ತದೆ.</p><div class="locbox" id="locStatus"><b>Location sharing: OFF</b><p class="muted">ನೀವು Start ಒತ್ತುವವರೆಗೆ location ಹಂಚುವುದಿಲ್ಲ.</p></div><button class="primary" onclick="startWorkerLocation()">Start Live Location</button><button class="danger" onclick="stopWorkerLocation()">Stop Sharing</button><div id="myLocDetails"></div></div>';
  if(saved){document.getElementById('myLocDetails').innerHTML='<p><b>Last location:</b> '+Number(saved.lat).toFixed(5)+', '+Number(saved.lng).toFixed(5)+'</p><p class="muted">Updated: '+new Date(saved.updatedAt).toLocaleString()+'</p><a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+saved.lat+'&mlon='+saved.lng+'#map=16/'+saved.lat+'/'+saved.lng+'">Open Map</a>'}
 }
+function handleWorkerPosition(pos){
+ const d=db();d.liveLocations=d.liveLocations||[];
+ const item={worker:me.id,name:me.name,city:me.city,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:Math.round(pos.coords.accuracy),updatedAt:Date.now(),sharing:true};
+ d.liveLocations=d.liveLocations.filter(x=>x.worker!==me.id);d.liveLocations.push(item);save(d);
+ fbDb.collection('locations').doc(me.id).set({uid:me.id,name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),sharing:true},{merge:true}).catch(err=>{const st=document.getElementById('locStatus');if(st)st.innerHTML='<b>Online sync failed</b><p>'+esc(err.message)+'</p>'});
+ const s=document.getElementById('locStatus');if(s)s.innerHTML='<b><span class="locdot"></span>Live location sharing ON</b><p>'+item.lat.toFixed(5)+', '+item.lng.toFixed(5)+' • Accuracy about '+item.accuracy+' m</p>';
+ const details=document.getElementById('myLocDetails');if(details)details.innerHTML='<a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+item.lat+'&mlon='+item.lng+'#map=16/'+item.lat+'/'+item.lng+'">Open My Location Map</a>';
+}
 async function startWorkerLocation(){
  if(!fbAuth.currentUser){alert('ದಯವಿಟ್ಟು ಮತ್ತೆ Login ಮಾಡಿ.');return}
- const nativeGeo=window.Capacitor?.Plugins?.Geolocation;
- if(nativeGeo?.requestPermissions){try{const permission=await nativeGeo.requestPermissions();if(permission.location!=='granted'&&permission.coarseLocation!=='granted'){alert('Location permission Allow ಮಾಡಿ.');return}}catch(err){alert('Location permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+err.message);return}}
- if(!navigator.geolocation){alert('ಈ ಸಾಧನದಲ್ಲಿ GPS location support ಇಲ್ಲ.');return}
  if(locationWatchId!==null)return;
  const status=document.getElementById('locStatus');if(status)status.innerHTML='<b>Getting your location…</b><p>ದಯವಿಟ್ಟು GPS permission Allow ಮಾಡಿ.</p>';
- locationWatchId=navigator.geolocation.watchPosition(pos=>{
-  const d=db();d.liveLocations=d.liveLocations||[];
-  const item={worker:me.id,name:me.name,city:me.city,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:Math.round(pos.coords.accuracy),updatedAt:Date.now(),sharing:true};
-  d.liveLocations=d.liveLocations.filter(x=>x.worker!==me.id);d.liveLocations.push(item);save(d);
-  fbDb.collection('locations').doc(me.id).set({uid:me.id,name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),sharing:true},{merge:true}).catch(err=>{const st=document.getElementById('locStatus');if(st)st.innerHTML='<b>Online sync failed</b><p>'+esc(err.message)+'</p>'});
-  const s=document.getElementById('locStatus');if(s)s.innerHTML='<b><span class="locdot"></span>Live location sharing ON</b><p>'+item.lat.toFixed(5)+', '+item.lng.toFixed(5)+' • Accuracy about '+item.accuracy+' m</p>';
-  const details=document.getElementById('myLocDetails');if(details)details.innerHTML='<a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+item.lat+'&mlon='+item.lng+'#map=16/'+item.lat+'/'+item.lng+'">Open My Location Map</a>';
- },err=>{
-  locationWatchId=null;const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location not available</b><p>'+esc(err.message)+' — GPS permission Allow ಮಾಡಿ, Location ON ಮಾಡಿ.</p>';
- },{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+ const nativeGeo=window.Capacitor?.Plugins?.Geolocation;
+ try{
+  if(nativeGeo?.requestPermissions){const permission=await nativeGeo.requestPermissions();if(permission.location!=='granted'&&permission.coarseLocation!=='granted'){alert('Location permission Allow ಮಾಡಿ.');return}}
+  if(nativeGeo?.watchPosition){
+   const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:20000,maximumAge:5000},(pos,err)=>{if(err){const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location error</b><p>'+esc(err.message)+'</p>';return}if(pos)handleWorkerPosition(pos)});
+   locationWatchId='native:'+id;return;
+  }
+  if(!navigator.geolocation){alert('ಈ ಸಾಧನದಲ್ಲಿ GPS location support ಇಲ್ಲ.');return}
+  locationWatchId=navigator.geolocation.watchPosition(handleWorkerPosition,err=>{locationWatchId=null;const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location not available</b><p>'+esc(err.message)+' — GPS permission Allow ಮಾಡಿ, Location ON ಮಾಡಿ.</p>'},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+ }catch(err){locationWatchId=null;alert('Location permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+err.message)}
 }
 function stopWorkerLocation(){
- if(locationWatchId!==null){navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
+ if(locationWatchId!==null){if(String(locationWatchId).startsWith('native:')){const id=String(locationWatchId).slice(7);window.Capacitor?.Plugins?.Geolocation?.clearWatch({id}).catch(console.warn)}else navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
  const d=db();d.liveLocations=(d.liveLocations||[]).filter(x=>x.worker!==me.id);save(d);if(fbAuth.currentUser)fbDb.collection('locations').doc(me.id).delete().catch(err=>console.warn('Could not clear cloud location',err));
  const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location sharing: OFF</b><p>ನಿಮ್ಮ location ಹಂಚಿಕೆ ನಿಲ್ಲಿಸಲಾಗಿದೆ.</p>';
  const details=document.getElementById('myLocDetails');if(details)details.innerHTML='';
