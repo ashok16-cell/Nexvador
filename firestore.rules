@@ -55,4 +55,4 @@ service cloud.firestore {
   match /{document=**}{allow read,write:if false;}
  }
 }
-// Deploy trigger: Firestore-only deployment path avoids unnecessary Storage API permissions.
+// Deploy trigger: Firestore-only deployment path; validation adjusted for modular worker app.
