@@ -27,6 +27,20 @@ jobs:
           SDKMANAGER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | head -n 1)"
           yes | "$SDKMANAGER" --licenses
           "$SDKMANAGER" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Validate HireHub JavaScript
+        working-directory: worker-app
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          html=Path("index.html").read_text()
+          scripts=re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, re.I)
+          inline=[x for x in scripts if x.strip()]
+          if not inline:
+              raise SystemExit("No inline application script found")
+          Path("/tmp/hirehub-inline.js").write_text("\\n".join(inline))
+          PY
+          node --check /tmp/hirehub-inline.js
       - name: Prepare Capacitor project
         working-directory: worker-app
         run: |
