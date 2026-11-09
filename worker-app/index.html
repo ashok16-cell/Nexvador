@@ -48,7 +48,10 @@ body.worker-app{background:#f1f6f8}
 .worker-app #dashboard>.grid{gap:12px}
 @media(min-width:760px){.worker-app #nav{position:static;display:flex;background:transparent;border:0;box-shadow:none;padding:0}.worker-app #app{padding-bottom:0}}
 
-</style></head>
+
+/* NEXVADORAQ full-upgrade polish */
+.upgrade-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 10px}.upgrade-head h3{margin:0}.upgrade-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800}.upgrade-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:16px;box-shadow:0 8px 24px #18233b0a}.upgrade-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.upgrade-actions button{padding:9px 12px;font-size:12px}.upgrade-empty{border:1px dashed #cbd5e1;border-radius:16px;padding:24px;text-align:center;color:var(--muted);background:#fff}.upgrade-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.upgrade-kpis .metric{background:#fff;border:1px solid var(--line);border-radius:15px}.upgrade-kpis .metric b{font-size:24px}@media(max-width:600px){.upgrade-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.worker-app #nav{grid-template-columns:repeat(5,minmax(0,1fr))}</style></head>
 <body class='worker-app'>
 <header class="top"><div class="topin"><div class="brand">NEXVADORAQ <small>WORK • PAN INDIA</small></div><div id="userbox"><button class="ghost" onclick="showLogin()">Login / Join</button></div></div></header>
 <main class="wrap">
@@ -137,6 +140,17 @@ function val(id){return document.getElementById(id).value.trim()}function esc(s)
 function publicRender(){document.getElementById('publicjobs').innerHTML=data().jobs.slice(0,3).map(j=>'<article class="card"><span class="pill">'+esc(j.type)+'</span><h3>'+esc(j.title)+'</h3><p class="muted">'+esc(j.company)+' • '+esc(j.city)+'</p><b>'+esc(j.pay)+'</b></article>').join('')}
 publicRender();
 function restoreAuthSession(firebaseUser){if(authFlow||logoutBusy)return;if(!firebaseUser){user=null;stopLiveGPS();cloudUnsubs.forEach(fn=>{try{fn()}catch(e){}});cloudUnsubs=[];cloudData={jobs:[],apps:[]};document.getElementById('app').classList.add('hidden');document.getElementById('public').classList.remove('hidden');document.getElementById('userbox').innerHTML='<button class="ghost" onclick="showLogin()">Login / Join</button>';authBooted=true;return;}cloud.collection('users').doc(firebaseUser.uid).get().then(async snap=>{if(authFlow||logoutBusy)return;if(!snap.exists||snap.data().active!==true){auth.signOut();return;}user={...snap.data(),uid:firebaseUser.uid};if(user.role!=='worker'){await auth.signOut();return;}document.getElementById('public').classList.add('hidden');document.getElementById('app').classList.remove('hidden');startCloudSync();render();authBooted=true;}).catch(err=>{console.error('Session restore failed',err);document.getElementById('authStatus').textContent='Could not restore session. Check internet and try Login.';});}
+
+const SAVED_JOBS_KEY='nexvadoraq_saved_jobs_v1';
+function savedJobIds(){try{return JSON.parse(localStorage.getItem(SAVED_JOBS_KEY)||'[]')}catch(e){return[]}}
+function toggleSavedJob(id){let ids=savedJobIds();ids=ids.includes(String(id))?ids.filter(x=>x!==String(id)):[...ids,String(id)];localStorage.setItem(SAVED_JOBS_KEY,JSON.stringify(ids));if(page==='saved')view();else render();}
+function shareJob(id){const j=data().jobs.find(x=>String(x.id)===String(id));if(!j)return;const msg=[j.title,j.company,j.city,j.pay,j.desc].filter(Boolean).join(' | ');if(navigator.share){navigator.share({title:j.title,text:msg,url:location.href}).catch(()=>{});}else if(navigator.clipboard){navigator.clipboard.writeText(msg).then(()=>alert('Job details copied.')).catch(()=>alert(msg));}else alert(msg);}
+const nexOriginalWorkerView=view;
+view=function(){if(page==='saved'&&user&&user.role==='worker'){const ids=savedJobIds(),items=data().jobs.filter(j=>ids.includes(String(j.id)));document.getElementById('dashboard').innerHTML='<div class="upgrade-head"><h3>ನಿಮ್ಮ Saved Jobs</h3><span class="upgrade-chip">'+items.length+' Saved</span></div>'+(items.length?'<div class="grid">'+items.map(jobCard).join('')+'</div>':'<div class="upgrade-empty">ಇನ್ನೂ ಯಾವುದೇ ಕೆಲಸ Save ಮಾಡಿಲ್ಲ. Jobs ಪುಟದಲ್ಲಿ ☆ Save ಒತ್ತಿ.</div>');return;}nexOriginalWorkerView();};
+const nexOriginalWorkerRender=render;
+render=function(){nexOriginalWorkerRender();if(user&&user.role==='worker'){const nav=document.getElementById('nav');if(nav&&!nav.querySelector('[data-saved-nav]'))nav.insertAdjacentHTML('beforeend','<button data-saved-nav class="tab '+(page==='saved'?'active':'')+'" onclick="go(\\'saved\\')">☆<br>Saved</button>');}};
+jobCard=function(j){const id=String(j.id),saved=savedJobIds().includes(id);return '<article class="card"><div class="row"><span class="pill">'+esc(j.type||'Work')+'</span><span class="muted" style="font-size:12px">'+esc(j.city)+(j.state?', '+esc(j.state):'')+'</span></div><h3>'+esc(j.title)+'</h3><div class="muted">'+esc(j.company)+'</div><div class="jobmeta"><span>💰 '+esc(j.pay||'Pay as discussed')+'</span><span>🧰 '+esc(j.skills||'Skills as per role')+'</span></div><p class="muted">'+esc(j.desc||'')+'</p><div class="upgrade-actions">'+(user&&user.role==='worker'?'<button class="primary" onclick="apply(\\''+esc(id)+'\\')">Apply now</button><button class="ghost" onclick="toggleSavedJob(\\''+esc(id)+'\\')">'+(saved?'★ Saved':'☆ Save job')+'</button>':'')+'<button class="ghost" onclick="shareJob(\\''+esc(id)+'\\')">Share</button></div></article>';};
+
 auth.onAuthStateChanged(restoreAuthSession);
 if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('./service-worker.js').catch(()=>{}));}
 </script></body></html>
