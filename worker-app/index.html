@@ -161,7 +161,7 @@ function save(d){saveLocal(d);if(!fbAuth.currentUser||!me)return;
 let cloudUnsubs=[];
 async function startCloudSync(){cloudUnsubs.forEach(fn=>fn());cloudUnsubs=[];if(!fbAuth.currentUser||!me)return;
  const attach=(query,localKey,transform=x=>x)=>cloudUnsubs.push(query.onSnapshot(snap=>{const cloud=snap.docs.map(doc=>transform({id:doc.id,...doc.data()}));const d=db();const ids=new Set(cloud.map(x=>String(x.id)));d[localKey]=[...cloud,...(d[localKey]||[]).filter(x=>!ids.has(String(x.id))&&!String(x.id).startsWith('s'))];saveLocal(d);if(document.getElementById('dash')&&!document.getElementById('dash').classList.contains('hidden'))render()},err=>console.warn(localKey+' sync',err)));
- attach(fbDb.collection('jobs').where('status','==','published'),'jobs');
+ attach(fbDb.collection('jobs'),'jobs'); // Fetch all job documents; Find Jobs UI displays only published jobs.
  // Auto-publish this company's own existing pending jobs when the company signs in. Paused/rejected jobs stay unchanged.
  if(me.role==='company'){
   const owned=await fbDb.collection('jobs').where('ownerId','==',me.id).get().catch(()=>null);
