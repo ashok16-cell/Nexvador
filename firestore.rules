@@ -55,6 +55,15 @@ service cloud.firestore {
       allow update, delete: if admin();
     }
 
+    match /notifications/{id} {
+      allow create: if active()
+        && request.resource.data.recipientId is string
+        && request.resource.data.title is string
+        && request.resource.data.message is string
+        && request.resource.data.message.size() <= 500;
+      allow read, update, delete: if active() && resource.data.recipientId == request.auth.uid;
+    }
+
     match /locations/{uid} {
       allow create, update: if active() && request.auth.uid == uid
         && request.resource.data.uid == request.auth.uid;
