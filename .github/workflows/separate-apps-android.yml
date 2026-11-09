@@ -38,7 +38,7 @@ jobs:
             "version": "1.0.0",
             "private": true,
             "scripts": { "build:android": "cap sync android" },
-            "dependencies": { "@capacitor/core": "^6.2.0" },
+            "dependencies": { "@capacitor/core": "^6.2.0", "@capacitor/geolocation": "^6.0.2", "@capacitor/camera": "^6.0.2" },
             "devDependencies": { "@capacitor/cli": "^6.2.0", "@capacitor/android": "^6.2.0" }
           }
           EOF
@@ -52,6 +52,21 @@ jobs:
           EOF
           npm install
           npx cap add android
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/AndroidManifest.xml")
+          s=p.read_text()
+          marker='<application'
+          perms='''    <uses-permission android:name="android.permission.INTERNET" />
+              <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+              <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+              <uses-permission android:name="android.permission.CAMERA" />
+              <uses-feature android:name="android.hardware.camera" android:required="false" />
+          '''
+          if 'android.permission.ACCESS_FINE_LOCATION' not in s:
+              s=s.replace(marker,perms+'    '+marker,1)
+          p.write_text(s)
+          PY
           npx cap sync android
       - name: Set Android version code
         working-directory: worker-app/android
