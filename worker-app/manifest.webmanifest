@@ -1,7 +1,7 @@
 {
-  "name": "NEXVADORAQ HireHub",
-  "short_name": "HireHub",
-  "description": "Find work. Hire people.",
+  "name": "NEXVADORAQ Worker Platform",
+  "short_name": "NEXVADORAQ",
+  "description": "Find work, apply for jobs and hire workers across India.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
