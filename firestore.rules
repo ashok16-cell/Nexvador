@@ -1,78 +1,47 @@
 rules_version = '2';
 service cloud.firestore {
-  match /databases/{database}/documents {
-    function signedIn() { return request.auth != null; }
-    function profile(uid) { return get(/databases/$(database)/documents/users/$(uid)).data; }
-    function active() {
-      return signedIn()
-        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
-        && profile(request.auth.uid).active == true;
-    }
-    function worker() { return active() && profile(request.auth.uid).role == 'worker'; }
-    function company() { return active() && profile(request.auth.uid).role == 'company'; }
-    function admin() { return active() && profile(request.auth.uid).role == 'admin'; }
-
-    match /users/{uid} {
-      allow create: if signedIn() && request.auth.uid == uid
-        && request.resource.data.role in ['worker', 'company']
-        && request.resource.data.active == true;
-      allow read: if signedIn() && (request.auth.uid == uid || admin());
-      allow update: if (signedIn() && request.auth.uid == uid
-        && request.resource.data.role == resource.data.role
-        && request.resource.data.active == resource.data.active)
-        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']));
-      allow delete: if admin();
-    }
-
-    match /jobs/{jobId} {
-      allow read: if active() || admin();
-      allow create: if company() && request.resource.data.ownerId == request.auth.uid
-        && request.resource.data.status == 'published';
-      allow update: if (company() && resource.data.ownerId == request.auth.uid
-        && request.resource.data.ownerId == resource.data.ownerId
-        && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['title','company','city','state','type','pay','skills','desc','status','updatedAt']))
-        || (admin() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
-      allow delete: if (company() && resource.data.ownerId == request.auth.uid) || admin();
-    }
-
-    match /applications/{id} {
-      allow create: if worker() && request.resource.data.workerId == request.auth.uid
-        && request.resource.data.status == 'Applied';
-      allow read: if admin()
-        || (worker() && resource.data.workerId == request.auth.uid)
-        || (company() && resource.data.employerId == request.auth.uid);
-      allow update: if company() && resource.data.employerId == request.auth.uid
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])
-        && request.resource.data.status in ['Shortlisted','Rejected','Accepted','Completed'];
-      allow delete: if admin();
-    }
-
-    match /workerBookings/{id} {
-      allow create: if worker() && request.resource.data.workerId == request.auth.uid
-        && request.resource.data.status == 'Pending';
-      allow read: if admin() || (worker() && resource.data.workerId == request.auth.uid) || company();
-      allow update, delete: if admin();
-    }
-
-    match /notifications/{id} {
-      allow create: if active()
-        && request.resource.data.actorId == request.auth.uid
-        && request.resource.data.recipientId is string
-        && request.resource.data.recipientId != request.auth.uid
-        && request.resource.data.title is string
-        && request.resource.data.message is string
-        && request.resource.data.message.size() <= 500;
-      allow read, update, delete: if active() && resource.data.recipientId == request.auth.uid;
-    }
-
-    match /locations/{uid} {
-      allow create, update: if active() && request.auth.uid == uid
-        && request.resource.data.uid == request.auth.uid;
-      allow read: if admin() || company() || (signedIn() && request.auth.uid == uid);
-      allow delete: if admin() || (signedIn() && request.auth.uid == uid);
-    }
-
-    match /{document=**} { allow read, write: if false; }
+ match /databases/{database}/documents {
+  function signedIn(){return request.auth!=null;}
+  function hasProfile(uid){return exists(/databases/$(database)/documents/users/$(uid));}
+  function profile(uid){return get(/databases/$(database)/documents/users/$(uid)).data;}
+  function active(){return signedIn()&&hasProfile(request.auth.uid)&&profile(request.auth.uid).active==true;}
+  function worker(){return active()&&profile(request.auth.uid).role=='worker';}
+  function company(){return active()&&profile(request.auth.uid).role=='company';}
+  function admin(){return active()&&profile(request.auth.uid).role=='admin';}
+  match /users/{uid}{
+   allow create:if signedIn()&&request.auth.uid==uid&&request.resource.data.role in ['worker','company']&&request.resource.data.active==true&&request.resource.data.email is string&&request.resource.data.name is string;
+   allow read:if signedIn()&&(request.auth.uid==uid||admin());
+   allow update:if signedIn()&&request.auth.uid==uid&&request.resource.data.role==resource.data.role&&request.resource.data.active==resource.data.active&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','mobile','city','photoURL','skills','experience','about','preference','state','phone','email','updatedAt']);
+   allow update:if admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']);
+   allow delete:if admin();
   }
+  match /jobs/{id}{
+   allow read:if active()||admin();
+   allow create:if company()&&request.resource.data.ownerId==request.auth.uid&&request.resource.data.status=='published'&&request.resource.data.title is string&&request.resource.data.title.size()>0&&request.resource.data.title.size()<=120&&request.resource.data.city is string;
+   allow update:if (company()&&resource.data.ownerId==request.auth.uid&&request.resource.data.ownerId==resource.data.ownerId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','company','city','state','type','pay','skills','desc','details','status','updatedAt']))||(admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
+   allow delete:if (company()&&resource.data.ownerId==request.auth.uid)||admin();
+  }
+  match /applications/{id}{
+   allow create:if worker()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.status in ['Applied','applied']&&request.resource.data.title is string;
+   allow read:if admin()||(worker()&&resource.data.workerId==request.auth.uid)||(company()&&resource.data.employerId==request.auth.uid);
+   allow update:if company()&&resource.data.employerId==request.auth.uid&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Shortlisted','Rejected','Accepted','Completed','applied'];
+   allow delete:if admin();
+  }
+  match /workerBookings/{id}{
+   allow create:if worker()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.status in ['Pending','pending'];
+   allow read:if admin()||(worker()&&resource.data.workerId==request.auth.uid)||company();
+   allow update:if admin()||(company()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt'])&&request.resource.data.status in ['Confirmed','Rejected','Completed']);
+   allow delete:if admin();
+  }
+  match /notifications/{id}{
+   allow create:if active()&&request.resource.data.actorId==request.auth.uid&&request.resource.data.recipientId is string&&request.resource.data.recipientId!=request.auth.uid&&request.resource.data.title is string&&request.resource.data.message is string&&request.resource.data.message.size()<=500;
+   allow read,update,delete:if active()&&resource.data.recipientId==request.auth.uid;
+  }
+  match /locations/{uid}{
+   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
+   allow read:if admin()||company()||(worker()&&request.auth.uid==uid);
+   allow delete:if admin()||(worker()&&request.auth.uid==uid);
+  }
+  match /{document=**}{allow read,write:if false;}
+ }
 }
