@@ -77,8 +77,9 @@ document.getElementById('authForm').onsubmit=async e=>{
 
   if(action==='login'&&snap.exists){
    profile=snap.data();
-   if(profile.role!==selectedRole)throw new Error('ಈ Email '+String(profile.role||'').toUpperCase()+' account ಆಗಿದೆ. ಸರಿಯಾದ account ಆಯ್ಕೆಮಾಡಿ.');
-   if(selectedRole==='admin'&&!['super','staff'].includes(profile.adminLevel))throw new Error('Admin access level ಸೆಟ್ ಆಗಿಲ್ಲ. Super Admin ಸಂಪರ್ಕಿಸಿ.');
+   if(!['worker','company','customer','admin'].includes(profile.role))throw new Error('ಈ Account‌ಗೆ ಸರಿಯಾದ Role ಸೆಟ್ ಆಗಿಲ್ಲ. Support ಪರಿಶೀಲನೆ ಅಗತ್ಯ.');
+   if(profile.role!==selectedRole){role=profile.role;authSync();msg.textContent='ನಿಮ್ಮ Account type '+String(profile.role).toUpperCase()+' ಎಂದು ಪತ್ತೆಯಾಗಿದೆ. Login ಮುಂದುವರಿಯುತ್ತಿದೆ…';}
+   if(profile.role==='admin'&&!['super','staff'].includes(profile.adminLevel))throw new Error('Admin access level ಸೆಟ್ ಆಗಿಲ್ಲ. Super Admin ಸಂಪರ್ಕಿಸಿ.');
    if(profile.active!==true)throw new Error('ಈ Account ನಿಷ್ಕ್ರಿಯವಾಗಿದೆ. Support ಸಂಪರ್ಕಿಸಿ.');
   }else if(action==='login'&&!snap.exists){
    mode='repair';authSync();document.getElementById('email').value=email;
