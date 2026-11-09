@@ -59,7 +59,7 @@ service cloud.firestore {
     match /locations/{uid} {
       allow create, update: if active() && request.auth.uid == uid
         && request.resource.data.uid == request.auth.uid;
-      allow read: if admin();
+      allow read: if admin() || company() || (signedIn() && request.auth.uid == uid);
       allow delete: if admin() || (signedIn() && request.auth.uid == uid);
     }
 
