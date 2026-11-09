@@ -34,11 +34,11 @@ jobs:
           from pathlib import Path
           import re
           html=Path("index.html").read_text()
-          scripts=re.findall(r"<script(?:\\s[^>]*)?>([\\s\\S]*?)</script>", html, re.I)
+          scripts=re.findall(r"<script>(.*?)</script>", html, re.S)
           inline=[x for x in scripts if x.strip()]
           if not inline:
               raise SystemExit("No inline application script found")
-          Path("/tmp/hirehub-inline.js").write_text("\\n".join(inline))
+          Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
       - name: Prepare Capacitor project
