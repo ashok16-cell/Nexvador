@@ -41,7 +41,7 @@ jobs:
           inline=[x for x in scripts if x.strip()]
           if not inline:
               raise SystemExit("No inline application script found")
-          Path("/tmp/hirehub-inline.js").write_text("\\n".join(inline))
+          Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
           if grep -n "async async function" index.html; then exit 1; fi
