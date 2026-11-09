@@ -58,6 +58,12 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
+      - name: Verify Firebase CLI authentication
+        run: |
+          test -n "$GOOGLE_APPLICATION_CREDENTIALS"
+          test -f "$GOOGLE_APPLICATION_CREDENTIALS"
+          firebase projects:list --non-interactive
+
       - name: Deploy selected Firebase resources
         env:
           TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
