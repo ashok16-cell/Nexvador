@@ -38,9 +38,9 @@ service cloud.firestore {
    allow read,update,delete:if active()&&resource.data.recipientId==request.auth.uid;
   }
   match /locations/{uid}{
-   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
-   allow read:if admin()||company()||(worker()&&request.auth.uid==uid);
-   allow delete:if admin()||(worker()&&request.auth.uid==uid);
+   allow create,update:if (worker()||company())&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.role==profile(request.auth.uid).role&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
+   allow read:if admin()||company()||(worker()&&resource.data.role=='company')||(worker()&&request.auth.uid==uid);
+   allow delete:if admin()||(active()&&request.auth.uid==uid);
   }
   match /{document=**}{allow read,write:if false;}
  }
