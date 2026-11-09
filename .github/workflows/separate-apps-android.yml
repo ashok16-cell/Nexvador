@@ -1,26 +1,15 @@
-name: NEXVADORAQ Separate Worker and HR APKs
+name: NEXVADORAQ Single App APK
 
 on:
   workflow_dispatch:
   push:
     paths:
       - 'worker-app/**'
-      - 'hr-app/**'
       - '.github/workflows/separate-apps-android.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - app: worker-app
-            label: NEXVADORAQ-Worker
-            app_id: in.nexvadoraq.worker
-          - app: hr-app
-            label: NEXVADORAQ-HR
-            app_id: in.nexvadoraq.hr
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -39,7 +28,7 @@ jobs:
           yes | "$SDKMANAGER" --licenses
           "$SDKMANAGER" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
       - name: Prepare Capacitor project
-        working-directory: ${{ matrix.app }}
+        working-directory: worker-app
         run: |
           mkdir -p www
           cp index.html www/
@@ -53,10 +42,10 @@ jobs:
             "devDependencies": { "@capacitor/cli": "^6.2.0", "@capacitor/android": "^6.2.0" }
           }
           EOF
-          cat > capacitor.config.json <<EOF
+          cat > capacitor.config.json <<'EOF'
           {
-            "appId": "${{ matrix.app_id }}",
-            "appName": "${{ matrix.label }}",
+            "appId": "in.nexvadoraq.app",
+            "appName": "NEXVADORAQ",
             "webDir": "www",
             "bundledWebRuntime": false
           }
@@ -65,7 +54,7 @@ jobs:
           npx cap add android
           npx cap sync android
       - name: Set Android version code
-        working-directory: ${{ matrix.app }}/android
+        working-directory: worker-app/android
         env:
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
@@ -78,11 +67,11 @@ jobs:
           p.write_text(s)
           PY
       - name: Build debug APK
-        working-directory: ${{ matrix.app }}/android
+        working-directory: worker-app/android
         run: ./gradlew assembleDebug
-      - name: Upload APK
+      - name: Upload single NEXVADORAQ APK
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.label }}-APK
-          path: ${{ matrix.app }}/android/app/build/outputs/apk/debug/app-debug.apk
+          name: NEXVADORAQ-Single-App-APK
+          path: worker-app/android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
