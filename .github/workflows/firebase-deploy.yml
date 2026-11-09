@@ -34,6 +34,7 @@ jobs:
         run: |
           test -f firebase.json
           test -f firestore.rules
+          test -f storage.rules
           test -f worker-app/index.html
           python3 - <<'PY'
           from pathlib import Path
@@ -69,9 +70,9 @@ jobs:
           TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
         run: |
           case "$TARGET" in
-            hosting-and-rules) firebase deploy --project nexvadoraq-hirehub --only hosting,firestore:rules --non-interactive ;;
-            hosting-only) firebase deploy --project nexvadoraq-hirehub --only hosting --non-interactive ;;
-            rules-only) firebase deploy --project nexvadoraq-hirehub --only firestore:rules --non-interactive ;;
+            hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
+            hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
+            rules-only) firebase deploy --project nexvadoraq --only firestore:rules,storage --non-interactive ;;
             *) echo "::error::Unknown deploy target"; exit 1 ;;
           esac
 
