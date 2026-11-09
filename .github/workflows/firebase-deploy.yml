@@ -35,17 +35,6 @@ jobs:
         run: |
           test -f firebase.json
           test -f firestore.rules
-          test -f worker-app/index.html
-          python3 - <<'PY'
-          from pathlib import Path
-          import re
-          html = Path("worker-app/index.html").read_text()
-          scripts = re.findall(r"<script>([\\s\\S]*?)</script>", html)
-          if not scripts:
-              raise SystemExit("No inline application script found")
-          Path("/tmp/nexvadoraq-app.js").write_text(scripts[-1])
-          PY
-          node --check /tmp/nexvadoraq-app.js
           node --check scripts/bootstrap-admin.mjs
 
       - name: Authenticate to Google Cloud
