@@ -4,7 +4,8 @@ service cloud.firestore {
   function signedIn(){return request.auth!=null;}
   function hasProfile(uid){return exists(/databases/$(database)/documents/users/$(uid));}
   function profile(uid){return get(/databases/$(database)/documents/users/$(uid)).data;}
-  function active(){return signedIn()&&hasProfile(request.auth.uid)&&profile(request.auth.uid).active==true;}
+  // Backward-compatible for existing accounts created before the active flag was introduced; explicitly blocked accounts remain denied.
+  function active(){return signedIn()&&hasProfile(request.auth.uid)&&profile(request.auth.uid).active!=false;}
   function worker(){return active()&&profile(request.auth.uid).role=='worker';}
   function company(){return active()&&profile(request.auth.uid).role=='company';}
   function admin(){return active()&&profile(request.auth.uid).role=='admin'&&profile(request.auth.uid).adminLevel=='super';}
