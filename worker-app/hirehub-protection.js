@@ -53,7 +53,7 @@
   }
   function workerCard(b) {
     const accepted = assignedIds(b).includes(me.id);
-    const eligible = accepted && ["Confirmed", "Partially Filled", "Pending"].includes(b.status);
+    const eligible = accepted && ["Confirmed", "Partially Filled", "Pending", "InProgress"].includes(b.status);
     return '<article class="card" style="margin:12px 0"><div class="row"><b>' + escText(b.category) + "</b>" + statusPill(b.status) + '</div><p class="muted">' + escText(b.location) + " • " + escText(b.date) + " • " + escText(b.bookingType) + "</p><p>Pay offered: " + escText(b.pay || "As agreed in booking") + "</p>" +
       (eligible ? '<button class="primary" onclick="hireProtectionAgree(\'' + escText(b.id) + '\')">Accept digital agreement</button>' : "") +
       (accepted && b.status === "InProgress" ? '<p class="success">You are checked in. Customer will confirm completion.</p>' : "") +
