@@ -55,3 +55,6 @@ exports.sendHireHubPush = onDocumentCreated(
     }
   }
 );
+
+// Secure booking QR, payments, agreement and anti-bypass protection.
+Object.assign(exports, require("./hirehub-protection"));
