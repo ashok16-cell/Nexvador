@@ -166,6 +166,28 @@ body.admin-mode #panel details{margin-top:10px}
 body.admin-mode #panel summary{cursor:pointer;font-weight:750;color:#24566b}
 body.admin-mode #panel .admin-page-head{background:#fff;border:1px solid #e1e8ef;border-radius:15px;padding:17px 19px;box-shadow:0 3px 14px #10283f08}
 @media(max-width:600px){body.admin-mode .wrap{padding:12px}body.admin-mode #dash>.row{padding:13px}body.admin-mode #panel .hero{padding:19px}body.admin-mode #nav{border-radius:11px;padding:8px}body.admin-mode #nav .tab{padding:9px 12px;font-size:12px}}
+
+/* Super Admin premium workspace refinement */
+body.admin-mode .brand{font-size:18px;font-weight:900;letter-spacing:.6px;color:#087f89!important;padding:5px 2px 12px}
+body.admin-mode .brand small{display:block;font-size:10px;font-weight:750;letter-spacing:1.5px;margin-top:5px;color:#8292a4!important}
+body.admin-mode #dash>.row{position:relative;align-items:center;min-height:76px}
+body.admin-mode #dash>.row:after{content:'SECURE ADMIN WORKSPACE';display:block;font-size:9px;letter-spacing:1.25px;font-weight:850;color:#8a9aac;position:absolute;right:20px;bottom:9px}
+body.admin-mode #welcome{margin:0 0 3px}
+body.admin-mode #roleText{margin:0;text-transform:uppercase}
+body.admin-mode #nav{align-content:start}
+body.admin-mode #nav .tab{display:flex;align-items:center;gap:10px;min-height:42px}
+body.admin-mode #nav .tab:before{content:'›';font-size:19px;line-height:12px;opacity:.7}
+body.admin-mode #nav .tab.active:before{content:'◆';font-size:9px;opacity:1}
+body.admin-mode #panel .hero{position:relative;overflow:hidden}
+body.admin-mode #panel .hero:after{content:'N';position:absolute;right:18px;top:-34px;font-size:170px;line-height:1;font-weight:950;color:#ffffff0c;pointer-events:none}
+body.admin-mode #panel .hero button{position:relative;z-index:1}
+body.admin-mode #dashboardOverview .dash-stat{background:#fff;border:1px solid #e1e8ef;border-radius:14px;box-shadow:0 3px 14px #10283f08;padding:16px}
+body.admin-mode #dashboardOverview .dash-stat strong{color:#10283f}
+body.admin-mode #dashboardOverview .dash-stat small{color:#748397;font-weight:700}
+body.admin-mode #panel input,body.admin-mode #panel select,body.admin-mode #panel textarea{border-radius:9px;border-color:#dce5ec;background:#fff}
+body.admin-mode #panel button.danger{border:1px solid #f4d6d5}
+@media(min-width:900px){body.admin-mode #nav{display:flex;flex-direction:column;align-items:stretch;position:sticky;top:14px;overflow:visible;padding:10px;background:#fff;border:1px solid #e1e8ef;border-radius:14px}body.admin-mode #nav .tab{width:100%;text-align:left;justify-content:flex-start}body.admin-mode #panel{min-width:0}}
+@media(max-width:600px){body.admin-mode #dash>.row:after{display:none}body.admin-mode .brand{font-size:16px}body.admin-mode #dashboardOverview .dash-stat{padding:11px}}
 </style><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script></head><body><header class="top"><div class="row" style="margin:0"><div class="brand">NEXVADORAQ <small>WORK • PAN INDIA</small></div><div style="min-width:155px"><label for="appLanguage" style="font-size:11px;color:#d6edf0">App Language / ಭಾಷೆ</label><select id="appLanguage" onchange="setAppLanguage(this.value)" style="width:100%;padding:8px;border-radius:9px"><option value="kn">ಕನ್ನಡ + English</option><option value="hi">हिन्दी + English</option><option value="ta">தமிழ் + English</option><option value="te">తెలుగు + English</option><option value="ml">മലയാളം + English</option><option value="mr">मराठी + English</option><option value="gu">ગુજરાતી + English</option><option value="bn">বাংলা + English</option><option value="pa">ਪੰਜਾਬੀ + English</option><option value="ur">اردو + English</option><option value="or">ଓଡ଼ିଆ + English</option><option value="as">অসমীয়া + English</option><option value="sa">संस्कृतम् + English</option><option value="ks">कॉशुर + English</option><option value="sd">سنڌي + English</option><option value="kok">कोंकणी + English</option><option value="mni">মৈতৈলোন্ + English</option><option value="doi">डोगरी + English</option><option value="brx">बड़ो + English</option><option value="sat">संताली + English</option><option value="ne">नेपाली + English</option><option value="en">English + English</option></select></div></div></header><main class="wrap">
 <section id="landing" class="portal-home">
  <div class="portal-heading"><div class="portal-brandmark">N</div><div><h1>NEXVADORAQ <span>HIREHUB</span></h1><p>ನಿಮ್ಮ ಖಾತೆಗೆ ಲಾಗಿನ್ ಆಗಿ ಮುಂದುವರಿಯಿರಿ / Select your account</p></div></div>
