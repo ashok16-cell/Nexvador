@@ -11,3 +11,5 @@ Requirements:
 - Install the new APK and enable Notifications in the HireHub app. Push delivery cannot be verified until a real Android device token is registered.
 
 Deployment note: the Firebase GitHub workflow validates and deploys this function when a commit changes `functions/**`.
+
+Deploy workflow now fetches full commit history to identify changed Firebase resources.
