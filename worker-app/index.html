@@ -148,6 +148,16 @@ function applyAppLanguage(){
  const extras=document.querySelectorAll('#landing>.grid .card'),eh=[['ಕೆಲಸ ಹುಡುಕಿ','Find Work'],['ಕೆಲಸಗಾರರನ್ನು ನೇಮಿಸಿ','Hire Workers'],['Worker Requests','Worker Requests']],ep=[['ನಗರ, ಕೌಶಲ್ಯ ಮತ್ತು ಕೆಲಸದ ಪ್ರಕಾರದ ಆಧಾರದ ಮೇಲೆ ಅವಕಾಶಗಳನ್ನು ನೋಡಿ.','Browse opportunities by city, skill and job type.'],['ಕಂಪನಿಗಳು ಕೆಲಸ ಪ್ರಕಟಿಸಿ ಅರ್ಜಿಗಳನ್ನು ಪರಿಶೀಲಿಸಬಹುದು.','Companies can post jobs and review applications.'],['ಅಗತ್ಯವಿರುವ ಕೆಲಸಗಾರರ ಸಂಖ್ಯೆಯನ್ನು ತಿಳಿಸಿ ಮತ್ತು ಪ್ರತಿಕ್ರಿಯೆ ಪಡೆಯಿರಿ.','Share how many workers you need and receive responses.']];
  extras.forEach((card,i)=>{if(!eh[i])return;const x=card.querySelector('h3'),p=card.querySelector('p');if(x)x.textContent=bi(eh[i][0],eh[i][1]);if(p)p.textContent=bi(ep[i][0],ep[i][1])});
  const l=document.getElementById('log'),rg=document.getElementById('reg');if(l)l.textContent=bi(t.login,'Login');if(rg)rg.textContent=bi(t.register,'Create Account');
+ // Translate the current minimal portal landing page (not the retired .hero layout).
+ const portalIntro=document.querySelector('.portal-heading p');
+ if(portalIntro)portalIntro.textContent=bi(
+  code==='hi'?'अपने खाते में लॉगिन करके आगे बढ़ें':code==='ta'?'உங்கள் கணக்கில் உள்நுழைந்து தொடரவும்':code==='te'?'మీ ఖాతాలోకి లాగిన్ చేసి కొనసాగండి':code==='ml'?'നിങ്ങളുടെ അക്കൗണ്ടിൽ ലോഗിൻ ചെയ്ത് തുടരുക':code==='mr'?'तुमच्या खात्यात लॉगिन करून पुढे जा':code==='gu'?'તમારા એકાઉન્ટમાં લૉગિન કરીને આગળ વધો':code==='bn'?'আপনার অ্যাকাউন্টে লগইন করে এগিয়ে যান':code==='pa'?'ਆਪਣੇ ਖਾਤੇ ਵਿੱਚ ਲੌਗਇਨ ਕਰਕੇ ਅੱਗੇ ਵਧੋ':code==='ur'?'اپنے اکاؤنٹ میں لاگ اِن کرکے آگے بڑھیں':code==='ne'?'आफ्नो खातामा लगइन गरेर अगाडि बढ्नुहोस्':'ನಿಮ್ಮ ಖಾತೆಗೆ ಲಾಗಿನ್ ಆಗಿ ಮುಂದುವರಿಯಿರಿ',
+  'Select your account');
+ const portalRoles=document.querySelectorAll('.portal-role');
+ const roleTexts=[t.need,t.find,t.company];
+ portalRoles.forEach((card,i)=>{const p=card.querySelector('p');if(p&&roleTexts[i])p.textContent=bi(roleTexts[i],['Book workers for your needs','Find work and apply for jobs','Post jobs and manage hiring'][i])});
+ const admin=document.querySelector('.portal-admin button');if(admin)admin.textContent=bi(code==='hi'?'सुपर एडमिन लॉगिन':code==='ta'?'சூப்பர் நிர்வாகி உள்நுழைவு':code==='te'?'సూపర్ అడ్మిన్ లాగిన్':code==='ml'?'സൂപ്പർ അഡ്മിൻ ലോഗിൻ':code==='mr'?'सुपर अ‍ॅडमिन लॉगिन':code==='gu'?'સુપર એડમિન લૉગિન':code==='bn'?'সুপার অ্যাডমিন লগইন':code==='pa'?'ਸੁਪਰ ਐਡਮਿਨ ਲੌਗਇਨ':code==='ur'?'سپر ایڈمن لاگ اِن':code==='ne'?'सुपर एडमिन लगइन':'ಸೂಪರ್ ಅಡ್ಮಿನ್ ಲಾಗಿನ್','Super Admin Login');
+ const jobsHeading=document.querySelector('.portal-jobs>h2');if(jobsHeading)jobsHeading.innerHTML=bi(code==='hi'?'नवीनतम नौकरी के अवसर':code==='ta'?'சமீபத்திய வேலை வாய்ப்புகள்':code==='te'?'తాజా ఉద్యోగ అవకాశాలు':code==='ml'?'പുതിയ തൊഴിൽ അവസരങ്ങൾ':code==='mr'?'नवीन नोकरीच्या संधी':code==='gu'?'નવી નોકરીની તકો':code==='bn'?'সর্বশেষ চাকরির সুযোগ':code==='pa'?'ਨੌਕਰੀ ਦੇ ਨਵੇਂ ਮੌਕੇ':code==='ur'?'تازہ ترین ملازمت کے مواقع':code==='ne'?'नयाँ रोजगारीका अवसर':'ಹೊಸ ಉದ್ಯೋಗ ಅವಕಾಶಗಳು','Latest Jobs');
 }
 document.addEventListener('DOMContentLoaded',applyAppLanguage);
 const samples=[]; // Show only real employer-posted jobs; no fabricated demo vacancies.
