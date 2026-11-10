@@ -383,7 +383,7 @@ if(page==='requests'&&me.role==='worker'){
  // Resolve the device GPS and each booking address independently. Address pins remain
  // visible even when the worker has not granted GPS; KM distance needs both points.
  (async()=>{
-  const coords=await captureRequestLocation();
+  const coords=await captureRequestLocation().catch(err=>{console.warn('Worker GPS capture failed',err);return{}});
   const hasWorkerGPS=hasValidCoordinates(coords.requestLat,coords.requestLng);
   if(hasWorkerGPS)window.workerCurrentCoords={lat:Number(coords.requestLat),lng:Number(coords.requestLng)};
   const rows=window.nearbyWorkRows||[];
@@ -414,8 +414,8 @@ function getMyWorkerCoords(){if(hasValidCoordinates(window.workerCurrentCoords?.
 async function geocodeBookingLocation(place){
  const raw=String(place||'').trim();if(!raw)return null;
  const normalized=raw.toLowerCase();
- const knownPlaces=[{match:/vaddarahatti.*madhugiri|madhugiri.*vaddarahatti/,lat:13.63917,lng:77.29389,name:'Vaddarahatti, Madhugiri'}];
- const known=knownPlaces.find(x=>x.match.test(normalized));if(known)return{lat:known.lat,lng:known.lng,precision:'locality',matchedName:known.name};
+ const knownPlaces=[{match:/vaddarahatti.*madhugiri|madhugiri.*vaddarahatti/,lat:13.6667,lng:77.2000,name:'Madhugiri town (approx. for Vaddarahatti)'},{match:/\\bvaddarahatti\\b/,lat:13.6667,lng:77.2000,name:'Madhugiri town (approximate fallback)'}];
+ const known=knownPlaces.find(x=>x.match.test(normalized));if(known)return{lat:known.lat,lng:known.lng,precision:'nearest-town',matchedName:known.name};
  const key='nex_geo_v4_'+normalized;
  try{const cached=localStorage.getItem(key);if(cached){const v=JSON.parse(cached);if(hasValidCoordinates(v.lat,v.lng))return{lat:Number(v.lat),lng:Number(v.lng),precision:v.precision||'approximate',matchedName:v.matchedName||''}}}catch(e){}
  // Keep the complete village/post/taluk context together. Searching individual words
