@@ -4,6 +4,8 @@ on:
   push:
     paths:
       - 'firestore.rules'
+      - 'functions/**'
+      - 'firebase.json'
   workflow_dispatch:
     inputs:
       deploy_target:
@@ -14,6 +16,7 @@ on:
           - hosting-and-rules
           - hosting-only
           - rules-only
+          - functions-only
 
 permissions:
   contents: read
@@ -62,6 +65,7 @@ jobs:
             hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
             hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
             rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
+            functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
             *) echo "::error::Unknown deploy target"; exit 1 ;;
           esac
 
