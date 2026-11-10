@@ -48,7 +48,25 @@ body.hr-app{background:#f3f3fb}
 
 /* NEXVADORAQ full-upgrade polish */
 .upgrade-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:18px 0 10px}.upgrade-head h3{margin:0}.upgrade-chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800}.upgrade-card{border:1px solid var(--line);border-radius:18px;background:#fff;padding:16px;box-shadow:0 8px 24px #18233b0a}.upgrade-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.upgrade-actions button{padding:9px 12px;font-size:12px}.upgrade-empty{border:1px dashed #cbd5e1;border-radius:16px;padding:24px;text-align:center;color:var(--muted);background:#fff}.upgrade-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:14px 0}.upgrade-kpis .metric{background:#fff;border:1px solid var(--line);border-radius:15px}.upgrade-kpis .metric b{font-size:24px}@media(max-width:600px){.upgrade-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.hr-app #nav{grid-template-columns:repeat(4,minmax(0,1fr))}</style></head>
+.hr-app #nav{grid-template-columns:repeat(4,minmax(0,1fr))}
+/* NEXVADORAQ unified corporate HR / booking dashboard */
+#app:not(.hidden){background:transparent}
+#app:not(.hidden)>.row{background:#fff;border:1px solid #e1e8ef;border-radius:16px;padding:16px 19px;box-shadow:0 4px 16px #10283f08;margin:10px 0 14px}
+#app:not(.hidden) #hello{color:#10283f;font-size:21px;font-weight:850;margin:0}
+#app:not(.hidden) #roleline{color:#718096;font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;margin:4px 0 0}
+#app:not(.hidden) #nav{display:flex;gap:8px;overflow-x:auto;padding:10px;margin:12px 0 17px;background:#fff;border:1px solid #e1e8ef;border-radius:14px;box-shadow:0 3px 14px #10283f08;scrollbar-width:thin}
+#app:not(.hidden) #nav .tab{flex:0 0 auto;background:#f7f9fc;color:#536579;border:1px solid #e1e8ef;border-radius:10px;padding:10px 15px;font-weight:750;font-size:13px;white-space:nowrap}
+#app:not(.hidden) #nav .tab.active{background:#0b7f89;color:#fff;border-color:#0b7f89;box-shadow:0 4px 10px #0b7f8928}
+#app:not(.hidden) #dashboard{min-width:0}
+#app:not(.hidden) #dashboard .card,#app:not(.hidden) #dashboard .item,#app:not(.hidden) #dashboard .job,#app:not(.hidden) #dashboard .panel,#app:not(.hidden) #dashboard .locbox{background:#fff;border:1px solid #e1e8ef;border-radius:15px;box-shadow:0 4px 16px #10283f08;padding:16px;margin:0 0 13px}
+#app:not(.hidden) #dashboard h2,#app:not(.hidden) #dashboard h3{color:#10283f;letter-spacing:-.25px}
+#app:not(.hidden) #dashboard button{border-radius:10px;font-weight:750}
+#app:not(.hidden) #dashboard button.primary{background:#087f89;color:#fff}
+#app:not(.hidden) #dashboard input,#app:not(.hidden) #dashboard select,#app:not(.hidden) #dashboard textarea{border:1px solid #dce5ec;border-radius:10px;background:#fff;min-height:43px}
+#app:not(.hidden) #dashboard .muted{color:#718096}
+@media(min-width:850px){#app:not(.hidden) #nav{flex-wrap:wrap}}
+@media(max-width:600px){#app:not(.hidden)>.row{padding:13px}#app:not(.hidden) #nav{padding:8px;border-radius:11px}#app:not(.hidden) #nav .tab{padding:9px 12px;font-size:12px}}
+</style></head>
 <body class='hr-app'>
 <header class="top"><div class="topin"><div class="brand">NEXVADORAQ <small>WORK • PAN INDIA</small></div><div id="userbox"><button class="ghost" onclick="showLogin()">Login / Join</button></div></div></header>
 <main class="wrap">
