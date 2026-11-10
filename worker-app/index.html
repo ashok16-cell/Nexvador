@@ -467,7 +467,7 @@ function filterHireHubJobs(){const q=(document.getElementById('jobSearch')?.valu
 function job(j,canApply,canDelete=false){return '<article class="job"><span class="pill">'+esc(j.type)+'</span><h3>'+esc(j.title)+'</h3><b>'+esc(j.company)+'</b><p>'+esc(j.city)+' • '+esc(j.pay)+'</p><p class="muted">'+esc(j.details||'')+'</p>'+(canApply?'<button class="primary" onclick="apply(\''+j.id+'\')">Apply Now</button>':canDelete?'<button class="danger" onclick="removeJob(\''+j.id+'\')">Delete</button>':'')+'</article>'}
 async function setApplicationStatus(id,status){try{const target=(db().apps||[]).find(x=>String(x.id)===String(id));await fbDb.collection('applications').doc(String(id)).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(target?.workerId||target?.worker)await fbDb.collection('notifications').add({actorId:me.id,recipientId:target.workerId||target.worker,title:'Application status updated',message:'ನಿಮ್ಮ '+(target.title||'job')+' ಅರ್ಜಿಯ ಸ್ಥಿತಿ: '+status,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});const d=db();d.apps=(d.apps||[]).map(x=>String(x.id)===String(id)?{...x,status}:x);d.notifications=d.notifications||[];d.notifications.unshift({title:'Application updated',message:'Status: '+status,createdAt:Date.now()});saveLocal(d);render()}catch(err){alert('Status update failed: '+err.message)}}
 let notificationUnsub=null;let notificationSeenIds=new Set(),notificationFirstSnapshot=true;
-async async function enableBrowserNotifications(){
+async function enableBrowserNotifications(){
  const el=document.getElementById('notificationPermissionStatus');
  try{
   const cap=window.Capacitor;
