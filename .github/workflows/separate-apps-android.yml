@@ -92,7 +92,16 @@ jobs:
               s=s.replace(marker,perms+'    '+marker,1)
           p.write_text(s)
           PY
-          npx esbuild push-bridge.js --bundle --format=iife --outfile=www/push-bridge.js\n          python3 - <<'PY'\n          from pathlib import Path\n          p=Path('www/index.html')\n          s=p.read_text()\n          tag='<script src=\"./push-bridge.js\"></script>'\n          if tag not in s:\n              s=s.replace('</body>', tag+'</body>')\n          p.write_text(s)\n          PY
+          npx esbuild push-bridge.js --bundle --format=iife --outfile=www/push-bridge.js
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path("www/index.html")
+          s=p.read_text()
+          tag='<script src="./push-bridge.js"></script>'
+          if tag not in s:
+              s=s.replace("</body>", tag+"</body>")
+          p.write_text(s)
+          PY
           npx cap sync android
           # Optional Firebase Android app config enables native FCM delivery.
           if [ -n "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
