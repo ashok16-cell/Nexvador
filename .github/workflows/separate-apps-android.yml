@@ -49,7 +49,7 @@ jobs:
           mkdir -p www
           cp index.html www/
           cp firebase-config.js www/
-          printf "import { PushNotifications } from '@capacitor/push-notifications';\\nimport { BackgroundGeolocation } from '@capacitor-community/background-geolocation';\\nwindow.NexPushNotifications = PushNotifications;\\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\\n" > push-bridge.js
+          printf "import { PushNotifications } from '@capacitor/push-notifications';\nimport { BackgroundGeolocation } from '@capacitor-community/background-geolocation';\nwindow.NexPushNotifications = PushNotifications;\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\n" > push-bridge.js
           cat > package.json <<'EOF'
           {
             "name": "nexvadoraq-mobile",
@@ -65,7 +65,8 @@ jobs:
             "appId": "com.nexvadoraq.app",
             "appName": "NEXVADORAQ",
             "webDir": "www",
-            "bundledWebRuntime": false,\n            "android": { "useLegacyBridge": true }
+            "bundledWebRuntime": false,
+            "android": { "useLegacyBridge": true }
           }
           EOF
           npm install
@@ -79,7 +80,8 @@ jobs:
               <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
               <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
               <uses-permission android:name="android.permission.CAMERA" />
-              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />\n              <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+              <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+              <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
               <uses-permission android:name="android.permission.VIBRATE" />
               <uses-feature android:name="android.hardware.camera" android:required="false" />
           '''
@@ -98,11 +100,11 @@ jobs:
           app=Path("android/app/build.gradle")
           s=root.read_text()
           if "com.google.gms:google-services" not in s:
-              s=s.replace("dependencies {","dependencies {\\n        classpath 'com.google.gms:google-services:4.4.2'",1)
+              s=s.replace("dependencies {","dependencies {\n        classpath 'com.google.gms:google-services:4.4.2'",1)
           root.write_text(s)
           a=app.read_text()
           if "com.google.gms.google-services" not in a:
-              a += "\\napply plugin: 'com.google.gms.google-services'\\n"
+              a += "\napply plugin: 'com.google.gms.google-services'\n"
           app.write_text(a)
           PY
           fi
