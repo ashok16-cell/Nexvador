@@ -32,7 +32,8 @@ The repository root `firebase.json` points to `firestore.rules` and `storage.rul
 - Role-aware dashboard and profile
 - Company job posting and worker applications
 - Application status updates
-- Worker-initiated, opt-in live GPS sharing; company live-worker map
+- Worker-initiated, opt-in live GPS sharing; Android APK uses a persistent foreground location notification for background updates; browser preview remains foreground-only
+- FCM push delivery through a Firestore-triggered Firebase Cloud Function (requires Android Firebase app configuration and Blaze plan)
 - Profile photo upload to Firebase Storage (photo reads restricted to the account owner by the Storage rules)
 - Installable web-app manifest, home-screen icon, and a clear offline connection screen
 - Published Privacy Policy and Terms of Use pages
@@ -59,3 +60,14 @@ Use two different email accounts and two phones/browsers:
 - Add a privacy policy, terms, support contact, account/data deletion workflow, and moderation/abuse reporting before a public Play Store launch.
 - The current rules allow company accounts to read worker booking requests and live locations as required by the current company workflow. Review the business consent and privacy design before launch.
 - No APK or Play Store release is produced by deploying Firestore rules. Android packaging/signing and Play Console review are separate steps.
+
+## Android background GPS and Push Notification setup
+
+1. In Firebase Console → Project settings → Your apps, register an Android app with package ID `com.nexvadoraq.app`.
+2. Download that Android app's `google-services.json`. Base64-encode the file and add it to GitHub repository Settings → Secrets and variables → Actions as `GOOGLE_SERVICES_JSON_BASE64`. Do not commit the raw file or service-account credentials.
+3. Run the NEXVADORAQ HireHub Android workflow again and install its newly generated APK.
+4. In the Worker account, open Notifications and press **Enable Push Notifications**. Confirm Android notification permission and check that the device token is saved to `users/{uid}.fcmToken`.
+5. For background GPS, open Location Sharing and press Start. Grant precise location and the persistent notification permission. Keep sharing enabled only during an active job; use Stop Location to end it. Android may show a persistent notification while tracking.
+6. The `sendHireHubPush` Cloud Function sends an FCM push whenever a Firestore `notifications/{id}` document is created. Deploy it with the GitHub Firebase workflow using `functions-only`, or `firebase deploy --project nexvadoraq --only functions:sendHireHubPush`. Cloud Functions deployment requires the Firebase Blaze billing plan.
+
+Background tracking is subject to Android battery restrictions, user permissions, network coverage and device power management. Test on a physical Android phone with the screen locked for at least 15 minutes. It is not emergency tracking.
