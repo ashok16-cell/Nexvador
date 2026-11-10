@@ -130,7 +130,7 @@
 <div class="notice">Firebase-connected preview: sign-in, jobs, applications, worker locations and notifications use cloud services when Firebase Authentication, Firestore and Storage are enabled and deployed. Live GPS sharing is opt-in and currently works only while the app is active; do not use this preview for emergency or safety-critical tracking.</div></main><footer>© 2026 NEXVADORAQ • HireHub<br><a href="./privacy.html">Privacy Policy</a> · <a href="./terms.html">Terms of Use</a></footer>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script><script src="./firebase-config.js"></script><script src="./push-bridge.js"></script>
 <script>
-window.addEventListener('error',function(e){try{let p=document.getElementById('runtimeDiagnostic');if(!p){p=document.createElement('div');p.id='runtimeDiagnostic';p.style.cssText='position:fixed;z-index:999999;left:10px;right:10px;bottom:10px;background:#7f1d1d;color:white;padding:14px;border-radius:12px;font:14px system-ui;white-space:pre-wrap';document.body.appendChild(p)}p.textContent='App error: '+(e.message||'Unknown JavaScript error')+' | '+(e.filename||'')+':'+(e.lineno||'');}catch(_){ }});
+window.addEventListener('error',function(e){try{let p=document.getElementById('runtimeDiagnostic');if(!p){p=document.createElement('div');p.id='runtimeDiagnostic';p.style.cssText='position:fixed;z-index:999999;left:10px;right:10px;bottom:10px;background:#7f1d1d;color:white;padding:14px;border-radius:12px;font:14px system-ui;white-space:pre-wrap';document.body.appendChild(p)}p.textContent='App error: '+(e.message||'Unknown JavaScript error')+' | '+(e.filename||'')+':'+(e.lineno||'')+' col '+(e.colno||'');}catch(_){ }});
 window.addEventListener('unhandledrejection',function(e){try{let p=document.getElementById('runtimeDiagnostic');if(!p){p=document.createElement('div');p.id='runtimeDiagnostic';p.style.cssText='position:fixed;z-index:999999;left:10px;right:10px;bottom:10px;background:#7f1d1d;color:white;padding:14px;border-radius:12px;font:14px system-ui;white-space:pre-wrap';document.body.appendChild(p)}p.textContent='App async error: '+(e.reason?.message||String(e.reason||'Unknown error'));}catch(_){ }});
 const firebaseApp=firebase.initializeApp(window.NEXVADORAQ_FIREBASE);const fbAuth=firebase.auth();const fbDb=firebase.firestore();const fbStorage=firebase.storage();const authReady=fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err=>{console.warn('LOCAL auth persistence unavailable; trying SESSION:',err);return fbAuth.setPersistence(firebase.auth.Auth.Persistence.SESSION)}).catch(err=>{console.warn('SESSION auth persistence unavailable; using in-memory auth:',err);return fbAuth.setPersistence(firebase.auth.Auth.Persistence.NONE)});
 const KEY='nexvadoraq_local_v1',SK='nexvadoraq_session_v1';let role='worker',mode='register',me=null,page='jobs',locationWatchId=null,companyWatchId=null,authSubmitting=false,authStage='initializing';
@@ -383,26 +383,33 @@ if(page==='requests'&&me.role==='worker'){
  // Resolve the device GPS and each booking address independently. Address pins remain
  // visible even when the worker has not granted GPS; KM distance needs both points.
  (async()=>{
-  const coords=await captureRequestLocation().catch(err=>{console.warn('Worker GPS capture failed',err);return{}});
-  const hasWorkerGPS=hasValidCoordinates(coords.requestLat,coords.requestLng);
-  if(hasWorkerGPS)window.workerCurrentCoords={lat:Number(coords.requestLat),lng:Number(coords.requestLng)};
+  let workerPoint=null;
+  try{
+   const coords=await captureRequestLocation();
+   if(hasValidCoordinates(coords.requestLat,coords.requestLng))workerPoint={lat:Number(coords.requestLat),lng:Number(coords.requestLng)};
+  }catch(err){console.warn('Fresh worker GPS unavailable; checking saved live GPS',err)}
+  if(!workerPoint)workerPoint=getMyWorkerCoords();
+  if(workerPoint)window.workerCurrentCoords=workerPoint;
+  const hasWorkerGPS=!!workerPoint&&hasValidCoordinates(workerPoint.lat,workerPoint.lng);
   const rows=window.nearbyWorkRows||[];
   for(let i=0;i<rows.length;i++){
    const b=rows[i];
-   if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){
-    const point=await geocodeBookingLocation(b.location);
-    if(point){b.requestLat=point.lat;b.requestLng=point.lng;b._distancePrecision=point.precision||'approximate';b._matchedLocation=point.matchedName||''}
-   }
-   b._distance=hasWorkerGPS&&hasValidCoordinates(b.requestLat,b.requestLng)
-    ?workerDistanceKm(window.workerCurrentCoords,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null;
+   try{
+    if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){
+     const point=await geocodeBookingLocation(b.location);
+     if(point){b.requestLat=point.lat;b.requestLng=point.lng;b._distancePrecision=point.precision||'approximate';b._matchedLocation=point.matchedName||''}
+    }
+    b._distance=hasWorkerGPS&&hasValidCoordinates(b.requestLat,b.requestLng)
+     ?workerDistanceKm(workerPoint,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null;
+   }catch(rowError){console.warn('Distance calculation failed for booking',b.id,rowError);b._distance=null}
   }
   window.nearbyWorkRows=rows.sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);
-  drawNearbyWorkRequests();
+  await drawNearbyWorkRequests();
   if(!hasWorkerGPS){
    const note=document.getElementById('nearbyRequestList');
-   if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">ದೂರ (KM) ಲೆಕ್ಕಿಸಲು ನಿಮ್ಮ ಫೋನ್ GPS Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ. Job ಸ್ಥಳಗಳನ್ನು ಮ್ಯಾಪ್‌ನಲ್ಲಿ ಪ್ರತ್ಯೇಕವಾಗಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</p>');
+   if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">ದೂರ (KM) ಲೆಕ್ಕಿಸಲು GPS ON ಮಾಡಿ ಮತ್ತು Location Permission Allow ಮಾಡಿ. ಈಗಾಗಲೇ ಹಂಚಿಕೊಂಡಿರುವ Worker GPS ಇದ್ದರೆ ಅದನ್ನೂ ಬಳಸಲಾಗುತ್ತದೆ.</p>');
   }
- })().catch(err=>console.warn('Worker GPS/address resolution failed',err));
+ })().catch(err=>{console.error('Worker GPS/address resolution failed',err);const note=document.getElementById('nearbyRequestList');if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">Distance ಲೆಕ್ಕಾಚಾರದಲ್ಲಿ ತಾತ್ಕಾಲಿಕ ದೋಷ. ಪುಟ Refresh ಮಾಡಿ.</p>')});
 }
 if(page==='liveworkers'){renderCompanyLocations(el)}
 if(page==='companylocation'){renderCompanyLocationSelf(el)}
