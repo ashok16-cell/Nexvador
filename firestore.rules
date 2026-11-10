@@ -37,7 +37,7 @@ service cloud.firestore {
    allow delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
   }
   match /workerActiveBookings/{workerId}{
-   allow create:if worker()&&request.auth.uid==workerId&&request.resource.data.workerId==request.auth.uid&&request.resource.data.bookingId is string&&getAfter(/databases/$(database)/documents/workerBookings/$(request.resource.data.bookingId)).data.acceptedWorkerIds is list&&getAfter(/databases/$(database)/documents/workerBookings/$(request.resource.data.bookingId)).data.acceptedWorkerIds.hasAny([request.auth.uid])&&getAfter(/databases/$(database)/documents/workerBookings/$(request.resource.data.bookingId)).data.status in ['Pending','Confirmed'];
+   allow create:if worker()&&request.auth.uid==workerId&&request.resource.data.workerId==request.auth.uid&&request.resource.data.bookingId is string&&getAfter(/databases/$(database)/documents/workerBookings/$(request.resource.data.bookingId)).data.acceptedWorkerIds is list&&getAfter(/databases/$(database)/documents/workerBookings/$(request.resource.data.bookingId)).data.acceptedWorkerIds.hasAny([request.auth.uid])&&getAfter(/databases/$(database)/documents/workerBookings/$(request.resource.data.bookingId)).data.status in ['Pending','Partially Filled','Confirmed'];
    allow read:if signedIn()&&request.auth.uid==workerId||admin();
    allow delete:if admin()||(company()&&get(/databases/$(database)/documents/workerBookings/$(resource.data.bookingId)).data.companyId==request.auth.uid&&get(/databases/$(database)/documents/workerBookings/$(resource.data.bookingId)).data.status in ['Completed','Rejected']);
   }
