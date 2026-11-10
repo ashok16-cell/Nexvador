@@ -643,7 +643,7 @@ async function geocodeBookingLocation(place){
 function currentDevicePosition(){return captureRequestLocation().then(p=>hasValidCoordinates(p.requestLat,p.requestLng)?{lat:Number(p.requestLat),lng:Number(p.requestLng)}:null).catch(()=>null)}
 function distanceKm(a,b){const rad=x=>x*Math.PI/180,R=6371,dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng),v=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(v))}
 function workerDistanceKm(a,b){return distanceKm(a,b)}
-async function captureRequestLocation(){const nativeGeo=window.Capacitor?.Plugins?.Geolocation;const valid=p=>{const lat=Number(p?.coords?.latitude??p?.latitude),lng=Number(p?.coords?.longitude??p?.longitude);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180?{requestLat:lat,requestLng:lng}:null};if(nativeGeo?.getCurrentPosition){try{if(nativeGeo.requestPermissions){const permission=await nativeGeo.requestPermissions();if(permission.location!=='granted'&&permission.coarseLocation!=='granted')throw new Error('Location permission not granted')}const p=await nativeGeo.getCurrentPosition({enableHighAccuracy:true,timeout:12000});const coords=valid(p);if(coords)return coords}catch(err){console.warn('Native booking GPS unavailable; trying browser GPS',err)}}if(navigator.geolocation){try{const p=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:60000}));return valid(p)||{}}catch(err){console.warn('Browser booking GPS unavailable',err)}}return {}}
+async function captureRequestLocation(){const nativeGeo=(window.NexGeolocation||window.Capacitor?.Plugins?.Geolocation);const valid=p=>{const lat=Number(p?.coords?.latitude??p?.latitude),lng=Number(p?.coords?.longitude??p?.longitude);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180?{requestLat:lat,requestLng:lng}:null};if(nativeGeo?.getCurrentPosition){try{if(nativeGeo.requestPermissions){const permission=await nativeGeo.requestPermissions();if(permission.location!=='granted'&&permission.coarseLocation!=='granted')throw new Error('Location permission not granted')}const p=await nativeGeo.getCurrentPosition({enableHighAccuracy:true,timeout:12000});const coords=valid(p);if(coords)return coords}catch(err){console.warn('Native booking GPS unavailable; trying browser GPS',err)}}if(navigator.geolocation){try{const p=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:60000}));return valid(p)||{}}catch(err){console.warn('Browser booking GPS unavailable',err)}}return {}}
 async function drawNearbyWorkRequests(){
  const rows=window.nearbyWorkRows||[],pos=getMyWorkerCoords(),radius=Number(document.getElementById('requestRadius')?.value||25);
  const filtered=rows.filter(x=>!pos||x._distance===null||x._distance<=radius);
@@ -722,7 +722,7 @@ async function startWorkerLocation(){
  if(locationWatchId!==null)return;
  try{const lock=await fbDb.collection('workerActiveBookings').doc(me.id).get();window.activeWorkerBookingId=lock.exists?String(lock.data().bookingId||''):'';}catch(err){console.warn('Active booking lookup failed; using cached bookings',err)}
  const status=document.getElementById('locStatus');if(status)status.innerHTML='<b>Getting your location…</b><p>Live GPS sharing ಅನ್ನು ನೀವು Stop ಮಾಡುವವರೆಗೆ ಹಂಚಲಾಗುತ್ತದೆ. Background tracking ಗೆ Location ಮತ್ತು Notification ಅನುಮತಿ ಬೇಕಾಗಬಹುದು.</p>';
- const nativeGeo=window.Capacitor?.Plugins?.Geolocation;
+ const nativeGeo=(window.NexGeolocation||window.Capacitor?.Plugins?.Geolocation);
  const bg=window.NexBackgroundGeolocation;
  try{
   if(window.Capacitor?.isNativePlatform?.()&&bg?.addWatcher){
@@ -746,7 +746,7 @@ async function startWorkerLocation(){
  }catch(err){locationWatchId=null;alert('Background GPS ಆರಂಭಿಸಲು ಆಗಲಿಲ್ಲ: '+err.message)}
 }
 async function stopWorkerLocation(){
- if(locationWatchId!==null){const watch=String(locationWatchId);if(watch.startsWith('background:')){const id=watch.slice(11);window.NexBackgroundGeolocation?.removeWatcher({id}).catch(console.warn)}else if(watch.startsWith('native:')){const id=watch.slice(7);window.Capacitor?.Plugins?.Geolocation?.clearWatch({id}).catch(console.warn)}else navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
+ if(locationWatchId!==null){const watch=String(locationWatchId);if(watch.startsWith('background:')){const id=watch.slice(11);window.NexBackgroundGeolocation?.removeWatcher({id}).catch(console.warn)}else if(watch.startsWith('native:')){const id=watch.slice(7);(window.NexGeolocation||window.Capacitor?.Plugins?.Geolocation)?.clearWatch({id}).catch(console.warn)}else navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
  const d=db();d.liveLocations=(d.liveLocations||[]).filter(x=>x.worker!==me.id);save(d);
  if(fbAuth.currentUser){
   const activeIds=new Set((d.bookings||[]).filter(b=>((Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))||b.workerId===me.id)).map(b=>String(b.id)));if(window.activeWorkerBookingId)activeIds.add(String(window.activeWorkerBookingId));
