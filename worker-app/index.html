@@ -375,15 +375,35 @@ if(page==='mybookings'&&me.role==='customer'){
 }
 if(page==='booking'&&me.role==='company'){el.innerHTML='<div class="card"><h3>Request Workers</h3><p class="muted">Create a manpower request for your company. Your request is saved to your account.</p><form id="bf"><div class="field"><label>Worker category</label><select id="bc"><option>General Helper</option><option>Housekeeping</option><option>Security Staff</option><option>Loading & Unloading</option><option>Factory Worker</option><option>Warehouse Staff</option><option>Event Staff</option><option>Driver</option></select></div><div class="field"><label>Booking / Work Period</label><select id="btype"><option value="Daily">Daily</option><option value="Hourly">Hourly</option><option value="Monthly">Monthly</option></select></div><div class="field"><label>Number of workers</label><input id="bn" type="number" min="1" max="500" value="1" required></div><div class="field"><label>Duration (months, for Monthly)</label><input id="bmonths" type="number" min="1" max="24" value="1"></div><div class="field"><label>Work location</label><input id="bl" value="'+esc(me.city)+'" required></div><div class="field"><label>Required date</label><input id="bd" type="date" required></div><div class="field"><label>Shift / timing</label><input id="bt" placeholder="e.g. 9 AM – 6 PM"></div><div class="field"><label>Payment offered</label><input id="bp" placeholder="e.g. ₹700 per day"></div><div class="field"><label>Additional details</label><textarea id="bnote" placeholder="Skills, uniform, experience, etc."></textarea></div><button class="primary">Submit Worker Request</button></form></div><h3>My Worker Requests</h3>'+(d.bookings.filter(b=>b.companyId===me.id).map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.count)+' workers • '+esc(b.location)+'<p>'+esc(b.bookingType||'Daily')+(b.bookingType==='Monthly'?' • '+esc(b.durationMonths||1)+' month(s)':'')+' • '+esc(b.date)+' • '+esc(b.status||'Pending')+'</p>'+'<p>Workers Accepted: '+esc(b.acceptedCount|| (b.workerId?1:0))+' / '+esc(b.count||1)+'</p>'+(Array.isArray(b.acceptedWorkers)&&b.acceptedWorkers.length?'<p><b>Accepted Workers:</b> '+b.acceptedWorkers.map(w=>esc(w.workerName||w.workerId||'Worker')).join(', ')+'</p>':'')+'<p class="muted">Status: '+esc(b.status||'Pending')+'</p>'+(b.status==='Confirmed'?'<p>Worker ಸ್ವೀಕರಿಸಿದ ತಕ್ಷಣ ಕೆಲಸ Confirm ಆಗಿದೆ.</p>':'')+((b.acceptedWorkerIds||(b.workerId?[b.workerId]:[])).length?'<div class="locbox"><b>Accepted Workers • Live GPS</b>'+((b.acceptedWorkerIds||(b.workerId?[b.workerId]:[])).map(wid=>'<p id="companyTrack_'+esc(b.id)+'_'+esc(wid)+'">'+esc((b.acceptedWorkers||[]).find(w=>w.workerId===wid)?.workerName||wid)+' • GPS waiting…</p>').join(''))+'</div>':'')+'</div>').join('')||'<p class="muted">No requests yet.</p>');watchCompanyBookingTracking(d.bookings);document.getElementById('bf').onsubmit=async e=>{e.preventDefault();const type=document.getElementById('btype').value;const months=type==='Monthly'?Number(document.getElementById('bmonths').value):0;const geo=await captureRequestLocation();const x={...geo,companyId:me.id,companyName:me.name,category:document.getElementById('bc').value,count:Number(document.getElementById('bn').value),bookingType:type,durationMonths:months,location:document.getElementById('bl').value.trim(),date:document.getElementById('bd').value,shift:document.getElementById('bt').value.trim(),pay:document.getElementById('bp').value.trim(),details:document.getElementById('bnote').value.trim(),status:'Pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await fbDb.collection('workerBookings').add(x);alert('Worker request submitted successfully.');}catch(err){alert('Request submit ಆಗಲಿಲ್ಲ: '+authError(err))}}}
 if(page==='requests'&&me.role==='worker'){
- const myPos=getMyWorkerCoords(),allOpen=(d.openBookings||[]).map(b=>({...b,_distance:myPos&&hasValidCoordinates(b.requestLat,b.requestLng)?workerDistanceKm(myPos,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null})).sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);
- const mine=d.bookings||[],online=!!myPos;
- el.innerHTML='<div class="row"><div><h3>Nearby Work • Captain Mode</h3><span class="pill">'+(online?'ONLINE':'OFFLINE')+'</span></div><button onclick="go(\'location\')">'+(online?'Manage GPS':'Go Online')+'</button></div><p class="muted">ನಿಮ್ಮ GPS ON ಇದ್ದರೆ 25 km ಒಳಗಿನ ಕೆಲಸಗಳು ಮೊದಲು ಕಾಣುತ್ತವೆ. ಕೆಲಸ ಸ್ವೀಕರಿಸಲು Accept ಒತ್ತಿ.</p><div class="field"><label>Search radius</label><select id="requestRadius" onchange="drawNearbyWorkRequests()"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="1000" selected>All available</option></select></div><div id="requestMap" class="mapcanvas"></div><div id="nearbyRequestList"></div><h3>My Accepted Work</h3><div id="acceptedWorkList">'+(mine.length?mine.map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.location)+'<p>'+esc(b.date)+' • '+esc(b.acceptedCount||1)+' / '+esc(b.count||1)+' Workers • <span class="pill">'+esc(b.status)+'</span></p></div>').join(''):'<p class="muted">ಇನ್ನೂ ಕೆಲಸ ಸ್ವೀಕರಿಸಿಲ್ಲ.</p>')+'</div>';
- window.nearbyWorkRows=allOpen;
+ const mine=d.bookings||[],baseRows=(d.openBookings||[]).map(b=>({...b,_distance:null}));
+ const online=!!getMyWorkerCoords();
+ el.innerHTML='<div class="row"><div><h3>Nearby Work • Captain Mode</h3><span class="pill">'+(online?'ONLINE':'OFFLINE')+'</span></div><button onclick="go(\\'location\\')">'+(online?'Manage GPS':'Go Online')+'</button></div><p class="muted">GPS ON ಇದ್ದರೆ ಕೆಲಸದ ಸ್ಥಳದಿಂದ ನಿಮ್ಮ ದೂರ KM ನಲ್ಲಿ ಕಾಣುತ್ತದೆ. Village, Post, Taluk ಮತ್ತು City ವಿಳಾಸಗಳನ್ನು ಸಹ ಸ್ಥಳವಾಗಿ ಗುರುತಿಸಲು ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತದೆ.</p><div class="field"><label>Search radius</label><select id="requestRadius" onchange="drawNearbyWorkRequests()"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="1000" selected>All available</option></select></div><div id="requestMap" class="mapcanvas"></div><div id="nearbyRequestList"></div><h3>My Accepted Work</h3><div id="acceptedWorkList">'+(mine.length?mine.map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.location)+'<p>'+esc(b.date)+' • '+esc(b.acceptedCount||1)+' / '+esc(b.count||1)+' Workers • <span class="pill">'+esc(b.status)+'</span></p></div>').join(''):'<p class="muted">ಇನ್ನೂ ಕೆಲಸ ಸ್ವೀಕರಿಸಿಲ್ಲ.</p>')+'</div>';
+ window.nearbyWorkRows=baseRows;
  drawNearbyWorkRequests();
- // Get a one-time device position for distance calculation without enabling continuous sharing.
- captureRequestLocation().then(async coords=>{if(!coords||!hasValidCoordinates(coords.requestLat,coords.requestLng)){const note=document.getElementById('nearbyRequestList');if(note)note.insertAdjacentHTML('afterbegin','<p class="muted">ನಿಮ್ಮ GPS ಸಿಗಲಿಲ್ಲ. Location ON ಮಾಡಿ Permission Allow ಮಾಡಿ.</p>');return}window.workerCurrentCoords={lat:Number(coords.requestLat),lng:Number(coords.requestLng)};const rows=window.nearbyWorkRows||[];for(let i=0;i<rows.length;i++){const b=rows[i];if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){const point=await geocodeBookingLocation(b.location);if(point){b.requestLat=point.lat;b.requestLng=point.lng;b._distancePrecision=point.precision||'approximate';b._matchedLocation=point.matchedName||''}}if(i<rows.length-1)await new Promise(resolve=>setTimeout(resolve,1100))}window.nearbyWorkRows=rows.map(b=>({...b,_distance:hasValidCoordinates(b.requestLat,b.requestLng)?workerDistanceKm(window.workerCurrentCoords,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null})).sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);drawNearbyWorkRequests()}).catch(err=>console.warn('One-time worker location unavailable',err));
+ // Resolve the device GPS and each booking address independently. Address pins remain
+ // visible even when the worker has not granted GPS; KM distance needs both points.
+ (async()=>{
+  const coords=await captureRequestLocation();
+  const hasWorkerGPS=hasValidCoordinates(coords.requestLat,coords.requestLng);
+  if(hasWorkerGPS)window.workerCurrentCoords={lat:Number(coords.requestLat),lng:Number(coords.requestLng)};
+  const rows=window.nearbyWorkRows||[];
+  for(let i=0;i<rows.length;i++){
+   const b=rows[i];
+   if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){
+    const point=await geocodeBookingLocation(b.location);
+    if(point){b.requestLat=point.lat;b.requestLng=point.lng;b._distancePrecision=point.precision||'approximate';b._matchedLocation=point.matchedName||''}
+   }
+   b._distance=hasWorkerGPS&&hasValidCoordinates(b.requestLat,b.requestLng)
+    ?workerDistanceKm(window.workerCurrentCoords,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null;
+  }
+  window.nearbyWorkRows=rows.sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);
+  drawNearbyWorkRequests();
+  if(!hasWorkerGPS){
+   const note=document.getElementById('nearbyRequestList');
+   if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">ದೂರ (KM) ಲೆಕ್ಕಿಸಲು ನಿಮ್ಮ ಫೋನ್ GPS Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ. Job ಸ್ಥಳಗಳನ್ನು ಮ್ಯಾಪ್‌ನಲ್ಲಿ ಪ್ರತ್ಯೇಕವಾಗಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</p>');
+  }
+ })().catch(err=>console.warn('Worker GPS/address resolution failed',err));
 }
-
 if(page==='liveworkers'){renderCompanyLocations(el)}
 if(page==='companylocation'){renderCompanyLocationSelf(el)}
 if(page==='nearbycompanies'){renderNearbyCompanies(el)}
@@ -393,20 +413,38 @@ function hasValidCoordinates(lat,lng){if(lat===null||lat===undefined||lng===null
 function getMyWorkerCoords(){if(hasValidCoordinates(window.workerCurrentCoords?.lat,window.workerCurrentCoords?.lng))return{lat:Number(window.workerCurrentCoords.lat),lng:Number(window.workerCurrentCoords.lng)};const d=db(),p=(d.liveLocations||[]).find(x=>x.worker===me.id&&x.sharing!==false&&hasValidCoordinates(x.lat,x.lng));return p?{lat:Number(p.lat),lng:Number(p.lng)}:null}
 async function geocodeBookingLocation(place){
  const raw=String(place||'').trim();if(!raw)return null;
- const key='nex_geo_v2_'+raw.toLowerCase();
- try{const cached=localStorage.getItem(key);if(cached){const v=JSON.parse(cached);if(hasValidCoordinates(v.lat,v.lng))return{lat:Number(v.lat),lng:Number(v.lng),precision:v.precision||'address'}}}catch(e){}
- const clean=raw.replace(/\b(village|vill|post|p[o.]?o[.]?|taluk|taluka|hobli|district|dist)\b/gi,' ').replace(/[,-]+/g,' ').replace(/\s+/g,' ').trim();
- const parts=[raw,clean,...raw.split(',').map(x=>x.trim()),...clean.split(' ').filter(x=>x.length>2)];
- const queries=[...new Set([raw+', Karnataka, India',clean+', Karnataka, India',...parts.filter(x=>x.length>2).map(x=>x+', Karnataka, India'),...parts.filter(x=>x.length>2).map(x=>x+', India')])];
- for(const query of queries){try{
-  const response=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&addressdetails=1&q='+encodeURIComponent(query),{headers:{Accept:'application/json'}});
-  if(response.ok){const data=await response.json(),v=data?.[0];if(v&&hasValidCoordinates(v.lat,v.lon)){
-   const address=v.address||{},precision=(address.village||address.hamlet||address.suburb||address.neighbourhood)?'locality':(address.town||address.city||address.county)?'nearest-town':'approximate';
-   const point={lat:Number(v.lat),lng:Number(v.lon),precision,matchedName:v.display_name||query};
-   localStorage.setItem(key,JSON.stringify(point));return point;
-  }}
- }catch(err){console.warn('Location lookup failed',query,err)}
- await new Promise(resolve=>setTimeout(resolve,1100));
+ const key='nex_geo_v3_'+raw.toLowerCase().replace(/\\s+/g,' ').trim();
+ try{const cached=localStorage.getItem(key);if(cached){const v=JSON.parse(cached);if(hasValidCoordinates(v.lat,v.lng))return{lat:Number(v.lat),lng:Number(v.lng),precision:v.precision||'approximate',matchedName:v.matchedName||''}}}catch(e){}
+ // Keep the complete village/post/taluk context together. Searching individual words
+ // can incorrectly geocode a person's name or a generic word as a different place.
+ const clean=raw.replace(/\\b(village|vill|post|p\\.?o\\.?|taluk|taluka|hobli|district|dist)\\b/gi,' ').replace(/[,-]+/g,' ').replace(/\\s+/g,' ').trim();
+ const queries=[...new Set([
+  raw+', Madhugiri, Tumakuru, Karnataka, India',
+  raw+', Tumakuru, Karnataka, India',
+  raw+', Karnataka, India',
+  clean+', Madhugiri, Tumakuru, Karnataka, India',
+  clean+', Tumakuru, Karnataka, India',
+  clean+', Karnataka, India',
+  clean+', India'
+ ].filter(q=>q&&q.length>8))];
+ for(const query of queries){
+  try{
+   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&countrycodes=in&q='+encodeURIComponent(query);
+   const response=await fetch(url,{headers:{Accept:'application/json'}});
+   if(response.ok){
+    const data=await response.json();
+    const candidates=(Array.isArray(data)?data:[]).filter(v=>hasValidCoordinates(v.lat,v.lon));
+    const v=candidates.find(x=>/Karnataka/i.test(x.display_name||'')&&(/Madhugiri|Tumakuru|Tumkur/i.test(x.display_name||'')||/village|hamlet|town|municipality/i.test(x.type||'')))||candidates[0];
+    if(v){
+     const address=v.address||{};
+     const precision=(address.village||address.hamlet||address.suburb||address.neighbourhood)?'locality':(address.town||address.city||address.county)?'nearest-town':'approximate';
+     const point={lat:Number(v.lat),lng:Number(v.lon),precision,matchedName:v.display_name||query};
+     try{localStorage.setItem(key,JSON.stringify(point))}catch(e){}
+     return point;
+    }
+   }
+  }catch(err){console.warn('Location lookup failed',query,err)}
+  await new Promise(resolve=>setTimeout(resolve,1100));
  }
  return null;
 }
