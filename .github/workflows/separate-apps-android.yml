@@ -41,6 +41,7 @@ jobs:
           Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
+          node --check hirehub-protection.js
       - name: Prepare Capacitor project
         working-directory: worker-app
         env:
