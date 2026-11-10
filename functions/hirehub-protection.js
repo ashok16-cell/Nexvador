@@ -24,7 +24,8 @@ async function getBooking(bookingId) {
   return { ref, data: snap.data() };
 }
 function workerIds(b) {
-  const ids = Array.isArray(b.acceptedWorkerIds) ? b.acceptedWorkerIds : (b.workerId ? [b.workerId] : []);
+  const ids = [...(Array.isArray(b.acceptedWorkerIds) ? b.acceptedWorkerIds : []), ...(b.workerId ? [b.workerId] : [])];
+  // Include the legacy primary worker ID as well as multi-worker assignments.
   return [...new Set(ids.filter(x => typeof x === "string" && x.length > 0))];
 }
 function isRequester(uid, b) { return b.requesterId === uid || b.customerId === uid || b.companyId === uid; }
@@ -282,3 +283,5 @@ exports.sanitizeLegacyBookingContacts = onCall({ region: REGION }, async request
   if (writes) await batch.commit();
   return { sanitized: changed };
 });
+
+// v1.1: security-reviewed QR, payment and attendance transitions.
