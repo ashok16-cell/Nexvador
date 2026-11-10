@@ -421,9 +421,14 @@ async function startWorkerLocation(){
   locationWatchId=navigator.geolocation.watchPosition(handleWorkerPosition,err=>{locationWatchId=null;const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location not available</b><p>'+esc(err.message)+' — GPS permission Allow ಮಾಡಿ, Location ON ಮಾಡಿ.</p>'},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
  }catch(err){locationWatchId=null;alert('Location permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+err.message)}
 }
-function stopWorkerLocation(){
+async function stopWorkerLocation(){
  if(locationWatchId!==null){if(String(locationWatchId).startsWith('native:')){const id=String(locationWatchId).slice(7);window.Capacitor?.Plugins?.Geolocation?.clearWatch({id}).catch(console.warn)}else navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
- const d=db();d.liveLocations=(d.liveLocations||[]).filter(x=>x.worker!==me.id);save(d);if(fbAuth.currentUser)fbDb.collection('locations').doc(me.id).delete().catch(err=>console.warn('Could not clear cloud location',err));
+ const d=db();d.liveLocations=(d.liveLocations||[]).filter(x=>x.worker!==me.id);save(d);
+ if(fbAuth.currentUser){
+  const active=(d.bookings||[]).filter(b=>((Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))||b.workerId===me.id));
+  await Promise.all(active.map(b=>fbDb.collection('workerBookings').doc(String(b.id)).collection('tracking').doc(me.id).delete().catch(err=>console.warn('Could not stop booking GPS',err))));
+  await fbDb.collection('locations').doc(me.id).delete().catch(err=>console.warn('Could not clear cloud location',err));
+ }
  const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location sharing: OFF</b><p>ನಿಮ್ಮ location ಹಂಚಿಕೆ ನಿಲ್ಲಿಸಲಾಗಿದೆ.</p>';
  const details=document.getElementById('myLocDetails');if(details)details.innerHTML='';
 }
