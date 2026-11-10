@@ -57,6 +57,20 @@ service cloud.firestore {
    allow read:if admin()||company()||(staffCan('users'))||(worker()&&resource.data.role=='company')||(worker()&&request.auth.uid==uid);
    allow delete:if admin()||(active()&&request.auth.uid==uid);
   }
+  match /conversations/{conversationId}{
+   function isParticipant(){return signedIn()&&resource.data.participants is list&&resource.data.participants.hasAny([request.auth.uid]);}
+   allow create:if signedIn()&&request.resource.data.participants is list&&request.resource.data.participants.size()==2&&request.resource.data.participants.hasAny([request.auth.uid])&&request.resource.data.createdBy==request.auth.uid;
+   allow read:if isParticipant();
+   allow update:if isParticipant()&&request.resource.data.participants==resource.data.participants&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastMessage','updatedAt','names']);
+   allow delete:if false;
+   match /messages/{messageId}{
+    function parentConversation(){return get(/databases/$(database)/documents/conversations/$(conversationId)).data;}
+    function participant(){return signedIn()&&parentConversation().participants is list&&parentConversation().participants.hasAny([request.auth.uid]);}
+    allow read:if participant();
+    allow create:if participant()&&request.resource.data.senderId==request.auth.uid&&request.resource.data.text is string&&request.resource.data.text.size()>0&&request.resource.data.text.size()<=2000;
+    allow update,delete:if false;
+   }
+  }
   match /{document=**}{allow read,write:if false;}
  }
 }
