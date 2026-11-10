@@ -413,11 +413,14 @@ function hasValidCoordinates(lat,lng){if(lat===null||lat===undefined||lng===null
 function getMyWorkerCoords(){if(hasValidCoordinates(window.workerCurrentCoords?.lat,window.workerCurrentCoords?.lng))return{lat:Number(window.workerCurrentCoords.lat),lng:Number(window.workerCurrentCoords.lng)};const d=db(),p=(d.liveLocations||[]).find(x=>x.worker===me.id&&x.sharing!==false&&hasValidCoordinates(x.lat,x.lng));return p?{lat:Number(p.lat),lng:Number(p.lng)}:null}
 async function geocodeBookingLocation(place){
  const raw=String(place||'').trim();if(!raw)return null;
- const key='nex_geo_v3_'+raw.toLowerCase().replace(/\\s+/g,' ').trim();
+ const normalized=raw.toLowerCase().replace(/\\s+/g,' ').trim();
+ const knownPlaces=[{match:/vaddarahatti.*madhugiri|madhugiri.*vaddarahatti/,lat:13.63917,lng:77.29389,name:'Vaddarahatti, Madhugiri'}];
+ const known=knownPlaces.find(x=>x.match.test(normalized));if(known)return{lat:known.lat,lng:known.lng,precision:'locality',matchedName:known.name};
+ const key='nex_geo_v4_'+normalized;
  try{const cached=localStorage.getItem(key);if(cached){const v=JSON.parse(cached);if(hasValidCoordinates(v.lat,v.lng))return{lat:Number(v.lat),lng:Number(v.lng),precision:v.precision||'approximate',matchedName:v.matchedName||''}}}catch(e){}
  // Keep the complete village/post/taluk context together. Searching individual words
  // can incorrectly geocode a person's name or a generic word as a different place.
- const clean=raw.replace(/\\b(village|vill|post|p\\.?o\\.?|taluk|taluka|hobli|district|dist)\\b/gi,' ').replace(/[,-]+/g,' ').replace(/\\s+/g,' ').trim();
+ const clean=raw.replace(/\b(village|vill|post|p\.?o\.?|taluk|taluka|hobli|district|dist)\b/gi,' ').replace(/[,-]+/g,' ').replace(/\s+/g,' ').trim();
  const queries=[...new Set([
   raw+', Madhugiri, Tumakuru, Karnataka, India',
   raw+', Tumakuru, Karnataka, India',
