@@ -502,20 +502,30 @@ async function startWorkerLocation(){
  if(!fbAuth.currentUser){alert('ದಯವಿಟ್ಟು ಮತ್ತೆ Login ಮಾಡಿ.');return}
  if(locationWatchId!==null)return;
  try{const lock=await fbDb.collection('workerActiveBookings').doc(me.id).get();window.activeWorkerBookingId=lock.exists?String(lock.data().bookingId||''):'';}catch(err){console.warn('Active booking lookup failed; using cached bookings',err)}
- const status=document.getElementById('locStatus');if(status)status.innerHTML='<b>Getting your location…</b><p>ದಯವಿಟ್ಟು GPS permission Allow ಮಾಡಿ.</p>';
+ const status=document.getElementById('locStatus');if(status)status.innerHTML='<b>Getting your location…</b><p>Live GPS sharing ಅನ್ನು ನೀವು Stop ಮಾಡುವವರೆಗೆ ಹಂಚಲಾಗುತ್ತದೆ. Background tracking ಗೆ Location ಮತ್ತು Notification ಅನುಮತಿ ಬೇಕಾಗಬಹುದು.</p>';
  const nativeGeo=window.Capacitor?.Plugins?.Geolocation;
+ const bg=window.NexBackgroundGeolocation;
  try{
+  if(window.Capacitor?.isNativePlatform?.()&&bg?.addWatcher){
+   const id=await bg.addWatcher({backgroundTitle:'NEXVADORAQ • Live GPS',backgroundMessage:'ನಿಮ್ಮ Live Location ಹಂಚಲಾಗುತ್ತಿದೆ. ನಿಲ್ಲಿಸಲು HireHub ತೆರೆಯಿರಿ ಮತ್ತು Stop Location ಒತ್ತಿರಿ.',requestPermissions:true,stale:false,distanceFilter:15},(location,error)=>{
+    if(error){const el=document.getElementById('locStatus');if(el)el.innerHTML='<b>Background GPS error</b><p>'+esc(error.message||String(error))+'</p>';return}
+    if(location)handleWorkerPosition({coords:{latitude:location.latitude,longitude:location.longitude,accuracy:location.accuracy}});
+   });
+   locationWatchId='background:'+id;
+   if(status)status.innerHTML='<b><span class="locdot"></span>Background Live GPS ON</b><p>App minimize / screen lock ಆದರೂ Android foreground tracking notification ಮೂಲಕ location update ಆಗುತ್ತದೆ. Stop ಒತ್ತಿದಾಗ ಮಾತ್ರ ನಿಲ್ಲುತ್ತದೆ.</p>';
+   return;
+  }
   if(nativeGeo?.requestPermissions){const permission=await nativeGeo.requestPermissions();if(permission.location!=='granted'&&permission.coarseLocation!=='granted'){alert('Location permission Allow ಮಾಡಿ.');return}}
   if(nativeGeo?.watchPosition){
-   const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:20000,maximumAge:5000},(pos,err)=>{if(err){const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location error</b><p>'+esc(err.message)+'</p>';return}if(pos)handleWorkerPosition(pos)});
+   const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:20000,maximumAge:5000},(pos,err)=>{if(err){const el=document.getElementById('locStatus');if(el)el.innerHTML='<b>Location error</b><p>'+esc(err.message)+'</p>';return}if(pos)handleWorkerPosition(pos)});
    locationWatchId='native:'+id;return;
   }
   if(!navigator.geolocation){alert('ಈ ಸಾಧನದಲ್ಲಿ GPS location support ಇಲ್ಲ.');return}
-  locationWatchId=navigator.geolocation.watchPosition(handleWorkerPosition,err=>{locationWatchId=null;const s=document.getElementById('locStatus');if(s)s.innerHTML='<b>Location not available</b><p>'+esc(err.message)+' — GPS permission Allow ಮಾಡಿ, Location ON ಮಾಡಿ.</p>'},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
- }catch(err){locationWatchId=null;alert('Location permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+err.message)}
+  locationWatchId=navigator.geolocation.watchPosition(handleWorkerPosition,err=>{locationWatchId=null;const el=document.getElementById('locStatus');if(el)el.innerHTML='<b>Location not available</b><p>'+esc(err.message)+' — GPS permission Allow ಮಾಡಿ, Location ON ಮಾಡಿ.</p>'},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+ }catch(err){locationWatchId=null;alert('Background GPS ಆರಂಭಿಸಲು ಆಗಲಿಲ್ಲ: '+err.message)}
 }
 async function stopWorkerLocation(){
- if(locationWatchId!==null){if(String(locationWatchId).startsWith('native:')){const id=String(locationWatchId).slice(7);window.Capacitor?.Plugins?.Geolocation?.clearWatch({id}).catch(console.warn)}else navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
+ if(locationWatchId!==null){const watch=String(locationWatchId);if(watch.startsWith('background:')){const id=watch.slice(11);window.NexBackgroundGeolocation?.removeWatcher({id}).catch(console.warn)}else if(watch.startsWith('native:')){const id=watch.slice(7);window.Capacitor?.Plugins?.Geolocation?.clearWatch({id}).catch(console.warn)}else navigator.geolocation.clearWatch(locationWatchId);locationWatchId=null}
  const d=db();d.liveLocations=(d.liveLocations||[]).filter(x=>x.worker!==me.id);save(d);
  if(fbAuth.currentUser){
   const activeIds=new Set((d.bookings||[]).filter(b=>((Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))||b.workerId===me.id)).map(b=>String(b.id)));if(window.activeWorkerBookingId)activeIds.add(String(window.activeWorkerBookingId));
