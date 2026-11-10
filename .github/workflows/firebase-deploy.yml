@@ -71,7 +71,7 @@ jobs:
           if [ "$EVENT_NAME" = "push" ]; then
             CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
             if echo "$CHANGED" | grep -Eq '^(functions/|firebase.json$)'; then
-              firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive
+              echo "::notice::Cloud Functions deployment skipped on push. Enable Cloud Functions, Cloud Build and Artifact Registry APIs, set Razorpay secrets, then run workflow_dispatch with functions-only."
             fi
             if echo "$CHANGED" | grep -q '^firestore.rules$'; then
               firebase deploy --project nexvadoraq --only firestore:rules --non-interactive
