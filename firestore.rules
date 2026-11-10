@@ -20,8 +20,8 @@ service cloud.firestore {
   }
   match /jobs/{id}{
    allow read:if active()||admin()||staffCan('jobs');
-   allow create:if company()&&request.resource.data.ownerId==request.auth.uid&&request.resource.data.status=='published'&&request.resource.data.title is string&&request.resource.data.title.size()>0&&request.resource.data.title.size()<=120&&request.resource.data.city is string;
-   allow update:if (company()&&resource.data.ownerId==request.auth.uid&&request.resource.data.ownerId==resource.data.ownerId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','company','city','state','type','pay','skills','desc','details','status','updatedAt']))||(admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
+   allow create:if company()&&request.resource.data.ownerId==request.auth.uid&&request.resource.data.status=='pending'&&request.resource.data.title is string&&request.resource.data.title.size()>0&&request.resource.data.title.size()<=120&&request.resource.data.city is string;
+   allow update:if (company()&&resource.data.ownerId==request.auth.uid&&request.resource.data.ownerId==resource.data.ownerId&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['title','company','city','state','type','pay','skills','desc','details','updatedAt'])&&request.resource.data.status==resource.data.status)||(company()&&resource.data.ownerId==request.auth.uid&&request.resource.data.ownerId==resource.data.ownerId&&request.resource.data.status=='paused'&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']))||(admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt']));
    allow delete:if (company()&&resource.data.ownerId==request.auth.uid)||admin();
   }
   match /applications/{id}{
