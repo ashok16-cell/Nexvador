@@ -12,7 +12,7 @@ if (!uid) throw new Error("Set ADMIN_UID to the existing Firebase Authentication
 
 initializeApp({
   credential: applicationDefault(),
-  projectId: "nexvadoraq-hirehub",
+  projectId: "nexvadoraq",
 });
 
 const auth = getAuth();
