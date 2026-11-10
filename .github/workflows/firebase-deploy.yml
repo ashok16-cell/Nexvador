@@ -59,16 +59,28 @@ jobs:
 
       - name: Deploy selected Firebase resources
         env:
-          TARGET: ${{ github.event_name == 'push' && 'rules-only' || inputs.deploy_target || 'hosting-and-rules' }}
+          TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
         run: |
-          case "$TARGET" in
-            hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
-            hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
-            rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
-            functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
-            *) echo "::error::Unknown deploy target"; exit 1 ;;
-          esac
-
+          if [ "$EVENT_NAME" = "push" ]; then
+            CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
+            if echo "$CHANGED" | grep -Eq '^(functions/|firebase.json$)'; then
+              firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive
+            fi
+            if echo "$CHANGED" | grep -q '^firestore.rules$'; then
+              firebase deploy --project nexvadoraq --only firestore:rules --non-interactive
+            fi
+          else
+            case "$TARGET" in
+              hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
+              hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
+              rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
+              functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
+              *) echo "::error::Unknown deploy target"; exit 1 ;;
+            esac
+          fi
       - name: Remove temporary credentials
         if: always()
         run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
