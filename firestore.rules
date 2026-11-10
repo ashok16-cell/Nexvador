@@ -18,6 +18,11 @@ service cloud.firestore {
    allow update:if admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']);
    allow delete:if admin();
   }
+  match /workerPublicProfiles/{uid}{
+   allow read:if active();
+   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.userId==request.auth.uid&&request.resource.data.keys().hasOnly(['userId','name','photoURL','city','area','pincode','mainSkill','secondSkill','skills','experience','dailyWage','hourlyRate','workingDays','workingTime','workRange','availability','updatedAt']);
+   allow delete:if worker()&&request.auth.uid==uid||admin();
+  }
   match /jobs/{id}{
    allow read:if active()||admin()||staffCan('jobs');
    allow create:if company()&&request.resource.data.ownerId==request.auth.uid&&request.resource.data.status=='published'&&request.resource.data.approvalRequired==false&&request.resource.data.title is string&&request.resource.data.title.size()>0&&request.resource.data.title.size()<=120&&request.resource.data.city is string;
