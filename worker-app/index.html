@@ -357,7 +357,7 @@ if(page==='requests'&&me.role==='worker'){
 if(page==='liveworkers'){renderCompanyLocations(el)}
 if(page==='companylocation'){renderCompanyLocationSelf(el)}
 if(page==='nearbycompanies'){renderNearbyCompanies(el)}
-if(page==='notifications'){const notes=(db().notifications||[]).slice().reverse();el.innerHTML='<h3>Notifications</h3><div class="card"><b>Browser Alerts</b><p class="muted">ಹೊಸ booking, application ಮತ್ತು ಕೆಲಸದ update ಗಳಿಗೆ browser notification ಪಡೆಯಲು ಅನುಮತಿ ನೀಡಿ. App ತೆರೆದಿರುವಾಗ live alerts ಬರುತ್ತವೆ.</p><button class="primary" onclick="enableBrowserNotifications()">Enable Notifications</button><p id="notificationPermissionStatus" class="muted">Permission: '+(('Notification'in window)?Notification.permission:'Not supported')+'</p></div>'+(notes.length?notes.map(n=>'<div class="item"><div class="row"><b>'+esc(n.title||'Update')+'</b><span class="pill">'+(n.read?'Read':'New')+'</span></div><p>'+esc(n.message||'')+'</p><small class="muted">'+esc(n.createdAt?new Date(n.createdAt).toLocaleString():'Just now')+'</small>'+(n.read?'':' <button onclick="markNotificationRead(\''+String(n.id).replace(/'/g,'')+'\')">Mark read</button>')+'</div>').join(''):'<p class="muted">ಇನ್ನೂ Notifications ಇಲ್ಲ.</p>')}
+if(page==='notifications'){const notes=(db().notifications||[]).slice().reverse();el.innerHTML='<h3>Notifications</h3><div class="card"><b>Android Push Notifications</b><p class="muted">Android App ಮೂಲಕ ಹೊಸ Booking, Worker Accept ಮತ್ತು ಇತರ updates ಗೆ Push Notification ಪಡೆಯಿರಿ.</p><button class="primary" onclick="enableBrowserNotifications()">Enable Push Notifications</button><p id="notificationPermissionStatus" class="muted">ಸ್ಥಿತಿ ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…</p></div>'+(notes.length?notes.map(n=>'<div class="item"><div class="row"><b>'+esc(n.title||'Update')+'</b><span class="pill">'+(n.read?'Read':'New')+'</span></div><p>'+esc(n.message||'')+'</p><small class="muted">'+esc(n.createdAt?new Date(n.createdAt).toLocaleString():'Just now')+'</small>'+(n.read?'':' <button onclick="markNotificationRead(\''+String(n.id).replace(/'/g,'')+'\')">Mark read</button>')+'</div>').join(''):'<p class="muted">ಇನ್ನೂ Notifications ಇಲ್ಲ.</p>')}
 if(page==='profile'){el.innerHTML='<div class="card"><h3>My Profile</h3><img class="profile-photo" id="profilePhoto" src="'+(me.photoURL||'https://placehold.co/120x120?text=Photo')+'"><div class="field"><label>Profile Photo (Camera / Gallery)</label><input id="photoInput" type="file" accept="image/*" capture="user"></div><p><b>Name:</b> '+esc(me.name)+'</p><p><b>Email:</b> '+esc(me.email)+'</p><p><b>Mobile:</b> '+esc(me.mobile||'Not added')+'</p><p><b>City:</b> '+esc(me.city)+'</p><p><b>Account:</b> '+esc(me.role)+'</p><p id="photoStatus" class="muted">Photo optional. Choose camera or gallery.</p></div>';document.getElementById('photoInput').onchange=ev=>{const file=ev.target.files[0];if(!file)return;const img=new Image(),url=URL.createObjectURL(file);img.onload=async()=>{const c=document.createElement('canvas'),scale=Math.min(1,360/Math.max(img.width,img.height));c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);const data=c.toDataURL('image/jpeg',.72);try{const blob=await (await fetch(data)).blob();const ref=fbStorage.ref('profilePhotos/'+me.id+'/profile.jpg');await ref.put(blob,{contentType:'image/jpeg'});const photoURL=await ref.getDownloadURL();await fbDb.collection('users').doc(me.id).update({photoURL});me.photoURL=photoURL;document.getElementById('profilePhoto').src=photoURL;document.getElementById('photoStatus').textContent='Photo uploaded securely'}catch(err){document.getElementById('photoStatus').textContent='Upload failed: '+err.message}URL.revokeObjectURL(url)};img.src=url}}}
 function getMyWorkerCoords(){const d=db(),p=(d.liveLocations||[]).find(x=>x.worker===me.id&&x.sharing!==false);return p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))?{lat:Number(p.lat),lng:Number(p.lng)}:null}
 function distanceKm(a,b){const rad=x=>x*Math.PI/180,R=6371,dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng),v=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(v))}
@@ -467,32 +467,37 @@ function filterHireHubJobs(){const q=(document.getElementById('jobSearch')?.valu
 function job(j,canApply,canDelete=false){return '<article class="job"><span class="pill">'+esc(j.type)+'</span><h3>'+esc(j.title)+'</h3><b>'+esc(j.company)+'</b><p>'+esc(j.city)+' • '+esc(j.pay)+'</p><p class="muted">'+esc(j.details||'')+'</p>'+(canApply?'<button class="primary" onclick="apply(\''+j.id+'\')">Apply Now</button>':canDelete?'<button class="danger" onclick="removeJob(\''+j.id+'\')">Delete</button>':'')+'</article>'}
 async function setApplicationStatus(id,status){try{const target=(db().apps||[]).find(x=>String(x.id)===String(id));await fbDb.collection('applications').doc(String(id)).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(target?.workerId||target?.worker)await fbDb.collection('notifications').add({actorId:me.id,recipientId:target.workerId||target.worker,title:'Application status updated',message:'ನಿಮ್ಮ '+(target.title||'job')+' ಅರ್ಜಿಯ ಸ್ಥಿತಿ: '+status,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});const d=db();d.apps=(d.apps||[]).map(x=>String(x.id)===String(id)?{...x,status}:x);d.notifications=d.notifications||[];d.notifications.unshift({title:'Application updated',message:'Status: '+status,createdAt:Date.now()});saveLocal(d);render()}catch(err){alert('Status update failed: '+err.message)}}
 let notificationUnsub=null;let notificationSeenIds=new Set(),notificationFirstSnapshot=true;
-async function enableBrowserNotifications(){
+async async function enableBrowserNotifications(){
  const el=document.getElementById('notificationPermissionStatus');
  try{
-  const nativePush=window.Capacitor?.Plugins?.PushNotifications;
-  if(nativePush){
+  const cap=window.Capacitor;
+  const nativePush=cap?.Plugins?.PushNotifications||(typeof cap?.registerPlugin==='function'?cap.registerPlugin('PushNotifications'):null);
+  if(cap?.isNativePlatform?.()&&nativePush){
    const permission=await nativePush.requestPermissions();
-   if(permission.receive!=='granted'){if(el)el.textContent='Notification permission: denied';alert('Android Settings ನಲ್ಲಿ NEXVADORAQ Notifications Allow ಮಾಡಿ.');return}
+   if(permission.receive!=='granted'){if(el)el.textContent='ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. Android Settings → Apps → NEXVADORAQ → Notifications → Allow ಮಾಡಿ.';return}
    if(!window.__nexPushListeners){
     window.__nexPushListeners=true;
     await nativePush.addListener('registration',async token=>{
-     try{if(fbAuth.currentUser)await fbDb.collection('users').doc(fbAuth.currentUser.uid).set({fcmToken:token.value,fcmTokenUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});if(el)el.textContent='Android push notifications enabled'}
-     catch(err){console.warn('FCM token save failed',err)}
+     try{
+      const uid=fbAuth.currentUser?.uid;
+      if(uid)await fbDb.collection('users').doc(uid).set({fcmToken:token.value,fcmTokenUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      if(el)el.textContent='Push ಸಕ್ರಿಯವಾಗಿದೆ. Device token Firebase ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ.';
+     }catch(err){console.error('FCM token save failed',err);if(el)el.textContent='Token ಉಳಿಸಲು ಆಗಲಿಲ್ಲ: '+(err.code||err.message)}
     });
-    await nativePush.addListener('registrationError',err=>{console.warn('Push registration error',err);if(el)el.textContent='Push registration failed'});
-    await nativePush.addListener('pushNotificationReceived',n=>{if(el)el.textContent='New notification received';if(n?.title)alert((n.title||'NEXVADORAQ')+'\\n'+(n.body||''))});
+    await nativePush.addListener('registrationError',err=>{console.error('FCM registration error',err);if(el)el.textContent='FCM Registration error: '+(err.message||JSON.stringify(err))});
+    await nativePush.addListener('pushNotificationReceived',n=>{if(el)el.textContent='ಹೊಸ Push Notification ಬಂದಿದೆ';if(n?.title)alert((n.title||'NEXVADORAQ')+'\\n'+(n.body||''))});
     await nativePush.addListener('pushNotificationActionPerformed',()=>{window.focus();go('notifications')});
    }
    await nativePush.register();
-   if(el)el.textContent='Android notification permission granted; registering device…';
+   if(el)el.textContent='Android permission OK. FCM device token ಪಡೆಯಲಾಗುತ್ತಿದೆ…';
    return;
   }
-  if(!('Notification'in window)){alert('ಈ Browser ನಲ್ಲಿ notification support ಇಲ್ಲ.');return}
-  const p=await Notification.requestPermission();
-  if(el)el.textContent=p==='granted'?'Browser alerts ON':'Permission: '+p;
-  if(p==='granted')alert('Browser notifications ON ಆಯಿತು. App ತೆರೆದಿರುವಾಗ alerts ಬರುತ್ತವೆ.');
- }catch(e){if(el)el.textContent='Notification setup failed';alert('Notification permission ಪಡೆಯಲು ಆಗಲಿಲ್ಲ: '+e.message)}
+  if(el)el.textContent='Native Push Plugin ಲಭ್ಯವಿಲ್ಲ. ದಯವಿಟ್ಟು ಇತ್ತೀಚಿನ Android APK ಬಳಸಿ; Website/browser ನಲ್ಲಿ FCM registration ಆಗುವುದಿಲ್ಲ.';
+  if(!cap?.isNativePlatform?.()&&'Notification'in window){
+   const p=await Notification.requestPermission();
+   if(el)el.textContent=p==='granted'?'Browser alerts ಮಾತ್ರ ಸಕ್ರಿಯ (background FCM ಅಲ್ಲ).':'Browser permission: '+p;
+  }
+ }catch(e){console.error('Push setup failed',e);if(el)el.textContent='Push setup ವಿಫಲ: '+(e.code||e.message);alert('Push Notification setup ಆಗಲಿಲ್ಲ: '+e.message)}
 }
 function showAppNotification(n){
  if(!('Notification'in window)||Notification.permission!=='granted'||document.visibilityState==='visible')return;
