@@ -47,6 +47,7 @@ jobs:
           mkdir -p www
           cp index.html www/
           cp firebase-config.js www/
+          printf "import { PushNotifications } from '@capacitor/push-notifications';\\nwindow.NexPushNotifications = PushNotifications;\\n" > push-bridge.js
           cat > package.json <<'EOF'
           {
             "name": "nexvadoraq-mobile",
@@ -54,7 +55,7 @@ jobs:
             "private": true,
             "scripts": { "build:android": "cap sync android" },
             "dependencies": { "@capacitor/core": "^6.2.0", "@capacitor/geolocation": "^6.0.2", "@capacitor/camera": "^6.0.2", "@capacitor/push-notifications": "^6.0.2" },
-            "devDependencies": { "@capacitor/cli": "^6.2.0", "@capacitor/android": "^6.2.0" }
+            "devDependencies": { "@capacitor/cli": "^6.2.0", "@capacitor/android": "^6.2.0", "esbuild": "^0.24.0" }
           }
           EOF
           cat > capacitor.config.json <<'EOF'
@@ -84,6 +85,7 @@ jobs:
               s=s.replace(marker,perms+'    '+marker,1)
           p.write_text(s)
           PY
+          npx esbuild push-bridge.js --bundle --format=iife --outfile=www/push-bridge.js
           npx cap sync android
       - name: Set Android version code
         working-directory: worker-app/android
