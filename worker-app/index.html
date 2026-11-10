@@ -413,7 +413,7 @@ function hasValidCoordinates(lat,lng){if(lat===null||lat===undefined||lng===null
 function getMyWorkerCoords(){if(hasValidCoordinates(window.workerCurrentCoords?.lat,window.workerCurrentCoords?.lng))return{lat:Number(window.workerCurrentCoords.lat),lng:Number(window.workerCurrentCoords.lng)};const d=db(),p=(d.liveLocations||[]).find(x=>x.worker===me.id&&x.sharing!==false&&hasValidCoordinates(x.lat,x.lng));return p?{lat:Number(p.lat),lng:Number(p.lng)}:null}
 async function geocodeBookingLocation(place){
  const raw=String(place||'').trim();if(!raw)return null;
- const normalized=raw.toLowerCase().replace(/\\s+/g,' ').trim();
+ const normalized=raw.toLowerCase();
  const knownPlaces=[{match:/vaddarahatti.*madhugiri|madhugiri.*vaddarahatti/,lat:13.63917,lng:77.29389,name:'Vaddarahatti, Madhugiri'}];
  const known=knownPlaces.find(x=>x.match.test(normalized));if(known)return{lat:known.lat,lng:known.lng,precision:'locality',matchedName:known.name};
  const key='nex_geo_v4_'+normalized;
