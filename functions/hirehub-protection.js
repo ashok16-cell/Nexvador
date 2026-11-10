@@ -109,6 +109,7 @@ exports.createHireHubPaymentOrder = onCall({
   const bookingId = request.data?.bookingId;
   const { ref, data: b } = await getBooking(bookingId);
   if (!isRequester(uid, b)) throw new HttpsError("permission-denied", "Only the booking owner can pay.");
+  if (!workerIds(b).length || ["Cancelled", "Rejected", "Completed"].includes(b.status)) throw new HttpsError("failed-precondition", "Only an active booking with an assigned worker can be paid.");
   const amount = Number(b.amountPaise);
   if (!Number.isSafeInteger(amount) || amount < 100 || amount > 50000000) {
     throw new HttpsError("failed-precondition", "This booking needs a valid total amount in INR before payment.");
@@ -173,6 +174,9 @@ exports.completeHireHubBooking = onCall({ region: REGION }, async request => {
   if (b.paymentStatus !== "Paid") throw new HttpsError("failed-precondition", "Customer payment must be captured before completion.");
   const ids = workerIds(b);
   if (!ids.length) throw new HttpsError("failed-precondition", "No assigned worker found.");
+  const checkins = await ref.collection("checkins").get();
+  const checkedInIds = new Set(checkins.docs.map(d => d.id));
+  if (!ids.every(id => checkedInIds.has(id))) throw new HttpsError("failed-precondition", "Every assigned worker must check in before completion.");
   const total = Number(b.amountPaise);
   const fee = Math.round(total * Number(b.platformCommissionBps || COMMISSION_BPS) / 10000);
   const perWorker = Math.floor((total - fee) / ids.length);
