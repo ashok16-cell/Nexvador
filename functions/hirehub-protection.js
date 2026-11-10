@@ -63,7 +63,7 @@ exports.issueHireHubBookingQr = onCall({ region: REGION }, async request => {
   const bookingId = request.data?.bookingId;
   const { data: b } = await getBooking(bookingId);
   if (!isRequester(uid, b)) throw new HttpsError("permission-denied", "Only the booking customer or company can issue this QR.");
-  if (!["Confirmed", "Partially Filled"].includes(b.status)) throw new HttpsError("failed-precondition", "A worker must accept the booking first.");
+  if (!["Confirmed", "Partially Filled", "InProgress"].includes(b.status)) throw new HttpsError("failed-precondition", "A worker must accept the booking first.");
   const ids = workerIds(b);
   if (!ids.length) throw new HttpsError("failed-precondition", "No worker has accepted this booking.");
   const token = crypto.randomBytes(24).toString("hex");
@@ -89,6 +89,8 @@ exports.checkInHireHubWorker = onCall({ region: REGION }, async request => {
     const ps = await tx.get(protectionRef);
     if (!ps.exists) throw new HttpsError("not-found", "Customer QR was not issued.");
     const p = ps.data();
+    const currentBooking = await tx.get(ref);
+    if (!currentBooking.exists || !["Confirmed", "Partially Filled", "InProgress"].includes(currentBooking.data().status)) throw new HttpsError("failed-precondition", "Booking is no longer active.");
     const hash = crypto.createHash("sha256").update(token).digest("hex");
     if ((p.usedWorkerIds || []).includes(uid) || !p.expiresAt || p.expiresAt.toMillis() < Date.now() || !safeEqualHex(hash, p.tokenHash) || !p.workerIds?.includes(uid)) {
       throw new HttpsError("permission-denied", "QR is invalid, expired, or already used. Ask the customer for a new QR.");
@@ -146,6 +148,7 @@ exports.verifyHireHubPayment = onCall({
   const paymentId = request.data?.razorpay_payment_id, signature = request.data?.razorpay_signature;
   const { ref, data: b } = await getBooking(bookingId);
   if (!isRequester(uid, b)) throw new HttpsError("permission-denied", "Only the booking owner can verify payment.");
+  if (["Cancelled", "Rejected"].includes(b.status)) throw new HttpsError("failed-precondition", "Cancelled bookings cannot be paid.");
   const paymentOrder = await db().collection("bookingPayments").doc(bookingId).get();
   if (!paymentOrder.exists || paymentOrder.data().orderId !== orderId) throw new HttpsError("permission-denied", "Payment order does not belong to this booking.");
   const expected = crypto.createHmac("sha256", RAZORPAY_KEY_SECRET.value()).update(orderId + "|" + paymentId).digest("hex");
