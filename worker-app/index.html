@@ -526,7 +526,41 @@ function handleWorkerPosition(pos){
  if(window.activeWorkerBookingId)bookingIds.add(String(window.activeWorkerBookingId));
  bookingIds.forEach(bookingId=>fbDb.collection('workerBookings').doc(bookingId).collection('tracking').doc(me.id).set({workerId:me.id,workerName:me.name,lat:item.lat,lng:item.lng,accuracy:item.accuracy,sharing:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(err=>console.warn('Booking GPS sync failed',bookingId,err)));
 }
-function hireHubDistanceKm(a,b){const r=x=>x*Math.PI/180,dLat=r(b.lat-a.lat),dLng=r(b.lng-a.lng),q=Math.sin(dLat/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)**2;return 6371*2*Math.asin(Math.sqrt(q))}async function notifyNearbyWorkersForBooking(booking){try{const lat=Number(booking?.requestLat),lng=Number(booking?.requestLng);if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){console.warn('Nearby notifications skipped: customer GPS unavailable');return 0}const snap=await fbDb.collection('workerPublicProfiles').where('availability','==','available').limit(500).get();const skill=String(booking.category||'').trim().toLowerCase();const nearby=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(w=>w.id!==booking.requesterId&&Number.isFinite(Number(w.lat))&&Number.isFinite(Number(w.lng))&&w.lastSeen?.toDate&&Date.now()-w.lastSeen.toDate().getTime()<180000&&hireHubDistanceKm({lat,lng},{lat:Number(w.lat),lng:Number(w.lng)})<=15&&(!skill||[w.mainSkill,w.secondSkill,...(Array.isArray(w.skills)?w.skills:[])].filter(Boolean).join(' ').toLowerCase().includes(skill)||skill.includes(String(w.mainSkill||'').toLowerCase())));const recipients=[...new Set([...(booking.selectedWorkerId?[booking.selectedWorkerId]:[]),...nearby.map(w=>w.id)])].filter(id=>id&&id!==booking.requesterId).slice(0,100);await Promise.all(recipients.map(recipientId=>fbDb.collection('notifications').add({actorId:booking.requesterId,recipientId,title:'ಹೊಸ Nearby Booking Request',message:(booking.category||'ಕೆಲಸ')+' • '+(booking.location||'ನಿಮ್ಮ ಹತ್ತಿರ')+' • '+(booking.pay||'ದರ ನೋಡಿ')+' — HireHub ತೆರೆಯಿರಿ ಮತ್ತು Request ನೋಡಿ.',eventType:'nearby_booking',bookingId:String(booking.id),createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false})));console.info('Nearby booking notifications queued:',recipients.length);return recipients.length}catch(err){console.warn('Nearby worker notification broadcast failed',err.code||err.message);return 0}}
+function hireHubDistanceKm(a,b){const r=x=>x*Math.PI/180,dLat=r(b.lat-a.lat),dLng=r(b.lng-a.lng),q=Math.sin(dLat/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)**2;return 6371*2*Math.asin(Math.sqrt(q))}async function notifyNearbyWorkersForBooking(booking){
+ try{
+  let lat=Number(booking?.requestLat),lng=Number(booking?.requestLng);
+  const valid=Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180;
+  if(!valid){
+   const position=await currentDevicePosition().catch(()=>null);
+   lat=Number(position?.lat);lng=Number(position?.lng);
+  }
+  if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){
+   console.warn('Nearby notifications skipped: customer GPS unavailable');
+   return 0;
+  }
+  const snap=await fbDb.collection('workerPublicProfiles').where('availability','==','available').limit(500).get();
+  const now=Date.now(),origin={lat,lng};
+  const nearby=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(w=>{
+   if(w.id===booking.requesterId||!Number.isFinite(Number(w.lat))||!Number.isFinite(Number(w.lng)))return false;
+   const seen=w.lastSeen?.toDate?w.lastSeen.toDate().getTime():0;
+   return seen>0&&now-seen<180000&&hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)})<=15;
+  });
+  const recipients=[...new Set([...(booking.selectedWorkerId?[booking.selectedWorkerId]:[]),...nearby.map(w=>w.id)])].filter(id=>id&&id!==booking.requesterId).slice(0,100);
+  const results=await Promise.all(recipients.map(async recipientId=>{
+   try{
+    await fbDb.collection('notifications').add({
+     actorId:booking.requesterId,recipientId,title:'ಹೊಸ Nearby Work Booking',
+     message:(booking.category||'ಹೊಸ ಕೆಲಸ')+' • '+(booking.location||'ನಿಮ್ಮ ಹತ್ತಿರ')+' • '+(booking.pay||'ದರ ನೋಡಿ')+' — HireHub ತೆರೆಯಿರಿ ಮತ್ತು ತಕ್ಷಣ Accept ಮಾಡಿ.',
+     eventType:'nearby_booking',bookingId:String(booking.id),createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false
+    });
+    return true;
+   }catch(err){console.warn('Nearby notification failed for',recipientId,err.code||err.message);return false}
+  }));
+  const sent=results.filter(Boolean).length;
+  console.info('Nearby booking notifications sent:',sent,'of',recipients.length);
+  return sent;
+ }catch(err){console.warn('Nearby worker notification broadcast failed',err.code||err.message);return 0}
+}
 async function activateWorkerAutoOnline(){if(!me||me.role!=='worker'||!fbAuth.currentUser||locationWatchId!==null)return;try{const ref=fbDb.collection('users').doc(me.id);await ref.update({availability:'available',autoOnline:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});me.availability='available';me.autoOnline=true;await startWorkerLocation();if(locationWatchId===null){await ref.update({availability:'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});me.availability='unavailable';const st=document.getElementById('autoOnlineStatus');if(st)st.textContent='GPS ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ. Location permission Allow ಮಾಡಿ.'}}catch(e){console.warn('Auto online failed',e);const st=document.getElementById('autoOnlineStatus');if(st)st.textContent='Online ಆಗಲಿಲ್ಲ: '+(e.code||e.message)}}
 async function startWorkerLocation(){
  if(!fbAuth.currentUser){alert('ದಯವಿಟ್ಟು ಮತ್ತೆ Login ಮಾಡಿ.');return}
