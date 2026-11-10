@@ -41,7 +41,7 @@
   }
   function customerCard(b) {
     const workers = assignedIds(b);
-    const canPay = b.amountPaise >= 100 && b.paymentStatus !== "Paid" && !["Cancelled", "Rejected"].includes(b.status);
+    const canPay = workers.length > 0 && b.amountPaise >= 100 && b.paymentStatus !== "Paid" && !["Cancelled", "Rejected"].includes(b.status);
     const qr = workers.length && ["Confirmed", "Partially Filled"].includes(b.status);
     const complete = b.status === "InProgress" && b.paymentStatus === "Paid";
     return '<article class="card" style="margin:12px 0"><div class="row"><b>' + escText(b.category) + "</b>" + statusPill(b.status) + '</div><p class="muted">' + escText(b.location) + " • " + escText(b.date) + " • " + escText(b.bookingType) + "</p><p>Workers: " + workers.length + " / " + escText(b.count || 1) + " • Total: <b>" + (b.amountPaise ? money(b.amountPaise) : "Amount not set") + "</b></p><p>Payment: " + escText(b.paymentStatus || "Not paid") + "</p>" +
@@ -74,7 +74,7 @@
           box.innerHTML += '<p class="notice">Admin risk dashboard ನೋಡಲು Super Admin ಅಥವಾ Payments permission ಅಗತ್ಯ.</p>'; return;
         }
         const snap = await fbDb.collection("bookingRiskFlags").orderBy("createdAt", "desc").limit(100).get();
-        box.innerHTML += '<h3>Booking Risk Review</h3>' + (snap.empty ? '<p class="muted">No risk flags.</p>' : snap.docs.map(d => {
+        box.innerHTML += (me.adminLevel === 'super' ? '<div class="card"><h3>Legacy Privacy Cleanup</h3><p class="muted">Remove old customer mobile numbers from shared booking documents so workers cannot read them.</p><button class="ghost" onclick="hireProtectionSanitizeContacts()">Sanitize old booking contacts</button></div>' : '') + '<h3>Booking Risk Review</h3>' + (snap.empty ? '<p class="muted">No risk flags.</p>' : snap.docs.map(d => {
           const x = d.data();
           return '<article class="card"><b>' + escText(x.type) + '</b><p>Booking: ' + escText(x.bookingId) + ' • Status: ' + escText(x.status) + '</p><p class="muted">Requester: ' + escText(x.requesterId) + ' • Pair cancellations: ' + escText(x.pairCancellationCount || "—") + '</p><button class="ghost" onclick="hireProtectionReviewFlag(\'' + escText(d.id) + '\')">Mark reviewed</button></article>';
         }).join(""));
@@ -210,7 +210,7 @@
       const data = {
         ...(customer ? { requesterId: me.id, requesterName: me.name, requesterRole: "customer" } : { companyId: me.id, companyName: me.name }),
         category: b.category || "General Helper", count: Number(b.count || 1),
-        bookingType: b.bookingType || "Daily", location: b.location || me.city,
+        bookingType: b.bookingType || "Daily", durationMonths: Number(b.durationMonths || 1), location: b.location || me.city,
         date: "", shift: b.shift || "", pay: b.pay || "", amountPaise: Number(b.amountPaise || 0),
         platformCommissionBps: 1500, agreementVersion: "2026-11-v1",
         status: "Pending", visibility: "public", createdAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -223,6 +223,16 @@
       alert("ಹೊಸ Repeat Booking Request ಸೃಷ್ಟಿಸಲಾಗಿದೆ. ಹೊಸ ದಿನಾಂಕವನ್ನು Booking ವಿವರಗಳಲ್ಲಿ ಸೇರಿಸಿ.");
       go(customer ? "mybookings" : "booking");
     } catch (err) { alert("Repeat booking ವಿಫಲ: " + (err.message || err)); }
+  };
+
+  window.hireProtectionSanitizeContacts = async function () {
+    try {
+      if (me.role !== "admin" || me.adminLevel !== "super") throw new Error("Super Admin only.");
+      if (!confirm("Old booking documentsನಲ್ಲಿರುವ customer mobile numbers delete ಮಾಡಬೇಕೇ?")) return;
+      const result = await callable("sanitizeLegacyBookingContacts", {});
+      alert(result.data.sanitized + " old booking contact records cleaned.");
+      go("protection");
+    } catch (err) { alert("Privacy cleanup ವಿಫಲ: " + (err.message || err)); }
   };
 
   window.hireProtectionReviewFlag = async function (flagId) {
