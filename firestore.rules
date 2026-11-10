@@ -87,6 +87,44 @@ service cloud.firestore {
    allow create:if active()&&profile(request.auth.uid).role=='customer'&&request.resource.data.customerId==request.auth.uid&&request.resource.data.workerId is string&&request.resource.data.rating is number&&request.resource.data.rating>=1&&request.resource.data.rating<=5&&request.resource.data.bookingId is string;
    allow update,delete:if false;
   }
+
+  // HireHub protection data: client writes are restricted; trusted Cloud Functions own state transitions.
+  function bookingParticipant(bookingId) {
+    let b = get(/databases/$(database)/documents/workerBookings/$(bookingId)).data;
+    return active() && (
+      b.requesterId == request.auth.uid ||
+      b.customerId == request.auth.uid ||
+      b.companyId == request.auth.uid ||
+      b.workerId == request.auth.uid ||
+      (b.acceptedWorkerIds is list && b.acceptedWorkerIds.hasAny([request.auth.uid]))
+    );
+  }
+  match /bookingPayments/{bookingId} {
+    allow read: if admin() || staffCan('payments') || bookingParticipant(bookingId);
+    allow create, update, delete: if false;
+  }
+  match /bookingProtection/{bookingId} {
+    allow read, write: if false;
+  }
+  match /bookingAgreements/{agreementId} {
+    allow read: if admin() || (signedIn() && resource.data.workerId == request.auth.uid);
+    allow create, update, delete: if false;
+  }
+  match /workerRewards/{workerId} {
+    allow read: if admin() || (worker() && request.auth.uid == workerId);
+    allow create, update, delete: if false;
+  }
+  match /bookingRiskFlags/{flagId} {
+    allow read: if admin() || staffCan('payments');
+    allow update: if (admin() || staffCan('payments')) &&
+      request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewedBy','reviewedAt']);
+    allow create, delete: if false;
+  }
+  match /workerBookings/{bookingId}/checkins/{workerId} {
+    allow read: if admin() || bookingParticipant(bookingId);
+    allow create, update, delete: if false;
+  }
+
   match /{document=**}{allow read,write:if false;}
  }
 }
