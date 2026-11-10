@@ -72,7 +72,7 @@ service cloud.firestore {
     function parentConversation(){return get(/databases/$(database)/documents/conversations/$(conversationId)).data;}
     function participant(){return signedIn()&&parentConversation().participants is list&&parentConversation().participants.hasAny([request.auth.uid]);}
     allow read:if participant();
-    allow create:if participant()&&request.resource.data.senderId==request.auth.uid&&request.resource.data.text is string&&request.resource.data.text.size()>0&&request.resource.data.text.size()<=2000;
+    allow create:if participant()&&request.resource.data.senderId==request.auth.uid&&request.resource.data.text is string&&request.resource.data.text.size()>0&&request.resource.data.text.size()<=2000&&!request.resource.data.text.matches('.*[6-9][0-9]{4}[ -]?[0-9]{5}.*');
     allow update,delete:if false;
    }
   }
