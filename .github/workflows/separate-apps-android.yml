@@ -49,7 +49,7 @@ jobs:
           mkdir -p www
           cp index.html www/
           cp firebase-config.js www/
-          printf "import { PushNotifications } from '@capacitor/push-notifications';\nimport { registerPlugin } from '@capacitor/core';\nimport { LocalNotifications } from '@capacitor/local-notifications';\nconst BackgroundGeolocation = registerPlugin('BackgroundGeolocation');\nwindow.NexPushNotifications = PushNotifications;\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\nwindow.NexLocalNotifications = LocalNotifications;\n" > push-bridge.js
+          printf "import { PushNotifications } from '@capacitor/push-notifications';\nimport { LocalNotifications } from '@capacitor/local-notifications';\nimport { BackgroundGeolocation } from '@capacitor-community/background-geolocation';\nwindow.NexPushNotifications = PushNotifications;\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\nwindow.NexLocalNotifications = LocalNotifications;\n" > push-bridge.js
           cat > package.json <<'EOF'
           {
             "name": "nexvadoraq-mobile",
