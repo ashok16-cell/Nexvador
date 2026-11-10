@@ -49,7 +49,7 @@ exports.acceptHireHubBookingAgreement = onCall({ region: REGION }, async request
   const bookingId = request.data?.bookingId;
   const { data: b } = await getBooking(bookingId);
   if (!workerIds(b).includes(uid)) throw new HttpsError("permission-denied", "Only an assigned worker can accept this agreement.");
-  if (!["Confirmed", "Partially Filled", "Pending"].includes(b.status)) throw new HttpsError("failed-precondition", "This booking is not accepting work.");
+  if (!["Confirmed", "Partially Filled", "Pending", "InProgress"].includes(b.status)) throw new HttpsError("failed-precondition", "This booking is not accepting work.");
   await db().collection("bookingAgreements").doc(bookingId + "_" + uid).set({
     bookingId, workerId: uid, accepted: true, agreementVersion: "2026-11-v1",
     commissionBps: Number(b.platformCommissionBps || COMMISSION_BPS),
