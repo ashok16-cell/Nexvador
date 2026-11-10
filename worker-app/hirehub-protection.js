@@ -42,7 +42,7 @@
   function customerCard(b) {
     const workers = assignedIds(b);
     const canPay = workers.length > 0 && b.amountPaise >= 100 && b.paymentStatus !== "Paid" && !["Cancelled", "Rejected"].includes(b.status);
-    const qr = workers.length && ["Confirmed", "Partially Filled"].includes(b.status);
+    const qr = workers.length && ["Confirmed", "Partially Filled", "InProgress"].includes(b.status);
     const complete = b.status === "InProgress" && b.paymentStatus === "Paid";
     return '<article class="card" style="margin:12px 0"><div class="row"><b>' + escText(b.category) + "</b>" + statusPill(b.status) + '</div><p class="muted">' + escText(b.location) + " • " + escText(b.date) + " • " + escText(b.bookingType) + "</p><p>Workers: " + workers.length + " / " + escText(b.count || 1) + " • Total: <b>" + (b.amountPaise ? money(b.amountPaise) : "Amount not set") + "</b></p><p>Payment: " + escText(b.paymentStatus || "Not paid") + "</p>" +
       (canPay ? '<button class="primary" onclick="hireProtectionPay(\'' + escText(b.id) + '\')">Pay securely</button> ' : "") +
@@ -57,7 +57,7 @@
     return '<article class="card" style="margin:12px 0"><div class="row"><b>' + escText(b.category) + "</b>" + statusPill(b.status) + '</div><p class="muted">' + escText(b.location) + " • " + escText(b.date) + " • " + escText(b.bookingType) + "</p><p>Pay offered: " + escText(b.pay || "As agreed in booking") + "</p>" +
       (eligible ? '<button class="primary" onclick="hireProtectionAgree(\'' + escText(b.id) + '\')">Accept digital agreement</button>' : "") +
       (accepted && b.status === "InProgress" ? '<p class="success">You are checked in. Customer will confirm completion.</p>' : "") +
-      (accepted && b.amountPaise ? '<p><b>Estimated worker share:</b> ' + money(Math.floor(Number(b.amountPaise) * 0.85)) + ' • Settlement after completion</p>' : "") + (accepted && ["Confirmed", "Partially Filled"].includes(b.status) ? '<div class="field"><label>Customer QR token (or scan QR)</label><input id="hireToken_' + escText(b.id) + '" placeholder="Paste token from customer"></div><button class="primary" onclick="hireProtectionCheckin(\'' + escText(b.id) + '\')">Check in</button> <button class="ghost" onclick="hireProtectionScan(\'' + escText(b.id) + '\')">Scan QR with camera</button><div id="hireScan_' + escText(b.id) + '"></div>' : "") +
+      (accepted && b.amountPaise ? '<p><b>Estimated worker share:</b> ' + money(Math.floor(Number(b.amountPaise) * 0.85)) + ' • Settlement after completion</p>' : "") + (accepted && ["Confirmed", "Partially Filled", "InProgress"].includes(b.status) ? '<div class="field"><label>Customer QR token (or scan QR)</label><input id="hireToken_' + escText(b.id) + '" placeholder="Paste token from customer"></div><button class="primary" onclick="hireProtectionCheckin(\'' + escText(b.id) + '\')">Check in</button> <button class="ghost" onclick="hireProtectionScan(\'' + escText(b.id) + '\')">Scan QR with camera</button><div id="hireScan_' + escText(b.id) + '"></div>' : "") +
       "</article>";
   }
   async function render(el) {
@@ -207,11 +207,15 @@
       if (!snap.exists) throw new Error("Booking not found.");
       const b = snap.data();
       const customer = me.role === "customer";
+      const newDate = prompt("ಹೊಸ ಕೆಲಸದ ದಿನಾಂಕ (YYYY-MM-DD):");
+      if (!newDate || !/^\\d{4}-\\d{2}-\\d{2}$/.test(newDate)) throw new Error("Valid work date is required.");
+      const geo = typeof captureRequestLocation === "function" ? await captureRequestLocation().catch(() => ({})) : {};
       const data = {
+        ...geo,
         ...(customer ? { requesterId: me.id, requesterName: me.name, requesterRole: "customer" } : { companyId: me.id, companyName: me.name }),
         category: b.category || "General Helper", count: Number(b.count || 1),
         bookingType: b.bookingType || "Daily", durationMonths: Number(b.durationMonths || 1), location: b.location || me.city,
-        date: "", shift: b.shift || "", pay: b.pay || "", amountPaise: Number(b.amountPaise || 0),
+        date: newDate, shift: b.shift || "", pay: b.pay || "", amountPaise: Number(b.amountPaise || 0),
         platformCommissionBps: 1500, agreementVersion: "2026-11-v1",
         status: "Pending", visibility: "public", createdAt: firebase.firestore.FieldValue.serverTimestamp(),
         updatedAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -219,8 +223,9 @@
       if (customer) data.customerAgreementAccepted = true;
       if (customer && !["Hourly", "Daily"].includes(data.bookingType)) data.bookingType = "Daily";
       if (!customer && data.bookingType === "Hourly") data.bookingType = "Daily";
-      await fbDb.collection("workerBookings").add(data);
-      alert("ಹೊಸ Repeat Booking Request ಸೃಷ್ಟಿಸಲಾಗಿದೆ. ಹೊಸ ದಿನಾಂಕವನ್ನು Booking ವಿವರಗಳಲ್ಲಿ ಸೇರಿಸಿ.");
+      const newRef = await fbDb.collection("workerBookings").add(data);
+      if (typeof notifyNearbyWorkersForBooking === "function") await notifyNearbyWorkersForBooking({ ...geo, ...data, id: newRef.id }).catch(() => 0);
+      alert("ಹೊಸ Repeat Booking Request ಸೃಷ್ಟಿಸಲಾಗಿದೆ.");
       go(customer ? "mybookings" : "booking");
     } catch (err) { alert("Repeat booking ವಿಫಲ: " + (err.message || err)); }
   };
