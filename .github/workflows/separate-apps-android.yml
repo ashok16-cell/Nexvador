@@ -41,6 +41,7 @@ jobs:
           Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
+          node --check hirehub-protection.js
       - name: Prepare Capacitor project
         working-directory: worker-app
         env:
@@ -48,6 +49,7 @@ jobs:
         run: |
           mkdir -p www
           cp index.html www/
+          cp hirehub-protection.js www/
           cp firebase-config.js www/
           printf "import { PushNotifications } from '@capacitor/push-notifications';\nimport { LocalNotifications } from '@capacitor/local-notifications';\nimport { registerPlugin } from '@capacitor/core';\nconst BackgroundGeolocation = registerPlugin('BackgroundGeolocation');\nwindow.NexPushNotifications = PushNotifications;\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\nwindow.NexLocalNotifications = LocalNotifications;\n" > push-bridge.js
           cat > package.json <<'EOF'

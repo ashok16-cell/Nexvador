@@ -42,6 +42,7 @@ jobs:
           test -f firestore.rules
           node --check scripts/bootstrap-admin.mjs
           node --check functions/index.js
+          node --check functions/hirehub-protection.js
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -70,7 +71,7 @@ jobs:
           if [ "$EVENT_NAME" = "push" ]; then
             CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
             if echo "$CHANGED" | grep -Eq '^(functions/|firebase.json$)'; then
-              firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive
+              echo "::notice::Cloud Functions deployment skipped on push. Enable Cloud Functions, Cloud Build and Artifact Registry APIs, set Razorpay secrets, then run workflow_dispatch with functions-only."
             fi
             if echo "$CHANGED" | grep -q '^firestore.rules$'; then
               firebase deploy --project nexvadoraq --only firestore:rules --non-interactive
@@ -80,7 +81,7 @@ jobs:
               hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
               hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
               rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
-              functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
+              functions-only) firebase deploy --project nexvadoraq --only functions --non-interactive ;;
               *) echo "::error::Unknown deploy target"; exit 1 ;;
             esac
           fi
