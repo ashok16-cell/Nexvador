@@ -69,7 +69,7 @@ exports.issueHireHubBookingQr = onCall({ region: REGION }, async request => {
   const expiresAt = Timestamp.fromMillis(Date.now() + 15 * 60 * 1000);
   await db().collection("bookingProtection").doc(bookingId).set({
     bookingId, requesterId: uid, tokenHash: crypto.createHash("sha256").update(token).digest("hex"),
-    workerIds: ids, expiresAt, used: false, createdAt: FieldValue.serverTimestamp()
+    workerIds: ids, expiresAt, usedWorkerIds: [], createdAt: FieldValue.serverTimestamp()
   });
   return { token, expiresAt: expiresAt.toDate().toISOString() };
 });
@@ -89,12 +89,12 @@ exports.checkInHireHubWorker = onCall({ region: REGION }, async request => {
     if (!ps.exists) throw new HttpsError("not-found", "Customer QR was not issued.");
     const p = ps.data();
     const hash = crypto.createHash("sha256").update(token).digest("hex");
-    if (p.used || !p.expiresAt || p.expiresAt.toMillis() < Date.now() || !safeEqualHex(hash, p.tokenHash) || !p.workerIds?.includes(uid)) {
+    if ((p.usedWorkerIds || []).includes(uid) || !p.expiresAt || p.expiresAt.toMillis() < Date.now() || !safeEqualHex(hash, p.tokenHash) || !p.workerIds?.includes(uid)) {
       throw new HttpsError("permission-denied", "QR is invalid, expired, or already used. Ask the customer for a new QR.");
     }
     const old = await tx.get(checkinRef);
     if (old.exists) throw new HttpsError("already-exists", "You are already checked in.");
-    tx.update(protectionRef, { used: true, usedBy: uid, usedAt: FieldValue.serverTimestamp() });
+    tx.update(protectionRef, { usedWorkerIds: FieldValue.arrayUnion(uid), lastUsedAt: FieldValue.serverTimestamp() });
     tx.set(checkinRef, { workerId: uid, bookingId, checkedInAt: FieldValue.serverTimestamp(), status: "in_progress" });
     tx.update(ref, { status: "InProgress", workStartedAt: FieldValue.serverTimestamp(), updatedAt: FieldValue.serverTimestamp() });
   });
@@ -144,6 +144,8 @@ exports.verifyHireHubPayment = onCall({
   const paymentId = request.data?.razorpay_payment_id, signature = request.data?.razorpay_signature;
   const { ref, data: b } = await getBooking(bookingId);
   if (!isRequester(uid, b)) throw new HttpsError("permission-denied", "Only the booking owner can verify payment.");
+  const paymentOrder = await db().collection("bookingPayments").doc(bookingId).get();
+  if (!paymentOrder.exists || paymentOrder.data().orderId !== orderId) throw new HttpsError("permission-denied", "Payment order does not belong to this booking.");
   const expected = crypto.createHmac("sha256", RAZORPAY_KEY_SECRET.value()).update(orderId + "|" + paymentId).digest("hex");
   if (!safeEqualHex(expected, signature)) throw new HttpsError("permission-denied", "Payment signature verification failed.");
   const auth = Buffer.from(RAZORPAY_KEY_ID.value() + ":" + RAZORPAY_KEY_SECRET.value()).toString("base64");
@@ -222,9 +224,8 @@ exports.flagRepeatedBookingCancellations = onDocumentUpdated({
   const ids = workerIds(after);
   if (!ids.length || !after.requesterId) return;
   const recent = await db().collection("workerBookings")
-    .where("requesterId", "==", after.requesterId)
-    .where("status", "==", "Cancelled").limit(20).get();
-  const pairCount = recent.docs.filter(d => workerIds(d.data()).some(id => ids.includes(id))).length;
+    .where("requesterId", "==", after.requesterId).limit(50).get();
+  const pairCount = recent.docs.filter(d => d.data().status === "Cancelled" && workerIds(d.data()).some(id => ids.includes(id))).length;
   if (pairCount < 2) return;
   await db().collection("bookingRiskFlags").add({
     bookingId: event.params.bookingId, requesterId: after.requesterId, workerIds: ids,
@@ -257,4 +258,23 @@ exports.razorpayHireHubWebhook = onRequest({
     }
   }
   return res.status(200).json({ received: true });
+});
+
+exports.sanitizeLegacyBookingContacts = onCall({ region: REGION }, async request => {
+  const uid = requireUser(request);
+  const admin = await db().collection("users").doc(uid).get();
+  if (!admin.exists || admin.data().role !== "admin" || admin.data().adminLevel !== "super") {
+    throw new HttpsError("permission-denied", "Super Admin only.");
+  }
+  const snap = await db().collection("workerBookings").get();
+  let changed = 0, batch = db().batch(), writes = 0;
+  for (const doc of snap.docs) {
+    if (Object.prototype.hasOwnProperty.call(doc.data(), "requesterMobile")) {
+      batch.update(doc.ref, { requesterMobile: FieldValue.delete(), updatedAt: FieldValue.serverTimestamp() });
+      changed++; writes++;
+      if (writes === 450) { await batch.commit(); batch = db().batch(); writes = 0; }
+    }
+  }
+  if (writes) await batch.commit();
+  return { sanitized: changed };
 });
