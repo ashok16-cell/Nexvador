@@ -814,7 +814,7 @@ async function enableBrowserNotifications(){
     await nativePush.addListener('registration',async token=>{
      try{
       const uid=fbAuth.currentUser?.uid;
-      if(uid)await fbDb.collection('users').doc(uid).set({fcmToken:token.value,fcmTokenUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      if(uid)await fbDb.collection('users').doc(uid).set({fcmToken:token.value,fcmTokens:firebase.firestore.FieldValue.arrayUnion(token.value),fcmTokenUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
       if(el)el.textContent='Push ಸಕ್ರಿಯವಾಗಿದೆ. Device token Firebase ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ.';
      }catch(err){console.error('FCM token save failed',err);if(el)el.textContent='Token ಉಳಿಸಲು ಆಗಲಿಲ್ಲ: '+(err.code||err.message)}
     });
