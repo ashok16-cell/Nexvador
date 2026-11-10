@@ -208,7 +208,7 @@
       const b = snap.data();
       const customer = me.role === "customer";
       const newDate = prompt("ಹೊಸ ಕೆಲಸದ ದಿನಾಂಕ (YYYY-MM-DD):");
-      if (!newDate || !/^\\d{4}-\\d{2}-\\d{2}$/.test(newDate)) throw new Error("Valid work date is required.");
+      if (!newDate || !/^\d{4}-\d{2}-\d{2}$/.test(newDate)) throw new Error("Valid work date is required.");
       const geo = typeof captureRequestLocation === "function" ? await captureRequestLocation().catch(() => ({})) : {};
       const data = {
         ...geo,
