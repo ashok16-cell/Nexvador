@@ -60,7 +60,7 @@ jobs:
           EOF
           cat > capacitor.config.json <<'EOF'
           {
-            "appId": "in.nexvadoraq.app",
+            "appId": "com.nexvadoraq.app",
             "appName": "NEXVADORAQ",
             "webDir": "www",
             "bundledWebRuntime": false
