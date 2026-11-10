@@ -71,3 +71,22 @@ Use two different email accounts and two phones/browsers:
 6. The `sendHireHubPush` Cloud Function sends an FCM push whenever a Firestore `notifications/{id}` document is created. Deploy it with the GitHub Firebase workflow using `functions-only`, or `firebase deploy --project nexvadoraq --only functions:sendHireHubPush`. Cloud Functions deployment requires the Firebase Blaze billing plan.
 
 Background tracking is subject to Android battery restrictions, user permissions, network coverage and device power management. Test on a physical Android phone with the screen locked for at least 15 minutes. It is not emergency tracking.
+
+
+## Latest deployment status (10 Nov 2026)
+
+- Android debug APK workflow completed successfully. Latest run: https://github.com/ashok16-cell/Nexvador/actions/runs/42832389072
+- The APK artifact is named `NEXVADORAQ-HireHub-APK` in that run.
+- Firebase Cloud Function deployment was attempted, but Google Cloud rejected automatic API enablement: `Permissions denied enabling artifactregistry.googleapis.com`.
+
+### One-time Google Cloud owner action required
+
+A Google Cloud Project Owner (or an administrator with Service Usage Admin permissions) must:
+1. Open https://console.cloud.google.com/apis/library/artifactregistry.googleapis.com?project=nexvadoraq and enable **Artifact Registry API**.
+2. Also enable **Cloud Functions API** and **Cloud Build API** for project `nexvadoraq`.
+3. Confirm the Firebase project is on the **Blaze** plan and billing is active before deploying Cloud Functions.
+4. Ensure the GitHub Actions service account has permissions to deploy Cloud Functions 2nd gen and use Cloud Build / Artifact Registry (for example, appropriate Cloud Functions Developer, Service Account User, Cloud Build, and Artifact Registry permissions).
+5. In Firebase Project settings, register Android app package `com.nexvadoraq.app`, download `google-services.json`, Base64-encode it, and save the value as GitHub Actions secret `GOOGLE_SERVICES_JSON_BASE64`.
+6. Re-run the Android workflow to build an APK with native Firebase Messaging configuration, then run the Firebase workflow with target `functions-only`.
+
+Do not paste service-account JSON or the raw Google Services file into chat or commit either file to the repository. These owner-level Google Cloud actions cannot be completed by a repository code change alone.
