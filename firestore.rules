@@ -78,8 +78,8 @@ service cloud.firestore {
   }
 
   match /workerSupportTickets/{ticketId}{
-   allow create:if worker()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.type is string&&request.resource.data.message is string&&request.resource.data.message.size()>0&&request.resource.data.message.size()<=1500&&request.resource.data.status=='Open';
-   allow read:if (worker()&&resource.data.workerId==request.auth.uid)||admin()||staffCan('users');
+   allow create:if ((worker()||active()&&profile(request.auth.uid).role=='customer')&&request.resource.data.workerId==request.auth.uid&&request.resource.data.type is string&&request.resource.data.message is string&&request.resource.data.message.size()>0&&request.resource.data.message.size()<=1500&&request.resource.data.status=='Open');
+   allow read:if ((worker()||active()&&profile(request.auth.uid).role=='customer')&&resource.data.workerId==request.auth.uid)||admin()||staffCan('users');
    allow update,delete:if admin()||staffCan('users');
   }
   match /workerReviews/{reviewId}{
