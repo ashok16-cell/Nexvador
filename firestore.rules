@@ -14,13 +14,13 @@ service cloud.firestore {
   match /users/{uid}{
    allow create:if signedIn()&&request.auth.uid==uid&&request.resource.data.role in ['worker','company','customer']&&request.resource.data.active==true&&request.resource.data.email is string&&request.resource.data.name is string;
    allow read:if signedIn()&&(request.auth.uid==uid||admin()||staffCan('users'));
-   allow update:if signedIn()&&request.auth.uid==uid&&request.resource.data.role==resource.data.role&&((!('active' in resource.data)&&!('active' in request.resource.data))||('active' in resource.data&&request.resource.data.active==resource.data.active))&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','mobile','city','photoURL','skills','experience','about','preference','state','phone','email','updatedAt','mainSkill','secondSkill','dailyWage','hourlyRate','workingDays','workingTime','workRange','availability','age','gender','area','pincode','address','emergencyContact','aadhaarLast4','notificationsEnabled','soundEnabled','hidePhone','language','fcmToken','fcmTokens','fcmTokenUpdatedAt']);
+   allow update:if signedIn()&&request.auth.uid==uid&&request.resource.data.role==resource.data.role&&((!('active' in resource.data)&&!('active' in request.resource.data))||('active' in resource.data&&request.resource.data.active==resource.data.active))&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name','mobile','city','photoURL','skills','experience','about','preference','state','phone','email','updatedAt','mainSkill','secondSkill','dailyWage','hourlyRate','upiId','workingDays','workingTime','workRange','availability','age','gender','area','pincode','address','emergencyContact','aadhaarLast4','notificationsEnabled','soundEnabled','hidePhone','language','fcmToken','fcmTokens','fcmTokenUpdatedAt']);
    allow update:if admin()&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['active','updatedAt']);
    allow delete:if admin();
   }
   match /workerPublicProfiles/{uid}{
    allow read:if active();
-   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.userId==request.auth.uid&&request.resource.data.keys().hasOnly(['userId','name','photoURL','city','area','pincode','mainSkill','secondSkill','skills','experience','dailyWage','hourlyRate','workingDays','workingTime','workRange','availability','updatedAt','rating','lat','lng','accuracy','lastSeen']);
+   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.userId==request.auth.uid&&request.resource.data.keys().hasOnly(['userId','name','photoURL','city','area','pincode','mainSkill','secondSkill','skills','experience','dailyWage','hourlyRate','upiId','workingDays','workingTime','workRange','availability','updatedAt','rating','lat','lng','accuracy','lastSeen']);
    allow delete:if worker()&&request.auth.uid==uid||admin();
   }
   match /jobs/{id}{
