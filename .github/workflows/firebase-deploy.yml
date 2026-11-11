@@ -23,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 jobs:
   deploy:
@@ -44,25 +45,27 @@ jobs:
           test -f worker-app/index.html
           node --check functions/index.js
 
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
+          create_credentials_file: true
+          export_environment_variables: true
+
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
       - name: Deploy Firebase resources
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
           EVENT_NAME: ${{ github.event_name }}
           BEFORE_SHA: ${{ github.event.before }}
           CURRENT_SHA: ${{ github.sha }}
         run: |
-          if [ -z "$FIREBASE_TOKEN" ]; then
-            echo "::error::FIREBASE_TOKEN GitHub Secret is missing."
-            exit 1
-          fi
           if [ "$EVENT_NAME" = "push" ]; then
             CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
             if echo "$CHANGED" | grep -q '^worker-app/'; then
-              firebase deploy --project nexvadoraq --only hosting --token "$FIREBASE_TOKEN" --non-interactive
+              firebase deploy --project nexvadoraq --only hosting --non-interactive
             fi
             if echo "$CHANGED" | grep -Eq '^(firestore.rules|storage.rules)$'; then
               firebase deploy --project nexvadoraq --only firestore:rules,storage --token "$FIREBASE_TOKEN" --non-interactive
