@@ -90,4 +90,4 @@ service cloud.firestore {
   match /{document=**}{allow read,write:if false;}
  }
 }
-// Deploy trigger: Firestore-only deployment path; validation adjusted for modular worker app.
+// Worker completion submission permission; deploy Firestore rules only.
