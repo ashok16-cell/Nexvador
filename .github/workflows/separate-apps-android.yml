@@ -41,7 +41,7 @@ jobs:
           fi
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
-          npx --yes firebase-tools@latest deploy --only storage --project nexvadoraq --non-interactive
+          npx --yes firebase-tools@latest deploy --only storage,firestore:rules --project nexvadoraq --non-interactive
       - name: Validate HireHub JavaScript
         working-directory: worker-app
         run: |
@@ -118,6 +118,7 @@ jobs:
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
               <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
               <uses-permission android:name="android.permission.VIBRATE" />
+              <uses-permission android:name="android.permission.RECORD_AUDIO" />
               <uses-feature android:name="android.hardware.camera" android:required="false" />
           '''
           if 'android.permission.ACCESS_FINE_LOCATION' not in s:
