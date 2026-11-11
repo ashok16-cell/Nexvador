@@ -279,6 +279,19 @@ function closeAuth(){document.getElementById('auth').classList.add('hidden');doc
 function authSync(){document.getElementById('authTitle').textContent=role==='admin'?'NEXVADORAQ Admin Login':(role==='worker'?'Worker Account':role==='customer'?'Customer / Local Booking Account':'HR / Company Account');document.getElementById('accountRoleLabel').textContent=role==='admin'?'Restricted admin access':(role==='worker'?'Worker account':role==='customer'?'Customer account':'HR / Company account');document.getElementById('reg').classList.toggle('hidden',role==='admin');document.getElementById('reg').classList.toggle('active',mode==='register');document.getElementById('log').classList.toggle('active',mode==='login');document.getElementById('regFields').classList.toggle('hidden',mode==='login'||role==='admin');['name','city'].forEach(x=>document.getElementById(x).required=mode!=='login');document.getElementById('submitAuth').textContent=role==='admin'?'Secure Admin Login':(mode==='register'?'Create account':mode==='repair'?'Complete profile':'Login');document.getElementById('submitAuth').disabled=false;document.getElementById('forgotBtn').classList.toggle('hidden',mode!=='login');document.getElementById('password').autocomplete=mode==='register'?'new-password':'current-password';document.getElementById('authMsg').textContent=''}
 async function forgotPassword(){const email=document.getElementById('email').value.trim().toLowerCase(),msg=document.getElementById('authMsg');if(!email){msg.textContent='ಮೊದಲು Email ನಮೂದಿಸಿ.';document.getElementById('email').focus();return}try{await fbAuth.sendPasswordResetEmail(email);msg.textContent='Password reset link ನಿಮ್ಮ Email ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.'}catch(e){msg.textContent=authError(e)}}
 function authError(err){const code=err?.code||'';const map={'auth/invalid-email':'Email ಸರಿಯಾದ format ನಲ್ಲಿ ನಮೂದಿಸಿ.','auth/user-not-found':'ಈ Email ನಲ್ಲಿ account ಇಲ್ಲ. Create account ಆಯ್ಕೆಮಾಡಿ.','auth/wrong-password':'Password ತಪ್ಪಾಗಿದೆ. Forgot password ಬಳಸಿ reset ಮಾಡಿ.','auth/invalid-credential':'Email ಅಥವಾ Password ತಪ್ಪಾಗಿದೆ.','auth/invalid-login-credentials':'Email ಅಥವಾ Password ತಪ್ಪಾಗಿದೆ.','auth/email-already-in-use':'ಈ Email ಈಗಾಗಲೇ ನೋಂದಾಯಿಸಲಾಗಿದೆ. Login ಆಯ್ಕೆಮಾಡಿ.','auth/weak-password':'ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳ Password ಬಳಸಿ.','auth/operation-not-allowed':'Firebase Console → Authentication → Sign-in method ನಲ್ಲಿ Email/Password Enable ಮಾಡಿ.','auth/network-request-failed':'Internet connection ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','auth/too-many-requests':'ಹೆಚ್ಚು ಪ್ರಯತ್ನಗಳಾಗಿವೆ. ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.','auth/user-disabled':'ಈ ಖಾತೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. Firebase Admin ಅನ್ನು ಸಂಪರ್ಕಿಸಿ.','auth/account-exists-with-different-credential':'ಈ Email ಬೇರೆ sign-in ವಿಧಾನಕ್ಕೆ ಲಿಂಕ್ ಆಗಿದೆ. Support ಸಂಪರ್ಕಿಸಿ.','auth/weak-password':'ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳ Password ಬಳಸಿ.','permission-denied':'Firebase Email/Password Login ಯಶಸ್ವಿಯಾದರೂ Firestore Profile ಓದಲು ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ. Firebase Console → Firestore Database → Rules ನಲ್ಲಿ Repositoryಯ firestore.rules ಸಂಪೂರ್ಣವಾಗಿ paste ಮಾಡಿ Publish ಮಾಡಿ. ನಂತರ ಮತ್ತೆ Login ಮಾಡಿ.','firestore/permission-denied':'Firebase Email/Password Login ಯಶಸ್ವಿಯಾದರೂ Firestore Profile ಓದಲು ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ. Firebase Console → Firestore Database → Rules ನಲ್ಲಿ Repositoryಯ firestore.rules ಸಂಪೂರ್ಣವಾಗಿ paste ಮಾಡಿ Publish ಮಾಡಿ. ನಂತರ ಮತ್ತೆ Login ಮಾಡಿ.','auth/unauthorized-domain':'Firebase Authentication → Settings → Authorized domains ನಲ್ಲಿ ashok16-cell.github.io ಸೇರಿಸಿ.','auth/invalid-api-key':'Firebase API key ತಪ್ಪಾಗಿದೆ. worker-app/firebase-config.js ಪರಿಶೀಲಿಸಿ.','auth/app-not-authorized':'ಈ website domain Firebase project ನಲ್ಲಿ ಅನುಮತಿಸಲ್ಪಟ್ಟಿಲ್ಲ. Authorized domains ಪರಿಶೀಲಿಸಿ.','auth/configuration-not-found':'Firebase Authentication ನಲ್ಲಿ Email/Password sign-in Enable ಮಾಡಿ.','auth/internal-error':'Firebase Authentication ತಾತ್ಕಾಲಿಕ ದೋಷ. ಪುಟ Refresh ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','unavailable':'Firebase ಸಂಪರ್ಕ ಸಿಗುತ್ತಿಲ್ಲ. Internet ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','failed-precondition':'Firestore Database ಸಿದ್ಧವಾಗಿಲ್ಲ ಅಥವಾ ಅಗತ್ಯ Index/Setup ಬಾಕಿ ಇದೆ. Firebase Console ಪರಿಶೀಲಿಸಿ.','deadline-exceeded':'Firebase ಪ್ರತಿಕ್ರಿಯೆ ತಡವಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','resource-exhausted':'Firebase ಮಿತಿ ತಲುಪಿದೆ. ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.','storage/unauthorized':'Profile photo upload ಅನುಮತಿ ಇಲ್ಲ. Storage Rules ಪ್ರಕಟಿಸಿ.'};const friendly=map[code]||err?.message||'Login ಆಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';return code?(friendly+' (Error: '+code+')'):friendly}
+async function readUserProfileWithRetry(userRef){
+ const delays=[0,800,1800];let lastError;
+ for(let attempt=0;attempt<delays.length;attempt++){
+  if(delays[attempt])await new Promise(resolve=>setTimeout(resolve,delays[attempt]));
+  try{return await userRef.get()}catch(err){
+   lastError=err;const code=err?.code||'';
+   const retryable=['unavailable','deadline-exceeded','resource-exhausted','cancelled'].includes(code);
+   if(!retryable||attempt===delays.length-1)throw err;
+   if(navigator.onLine===false)throw new Error('Internet connection ಇಲ್ಲ. Network ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+  }
+ }
+ throw lastError;
+}
 document.getElementById('authForm').onsubmit=async e=>{
  e.preventDefault();
  if(authSubmitting)return;
@@ -309,7 +322,7 @@ document.getElementById('authForm').onsubmit=async e=>{
   if(!user)throw new Error('Firebase account ಸಿಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
   const userRef=fbDb.collection('users').doc(user.uid);
   authStage='Firestore user profile read';
-  const snap=await userRef.get();
+  const snap=await readUserProfileWithRetry(userRef);
 
   if(action==='login'&&snap.exists){
    profile=snap.data();
