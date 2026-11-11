@@ -58,7 +58,7 @@ jobs:
             "version": "1.0.0",
             "private": true,
             "scripts": { "build:android": "cap sync android" },
-            "dependencies": { "@capacitor/core": "^6.2.0", "@capacitor/geolocation": "^6.0.2", "@capacitor/camera": "^6.0.2", "@capacitor/push-notifications": "^6.0.2", "@capacitor-community/background-geolocation": "^1.2.27", "@capacitor/local-notifications": "^6.0.2" },
+            "dependencies": { "@capacitor/core": "^6.2.0", "@capacitor/geolocation": "^6.0.2", "@capacitor/camera": "^6.0.2", "@capacitor/push-notifications": "^6.0.2", "@capacitor/local-notifications": "^6.0.2" },
             "devDependencies": { "@capacitor/cli": "^6.2.0", "@capacitor/android": "^6.2.0", "esbuild": "^0.24.0" }
           }
           EOF
