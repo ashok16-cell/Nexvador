@@ -77,7 +77,7 @@ jobs:
               firebase deploy --project nexvadoraq --only storage --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^functions/'; then
-              firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive
+              firebase deploy --project nexvadoraq --only functions --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^firebase.json$'; then
               firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive
