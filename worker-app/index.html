@@ -323,8 +323,14 @@ document.getElementById('authForm').onsubmit=async e=>{
 
   if(!user)throw new Error('Firebase account ಸಿಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
   const userRef=fbDb.collection('users').doc(user.uid);
-  authStage='Firestore user profile read';
-  const snap=await readUserProfileWithRetry(userRef);
+  // A newly-created Firebase Auth account has no Firestore profile yet.
+  // Do not read a non-existent profile before creating it; write it directly.
+  // Existing login/repair flows still read the profile and retain retry handling.
+  let snap=null;
+  if(action!=='register'){
+   authStage='Firestore user profile read';
+   snap=await readUserProfileWithRetry(userRef);
+  }
 
   if(action==='login'&&snap.exists){
    profile=snap.data();
@@ -359,7 +365,7 @@ document.getElementById('authForm').onsubmit=async e=>{
   // Keep a newly-created Firebase account signed in so the user can repair its missing profile.
   if(action==='register'&&fbAuth.currentUser){
    mode='repair';authSync();document.getElementById('email').value=email;
-   msg.textContent='Firebase account ಸೃಷ್ಟಿಯಾಗಿದೆ; Profile save ಆಗಲಿಲ್ಲ. '+authError(err)+' Name/City ಪರಿಶೀಲಿಸಿ Complete profile ಒತ್ತಿ.';
+   msg.textContent='Firebase account ಸೃಷ್ಟಿಯಾಗಿದೆ; Profile ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ಹಂತ: '+authStage+' — '+authError(err)+' Name/City ಪರಿಶೀಲಿಸಿ Complete profile ಒತ್ತಿ.';
   }
  }finally{btn.disabled=false;authSubmitting=false}
 };
