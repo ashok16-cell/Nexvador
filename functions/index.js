@@ -112,7 +112,7 @@ exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
 );
 
 
-// Assign a stable, sequential public HireHub ID without exposing Firebase Auth UIDs.
+// Assign a stable sequential public HireHub ID to both new and existing accounts on login.
 exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (request) => {
   if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Login ಅಗತ್ಯ.");
   const db = getFirestore();
@@ -122,13 +122,14 @@ exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (r
     const userSnap = await tx.get(userRef);
     if (!userSnap.exists) throw new HttpsError("not-found", "User profile ಸಿಗಲಿಲ್ಲ.");
     const user = userSnap.data() || {};
-    if (typeof user.displayId === "string" && /^NH-(WKR|CMP|CUS)-\\d{6}$/.test(user.displayId)) {
+    // Keep an already-issued valid ID unchanged; this also supports older accounts.
+    if (typeof user.displayId === "string" && /^NH-(WKR|CMP|CUS)-\d{6}$/.test(user.displayId)) {
       return { displayId: user.displayId };
     }
-    const role = String(user.role || "");
+    const role = String(user.role || "").toLowerCase();
     const prefix = role === "worker" ? "WKR" : role === "company" ? "CMP" : role === "customer" ? "CUS" : null;
     if (!prefix) throw new HttpsError("failed-precondition", "ಈ accountಗೆ Display ID ನೀಡಲಾಗುವುದಿಲ್ಲ.");
-    // One shared counter guarantees the numeric sequence is unique across every account type.
+    // Shared global counter ensures sequential numbers across all account types.
     const counterRef = db.collection("systemCounters").doc("hireHub_global");
     const counterSnap = await tx.get(counterRef);
     const next = Number(counterSnap.exists ? counterSnap.data().value || 0 : 0) + 1;
