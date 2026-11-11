@@ -51,7 +51,7 @@ jobs:
           mkdir -p www
           cp index.html www/
           cp firebase-config.js www/
-          printf "import { PushNotifications } from '@capacitor/push-notifications';\nimport { Geolocation } from '@capacitor/geolocation';\nimport { LocalNotifications } from '@capacitor/local-notifications';\nimport { registerPlugin } from '@capacitor/core';\nconst BackgroundGeolocation = registerPlugin('BackgroundGeolocation');\nwindow.NexPushNotifications = PushNotifications;\nwindow.NexGeolocation = Geolocation;\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\nwindow.NexLocalNotifications = LocalNotifications;\n" > push-bridge.js
+          printf "import { PushNotifications } from '@capacitor/push-notifications';\nimport { Geolocation } from '@capacitor/geolocation';\nimport { LocalNotifications } from '@capacitor/local-notifications';\nimport { registerPlugin } from '@capacitor/core';\nconst NativeAppCheck = registerPlugin('NativeAppCheck');\nwindow.NexNativeAppCheck = NativeAppCheck;\nconst BackgroundGeolocation = registerPlugin('BackgroundGeolocation');\nwindow.NexPushNotifications = PushNotifications;\nwindow.NexGeolocation = Geolocation;\nwindow.NexBackgroundGeolocation = BackgroundGeolocation;\nwindow.NexLocalNotifications = LocalNotifications;\n" > push-bridge.js
           cat > package.json <<'EOF'
           {
             "name": "nexvadoraq-mobile",
@@ -105,8 +105,10 @@ jobs:
           p.write_text(s)
           PY
           npx cap sync android
-          # Optional Firebase Android app config enables native FCM delivery.
-          if [ -n "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
+          # Firebase native config is required for Play Integrity App Check.
+          if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
+            echo "::warning::GOOGLE_SERVICES_JSON_BASE64 is missing; native App Check will be compiled but cannot obtain Firebase tokens on this build."
+          else
             echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
             python3 - <<'PY'
           from pathlib import Path
@@ -119,7 +121,62 @@ jobs:
           a=app.read_text()
           if "com.google.gms.google-services" not in a:
               a += "\napply plugin: 'com.google.gms.google-services'\n"
+          if "firebase-appcheck-playintegrity" not in a:
+              a += "\ndependencies {\n    implementation 'com.google.firebase:firebase-appcheck-playintegrity:18.0.0'\n    debugImplementation 'com.google.firebase:firebase-appcheck-debug:18.0.0'\n}\n"
           app.write_text(a)
+          PY
+            mkdir -p android/app/src/main/java/com/nexvadoraq/app
+            cat > android/app/src/main/java/com/nexvadoraq/app/NativeAppCheckPlugin.java <<'JAVA'
+          package com.nexvadoraq.app;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import com.getcapacitor.JSObject;
+          import com.google.firebase.FirebaseApp;
+          import com.google.firebase.appcheck.FirebaseAppCheck;
+          import com.google.firebase.appcheck.AppCheckToken;
+          import com.google.firebase.appcheck.debug.DebugAppCheckProviderFactory;
+          import com.google.firebase.appcheck.playintegrity.PlayIntegrityAppCheckProviderFactory;
+          import com.google.android.gms.tasks.Task;
+          import android.util.Log;
+          @CapacitorPlugin(name = "NativeAppCheck")
+          public class NativeAppCheckPlugin extends Plugin {
+            @Override public void load() {
+              try {
+                FirebaseAppCheck check = FirebaseAppCheck.getInstance(FirebaseApp.getInstance());
+                if (BuildConfig.DEBUG) {
+                  check.installAppCheckProviderFactory(DebugAppCheckProviderFactory.getInstance());
+                  Log.i("HireHubAppCheck", "Debug App Check provider installed. Register its debug token in Firebase Console before enforcement.");
+                } else {
+                  check.installAppCheckProviderFactory(PlayIntegrityAppCheckProviderFactory.getInstance());
+                }
+              } catch (Exception e) {
+                Log.e("HireHubAppCheck", "Provider setup failed", e);
+              }
+            }
+            @PluginMethod public void getToken(PluginCall call) {
+              try {
+                FirebaseAppCheck.getInstance(FirebaseApp.getInstance()).getAppCheckToken(false)
+                  .addOnSuccessListener(token -> {
+                    JSObject result = new JSObject();
+                    result.put("token", token.getToken());
+                    result.put("expireTimeMillis", token.getExpireTimeMillis());
+                    call.resolve(result);
+                  })
+                  .addOnFailureListener(error -> call.reject("App Check token unavailable", error));
+              } catch (Exception e) { call.reject("Firebase App Check is not configured", e); }
+            }
+          }
+          JAVA
+            python3 - <<'PY'
+          from pathlib import Path
+          p=Path("android/app/src/main/java/com/nexvadoraq/app/MainActivity.java")
+          s=p.read_text()
+          if "NativeAppCheckPlugin" not in s:
+              s=s.replace("import com.getcapacitor.BridgeActivity;", "import com.getcapacitor.BridgeActivity;\\nimport com.nexvadoraq.app.NativeAppCheckPlugin;")
+              s=s.replace("public class MainActivity extends BridgeActivity {", "public class MainActivity extends BridgeActivity {\\n    @Override public void onCreate(android.os.Bundle savedInstanceState) {\\n        registerPlugin(NativeAppCheckPlugin.class);\\n        super.onCreate(savedInstanceState);\\n    }")
+          p.write_text(s)
           PY
           fi
       - name: Set Android version code
