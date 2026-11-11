@@ -90,4 +90,4 @@ service cloud.firestore {
   match /{document=**}{allow read,write:if false;}
  }
 }
-// Worker completion submission permission; deploy Firestore rules only.
+// Worker completion submission permission; deployment isolated from Storage.
