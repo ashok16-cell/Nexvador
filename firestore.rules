@@ -66,8 +66,14 @@ match /workerBookings/{id}{
    allow delete:if admin()||(worker()&&request.auth.uid==workerId);
   }
   match /locations/{uid}{
-   allow create,update:if (worker()||company())&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.role==profile(request.auth.uid).role&&request.resource.data.sharing==true&&request.resource.data.lat is number&&request.resource.data.lng is number;
-   allow read:if admin()||company()||(staffCan('users'))||(worker()&&resource.data.role=='company')||(worker()&&request.auth.uid==uid);
+   function validCoordinates(){return request.resource.data.lat is number&&request.resource.data.lat>=-90&&request.resource.data.lat<=90&&request.resource.data.lng is number&&request.resource.data.lng>=-180&&request.resource.data.lng<=180;}
+   function linkedBooking(){return exists(/databases/$(database)/documents/workerActiveBookings/$(uid))&&get(/databases/$(database)/documents/workerActiveBookings/$(uid)).data.bookingId is string&&exists(/databases/$(database)/documents/workerBookings/$(get(/databases/$(database)/documents/workerActiveBookings/$(uid)).data.bookingId));}
+   function bookingData(){return get(/databases/$(database)/documents/workerBookings/$(get(/databases/$(database)/documents/workerActiveBookings/$(uid)).data.bookingId)).data;}
+   function assignedCompany(){return linkedBooking()&&company()&&bookingData().companyId==request.auth.uid&&bookingData().status in ['Confirmed','Partially Filled'];}
+   function assignedCustomer(){return linkedBooking()&&active()&&profile(request.auth.uid).role=='customer'&&bookingData().requesterId==request.auth.uid&&bookingData().status in ['Confirmed','Partially Filled'];}
+   allow create,update:if (worker()||company())&&request.auth.uid==uid&&request.resource.data.uid==request.auth.uid&&request.resource.data.role==profile(request.auth.uid).role&&request.resource.data.sharing==true&&validCoordinates();
+   // GPS is visible only to the owner, administrators, or the company/customer on the worker's active booking.
+   allow read:if admin()||staffCan('users')||(worker()&&request.auth.uid==uid)||assignedCompany()||assignedCustomer();
    allow delete:if admin()||(active()&&request.auth.uid==uid);
   }
   match /conversations/{conversationId}{
