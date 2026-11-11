@@ -5,6 +5,8 @@ on:
   push:
     paths:
       - 'worker-app/**'
+      - 'functions/**'
+      - 'firestore.rules'
       - '.github/workflows/separate-apps-android.yml'
 
 jobs:
