@@ -738,6 +738,29 @@ async function openHireHubChat(conversationId,otherId,bookingId){
  document.getElementById('sendChatForm').onsubmit=async ev=>{ev.preventDefault();const input=document.getElementById('chatMessageText'),status=document.getElementById('sendChatStatus'),value=input.value.trim();if(!value)return;input.disabled=true;try{await getConfirmedBookingContact(bookingId,otherId);await conv.collection('messages').add({senderId:me.id,senderName:me.name||'User',text:value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await conv.set({lastMessage:value.slice(0,180),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});input.value='';status.textContent='Sent'}catch(e){status.textContent='Message ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+e.message}finally{input.disabled=false;input.focus()}};
  document.getElementById('startVoiceCall').onclick=()=>startHireHubVoiceCall(conversationId,otherId,bookingId);
  document.getElementById('endVoiceCall').onclick=()=>endHireHubVoiceCall();
+ const incoming=conv.collection('calls').where('calleeId','==',me.id).where('status','==','ringing').onSnapshot(snap=>{
+  const active=snap.docs.find(d=>d.data().bookingId===String(bookingId));
+  let box=document.getElementById('voiceCallStatus');if(!box)return;
+  if(active){box.innerHTML='Incoming Voice Call <button class="primary" onclick="answerHireHubVoiceCall(\''+esc(conversationId)+'\',\''+esc(active.id)+'\',\''+esc(otherId)+'\',\''+esc(bookingId)+'\')">Answer</button>';}
+ });window.hireHubIncomingCallUnsub=incoming;
+}
+async function answerHireHubVoiceCall(conversationId,callId,otherId,bookingId){
+ const status=document.getElementById('voiceCallStatus'),end=document.getElementById('endVoiceCall');
+ try{
+  await getConfirmedBookingContact(bookingId,otherId);
+  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection)throw new Error('ಈ ಸಾಧನದ WebView Voice Call ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.');
+  const callRef=fbDb.collection('conversations').doc(conversationId).collection('calls').doc(callId),snap=await callRef.get(),d=snap.data();
+  if(!snap.exists||d.status!=='ringing'||d.calleeId!==me.id)throw new Error('ಈ Call ಈಗ ಲಭ್ಯವಿಲ್ಲ.');
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}),pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  window.hireHubVoice={pc,stream,conversationId,otherId,bookingId,callRef,unsubs:[]};stream.getTracks().forEach(t=>pc.addTrack(t,stream));
+  pc.ontrack=e=>{const a=document.getElementById('remoteVoiceAudio');if(a)a.srcObject=e.streams[0]};
+  pc.onicecandidate=e=>{if(e.candidate)callRef.collection('calleeCandidates').add(e.candidate.toJSON()).catch(console.warn)};
+  await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
+  const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+  await callRef.update({answer:{type:answer.type,sdp:answer.sdp},status:'answered',answeredAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const unsub=callRef.collection('callerCandidates').onSnapshot(s=>s.docChanges().forEach(c=>{if(c.type==='added')pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(console.warn)}));
+  window.hireHubVoice.unsubs.push(unsub);status.textContent='Voice Call ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…';end.disabled=false;
+ }catch(e){status.textContent='Call Answer ಆಗಲಿಲ್ಲ: '+e.message}
 }
 async function startHireHubVoiceCall(conversationId,otherId,bookingId){
  const status=document.getElementById('voiceCallStatus'),start=document.getElementById('startVoiceCall'),end=document.getElementById('endVoiceCall');
