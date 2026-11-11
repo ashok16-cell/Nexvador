@@ -64,7 +64,7 @@ jobs:
           const config = fs.readFileSync('worker-app/firebase-config.js', 'utf8');
           const required = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
           for (const key of required) {
-            if (!new RegExp('\\\\b' + key + '\\\\s*:').test(config)) throw new Error('Firebase config missing ' + key);
+            if (!config.includes(key + ':')) throw new Error('Firebase config missing ' + key);
           }
           if (!config.includes('projectId: "nexvadoraq"')) throw new Error('Unexpected Firebase project ID');
           const manifest = JSON.parse(fs.readFileSync('worker-app/manifest.webmanifest', 'utf8'));
