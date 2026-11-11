@@ -57,11 +57,9 @@ exports.sendHireHubPush = onDocumentCreated(
 );
 
 
-// Notify every active Admin when a worker submits work completion.
-// Admin SDK writes bypass client Firestore rules; the client cannot enumerate Admin UIDs.
-const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
-
-exports.notifyAdminOnWorkerCompletion = onDocumentUpdated(
+// One completion event fans out to the booking customer/requester and every active Admin,
+// including Super Admin accounts (role=admin/adminLevel=super or legacy superadmin roles).
+exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
   { document: "workerBookings/{bookingId}", region: "asia-south1" },
   async (event) => {
     const before = event.data?.before?.data() || {};
@@ -70,10 +68,23 @@ exports.notifyAdminOnWorkerCompletion = onDocumentUpdated(
         after.workerCompletionStatus !== "submitted") return;
 
     const db = getFirestore();
-    const admins = await db.collection("users").where("role", "==", "admin").get();
-    const recipients = admins.docs.filter((doc) => doc.data()?.active !== false);
-    if (!recipients.length) {
-      console.warn("No active Admin accounts found for worker completion notification.");
+    const [admins, superAdmins, legacySuperAdmins] = await Promise.all([
+      db.collection("users").where("role", "==", "admin").get(),
+      db.collection("users").where("role", "==", "superadmin").get(),
+      db.collection("users").where("role", "==", "super_admin").get()
+    ]);
+    const recipients = new Map();
+    [admins, superAdmins, legacySuperAdmins].forEach(snapshot => {
+      snapshot.docs.forEach(doc => {
+        if (doc.data()?.active !== false) recipients.set(doc.id, doc.id);
+      });
+    });
+    [after.requesterId, after.customerId, after.companyId].forEach(uid => {
+      if (typeof uid === "string" && uid && uid !== after.workerCompletedBy) recipients.set(uid, uid);
+    });
+    recipients.delete(String(after.workerCompletedBy || ""));
+    if (!recipients.size) {
+      console.warn("No customer or Admin recipients found for worker completion.", event.params.bookingId);
       return;
     }
 
@@ -82,12 +93,11 @@ exports.notifyAdminOnWorkerCompletion = onDocumentUpdated(
     const location = String(after.location || after.city || "ಸ್ಥಳ ತಿಳಿಸಿಲ್ಲ");
     const message = `${workerName} ಅವರು ${workName} ಕೆಲಸ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾಗಿ ತಿಳಿಸಿದ್ದಾರೆ. ಸ್ಥಳ: ${location}. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ.`.slice(0, 500);
     const batch = db.batch();
-    recipients.forEach((adminDoc) => {
-      const ref = db.collection("notifications").doc();
-      batch.set(ref, {
-        actorId: String(after.workerCompletedBy || after.workerId || "system"),
-        recipientId: adminDoc.id,
-        title: "Worker Work Complete — Admin Review",
+    recipients.forEach(uid => {
+      batch.set(db.collection("notifications").doc(), {
+        actorId: String(after.workerCompletedBy || "system"),
+        recipientId: uid,
+        title: "Worker Work Complete — Review Required",
         message,
         eventType: "worker_completion_submitted",
         bookingId: event.params.bookingId,
@@ -96,46 +106,6 @@ exports.notifyAdminOnWorkerCompletion = onDocumentUpdated(
       });
     });
     await batch.commit();
-  }
-);
-
-
-// Separate Super Admin alert when a worker explicitly presses the dedicated button.
-exports.notifySuperAdminOnExplicitCompletionNotice = onDocumentUpdated(
-  { document: "workerBookings/{bookingId}", region: "asia-south1" },
-  async (event) => {
-    const before = event.data?.before?.data() || {};
-    const after = event.data?.after?.data() || {};
-    if (before.superAdminCompletionNoticeStatus === "submitted" ||
-        after.superAdminCompletionNoticeStatus !== "submitted") return;
-
-    const db = getFirestore();
-    const [a, b] = await Promise.all([
-      db.collection("users").where("role", "==", "superadmin").get(),
-      db.collection("users").where("role", "==", "super_admin").get()
-    ]);
-    const admins = new Map([...a.docs, ...b.docs].map(doc => [doc.id, doc]));
-    const recipients = [...admins.values()].filter(doc => doc.data()?.active !== false);
-    if (!recipients.length) {
-      console.warn("No active Super Admin accounts found for explicit completion notice.");
-      return;
-    }
-    const workerName = String(after.workerName || after.acceptedWorkerName || "Worker");
-    const workName = String(after.category || after.title || "Work");
-    const message = `${workerName} ಅವರು ${workName} ಕೆಲಸ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾಗಿ Super Admin‌ಗೆ ಪ್ರತ್ಯೇಕ ಮಾಹಿತಿ ಕಳುಹಿಸಿದ್ದಾರೆ. Booking ಪರಿಶೀಲಿಸಿ.`.slice(0, 500);
-    const batch = db.batch();
-    recipients.forEach(doc => {
-      batch.set(db.collection("notifications").doc(), {
-        actorId: String(after.superAdminCompletionNoticeBy || after.workerCompletedBy || "system"),
-        recipientId: doc.id,
-        title: "Worker Work Complete — Super Admin Alert",
-        message,
-        eventType: "superadmin_worker_completion_notice",
-        bookingId: event.params.bookingId,
-        createdAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
-        read: false
-      });
-    });
-    await batch.commit();
+    console.log("Worker completion notifications delivered to", recipients.size, "recipients.");
   }
 );
