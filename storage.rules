@@ -1,19 +1,33 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-
-    match /workerAssets/{uid}/{allPaths=**} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null && request.auth.uid == uid
-        && request.resource.size < 3 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+    function signedInOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
     }
+    function safeImage(maxBytes) {
+      return request.resource != null
+        && request.resource.size > 0
+        && request.resource.size <= maxBytes
+        && request.resource.contentType.matches('image/(jpeg|png|webp)');
+    }
+
+    // Private worker uploads: only the owner can read or upload.
+    match /workerAssets/{uid}/{allPaths=**} {
+      allow read: if signedInOwner(uid);
+      allow create, update: if signedInOwner(uid) && safeImage(3 * 1024 * 1024);
+      allow delete: if signedInOwner(uid);
+    }
+
+    // Private profile photos: only the owner can read or upload.
     match /profilePhotos/{uid}/{fileName} {
-      allow read: if request.auth != null && request.auth.uid == uid;
-      allow write: if request.auth != null
-        && request.auth.uid == uid
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/.*');
+      allow read: if signedInOwner(uid);
+      allow create, update: if signedInOwner(uid) && safeImage(5 * 1024 * 1024);
+      allow delete: if signedInOwner(uid);
+    }
+
+    // Deny every unlisted storage path by default.
+    match /{allPaths=**} {
+      allow read, write: if false;
     }
   }
 }
