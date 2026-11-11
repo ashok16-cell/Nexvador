@@ -982,18 +982,23 @@ async function startWorkerLocation(){
   else throw new Error('ಈ ಸಾಧನದಲ್ಲಿ GPS support ಇಲ್ಲ.');
   if(!valid(first))throw new Error('GPS coordinates ಸಿಗಲಿಲ್ಲ. Location ON ಮಾಡಿ.');
   handleWorkerPosition(first);
+  let backgroundStarted=false;
   if(window.Capacitor?.isNativePlatform?.()&&bg?.addWatcher){
-   const localNotifications=window.NexLocalNotifications;
-   if(localNotifications?.requestPermissions){const permission=await localNotifications.requestPermissions();if(permission.display!=='granted')throw new Error('Background GPS notification permission Allow ಮಾಡಿ.');}
-   const id=await bg.addWatcher({backgroundTitle:'NEXVADORAQ • Live GPS',backgroundMessage:'ನಿಮ್ಮ Live Location ಹಂಚಲಾಗುತ್ತಿದೆ. ನಿಲ್ಲಿಸಲು HireHub ನಲ್ಲಿ Go Offline ಒತ್ತಿರಿ.',requestPermissions:true,stale:false,distanceFilter:15},(location,error)=>{
-    if(error){console.error('Background GPS error',error);const el=document.getElementById('locStatus');if(el)el.innerHTML='<b>Background GPS error</b><p>'+esc(error.message||String(error))+'</p>';return;}
-    if(location&&valid(location))handleWorkerPosition({coords:{latitude:location.latitude,longitude:location.longitude,accuracy:location.accuracy}});
-   });
-   locationWatchId='background:'+id;
-  }else if(nativeGeo?.watchPosition){
+   try{
+    const localNotifications=window.NexLocalNotifications;
+    if(localNotifications?.requestPermissions){const permission=await localNotifications.requestPermissions();if(permission.display!=='granted')throw new Error('Background GPS notification permission Allow ಮಾಡಿ.');}
+    const id=await bg.addWatcher({backgroundTitle:'NEXVADORAQ • Live GPS',backgroundMessage:'ನಿಮ್ಮ Live Location ಹಂಚಲಾಗುತ್ತಿದೆ. ನಿಲ್ಲಿಸಲು HireHub ನಲ್ಲಿ Go Offline ಒತ್ತಿರಿ.',requestPermissions:true,stale:false,distanceFilter:15},(location,error)=>{
+     if(error){console.error('Background GPS error',error);const el=document.getElementById('locStatus');if(el)el.innerHTML='<b>Background GPS error</b><p>'+esc(error.message||String(error))+'</p>';return;}
+     if(location&&valid(location))handleWorkerPosition({coords:{latitude:location.latitude,longitude:location.longitude,accuracy:location.accuracy}});
+    });
+    locationWatchId='background:'+id;backgroundStarted=true;
+   }catch(bgError){console.warn('Background GPS unavailable; using foreground GPS watcher',bgError);}
+  }
+  if(!backgroundStarted&&nativeGeo?.watchPosition){
    const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:20000,maximumAge:5000},(pos,err)=>{if(err){console.error('GPS watcher error',err);return;}if(pos&&valid(pos))handleWorkerPosition(pos);});
    locationWatchId='native:'+id;
-  }else{
+  }else if(!backgroundStarted){
+   if(!navigator.geolocation)throw new Error('ಈ ಸಾಧನದಲ್ಲಿ GPS support ಇಲ್ಲ.');
    locationWatchId=navigator.geolocation.watchPosition(pos=>{if(valid(pos))handleWorkerPosition(pos);},err=>{console.error('GPS watcher error',err);const el=document.getElementById('locStatus');if(el)el.innerHTML='<b>GPS signal lost</b><p>'+esc(err.message)+' — GPS ON ಮಾಡಿ.</p>';},{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
   }
   if(status)status.innerHTML='<b><span class="locdot"></span>GPS Tracking ON</b><p>ನಿಮ್ಮ ಅನುಮತಿಯೊಂದಿಗೆ Live Location ಹಂಚಲಾಗುತ್ತಿದೆ. Go Offline ಒತ್ತಿದಾಗ Tracking ನಿಲ್ಲುತ್ತದೆ.</p>';
