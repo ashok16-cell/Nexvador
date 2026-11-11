@@ -6,6 +6,7 @@ on:
       - 'firestore.rules'
       - 'functions/**'
       - 'firebase.json'
+      - 'worker-app/**'
   workflow_dispatch:
     inputs:
       deploy_target:
@@ -72,8 +73,23 @@ jobs:
             if echo "$CHANGED" | grep -Eq '^(functions/|firebase.json$)'; then
               firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive
             fi
-            if echo "$CHANGED" | grep -q '^firestore.rules$'; then
+            if echo "$CHANGED" | grep -q '^firestore.rules          else
+            case "$TARGET" in
+              hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
+              hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
+              rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
+              functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
+              *) echo "::error::Unknown deploy target"; exit 1 ;;
+            esac
+          fi
+      - name: Remove temporary credentials
+        if: always()
+        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
+; then
               firebase deploy --project nexvadoraq --only firestore:rules --non-interactive
+            fi
+            if echo "$CHANGED" | grep -q '^worker-app/'; then
+              firebase deploy --project nexvadoraq --only hosting --non-interactive
             fi
           else
             case "$TARGET" in
