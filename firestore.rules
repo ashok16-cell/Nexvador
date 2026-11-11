@@ -47,8 +47,10 @@ service cloud.firestore {
    allow delete:if admin()||(company()&&get(/databases/$(database)/documents/workerBookings/$(resource.data.bookingId)).data.companyId==request.auth.uid&&get(/databases/$(database)/documents/workerBookings/$(resource.data.bookingId)).data.status in ['Completed','Rejected']);
   }
   match /notifications/{id}{
-   allow create:if active()&&request.resource.data.actorId==request.auth.uid&&request.resource.data.recipientId is string&&request.resource.data.recipientId!=request.auth.uid&&request.resource.data.title is string&&request.resource.data.message is string&&request.resource.data.message.size()<=500;
-   allow read,update,delete:if active()&&resource.data.recipientId==request.auth.uid;
+   allow create:if active()&&request.resource.data.actorId==request.auth.uid&&request.resource.data.recipientId is string&&request.resource.data.recipientId!=request.auth.uid&&request.resource.data.title is string&&request.resource.data.message is string&&request.resource.data.message.size()<=500&&((request.resource.data.recipientId!='__admins__')||(worker()&&request.resource.data.audience=='admins'&&request.resource.data.eventType=='worker_completion_submitted'&&request.resource.data.bookingId is string));
+   allow read:if active()&&(resource.data.recipientId==request.auth.uid||(profile(request.auth.uid).role=='admin'&&resource.data.audience=='admins'));
+   allow update:if active()&&((resource.data.recipientId==request.auth.uid&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read','updatedAt']))||(profile(request.auth.uid).role=='admin'&&resource.data.audience=='admins'&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['readBy','updatedAt'])&&request.resource.data.readBy is list&&request.resource.data.readBy.hasAny([request.auth.uid])));
+   allow delete:if active()&&resource.data.recipientId==request.auth.uid;
   }
   match /workerBookings/{bookingId}/tracking/{workerId}{
    function booking(){return get(/databases/$(database)/documents/workerBookings/$(bookingId)).data;}
