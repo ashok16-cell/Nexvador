@@ -43,6 +43,23 @@ jobs:
           Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
+      - name: Validate Firebase and release configuration
+        run: |
+          node --check functions/index.js
+          node - <<'NODE'
+          const fs = require('fs');
+          const config = fs.readFileSync('worker-app/firebase-config.js', 'utf8');
+          const required = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId'];
+          for (const key of required) {
+            if (!new RegExp('\\\\b' + key + '\\\\s*:').test(config)) throw new Error('Firebase config missing ' + key);
+          }
+          if (!config.includes('projectId: "nexvadoraq"')) throw new Error('Unexpected Firebase project ID');
+          const manifest = JSON.parse(fs.readFileSync('worker-app/manifest.webmanifest', 'utf8'));
+          if (!manifest.name || !manifest.start_url || !Array.isArray(manifest.icons) || !manifest.icons.length) throw new Error('PWA manifest is incomplete');
+          const storageRules = fs.readFileSync('storage.rules', 'utf8');
+          if (!storageRules.includes('match /{allPaths=**}') || !storageRules.includes('allow read, write: if false')) throw new Error('Storage rules must deny unlisted paths');
+          console.log('Firebase config, Cloud Functions syntax, PWA manifest and Storage deny-by-default checks passed.');
+          NODE
       - name: Prepare Capacitor project
         working-directory: worker-app
         env:
