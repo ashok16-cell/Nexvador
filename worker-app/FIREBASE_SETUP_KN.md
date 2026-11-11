@@ -9,7 +9,7 @@ Before deploying, open Firebase Console and confirm that this is the intended pr
 ## One-time Firebase Console setup
 1. Open https://console.firebase.google.com/ and select `nexvadoraq`.
 2. **Authentication → Sign-in method**: enable **Email/Password**.
-3. **Authentication → Settings → Authorized domains**: add `ashok16-cell.github.io`. Add any custom domain used by the app as well.
+3. **Authentication → Settings → Authorized domains**: confirm `nexvadoraq.web.app` and `nexvadoraq.firebaseapp.com` are present for Firebase Hosting, and add `ashok16-cell.github.io` if using the GitHub Pages URL. Add any custom domain used by the app as well. Firebase Console is the source of truth; this repository cannot verify or change the live authorized-domain list.
 4. **Firestore Database**: create the database in the intended region. Do not use test mode.
 5. **Storage**: enable Firebase Storage if profile photo upload is required.
 6. In Project settings → Your apps, confirm the Web App configuration matches `worker-app/firebase-config.js`.
@@ -90,3 +90,12 @@ A Google Cloud Project Owner (or an administrator with Service Usage Admin permi
 6. Re-run the Android workflow to build an APK with native Firebase Messaging configuration, then run the Firebase workflow with target `functions-only`.
 
 Do not paste service-account JSON or the raw Google Services file into chat or commit either file to the repository. These owner-level Google Cloud actions cannot be completed by a repository code change alone.
+
+
+## Login follow-up verification (11 Nov 2026)
+
+- The login code now accepts legacy `users/{uid}` profiles where `active` is absent, while continuing to block profiles explicitly marked `active: false`.
+- Android debug APK build for branch `fix/login-firestore-legacy-profile` completed successfully. This confirms compilation and artifact upload only; it does not prove Firebase sign-in works on a real account.
+- Before declaring login fixed, verify Email/Password is enabled, the app's actual domain is in Authentication → Settings → Authorized domains, and the deployed Firestore rules permit an authenticated user to read their own `users/{uid}` document.
+- Test with one Worker test account and one Company test account on the installed APK. Record the exact on-screen Firebase error if either fails.
+- Do not deploy rules or merge this branch to `main` until the live Firebase project and test results have been checked.
