@@ -55,3 +55,46 @@ exports.sendHireHubPush = onDocumentCreated(
     }
   }
 );
+
+
+// Notify every active Admin when a worker submits work completion.
+// Admin SDK writes bypass client Firestore rules; the client cannot enumerate Admin UIDs.
+const { onDocumentUpdated } = require("firebase-functions/v2/firestore");
+
+exports.notifyAdminOnWorkerCompletion = onDocumentUpdated(
+  { document: "workerBookings/{bookingId}", region: "asia-south1" },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const after = event.data?.after?.data() || {};
+    if (before.workerCompletionStatus === "submitted" ||
+        after.workerCompletionStatus !== "submitted") return;
+
+    const db = getFirestore();
+    const admins = await db.collection("users").where("role", "==", "admin").get();
+    const recipients = admins.docs.filter((doc) => doc.data()?.active !== false);
+    if (!recipients.length) {
+      console.warn("No active Admin accounts found for worker completion notification.");
+      return;
+    }
+
+    const workerName = String(after.workerName || after.acceptedWorkerName || "Worker");
+    const workName = String(after.category || after.title || "Work");
+    const location = String(after.location || after.city || "ಸ್ಥಳ ತಿಳಿಸಿಲ್ಲ");
+    const message = `${workerName} ಅವರು ${workName} ಕೆಲಸ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾಗಿ ತಿಳಿಸಿದ್ದಾರೆ. ಸ್ಥಳ: ${location}. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ.`.slice(0, 500);
+    const batch = db.batch();
+    recipients.forEach((adminDoc) => {
+      const ref = db.collection("notifications").doc();
+      batch.set(ref, {
+        actorId: String(after.workerCompletedBy || after.workerId || "system"),
+        recipientId: adminDoc.id,
+        title: "Worker Work Complete — Admin Review",
+        message,
+        eventType: "worker_completion_submitted",
+        bookingId: event.params.bookingId,
+        createdAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+        read: false
+      });
+    });
+    await batch.commit();
+  }
+);
