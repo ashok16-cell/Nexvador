@@ -681,8 +681,87 @@ if(page==='profile'){const p=me;el.innerHTML='<div class="card"><div class="row"
 async function loadMyWorkerTickets(){const box=document.getElementById('mySupportTickets');if(!box)return;try{const q=await fbDb.collection('workerSupportTickets').where('workerId','==',me.id).limit(30).get();box.innerHTML=q.empty?'ಇನ್ನೂ ಯಾವುದೇ Complaint ಇಲ್ಲ.':q.docs.map(d=>{const x=d.data();return '<div class="item"><b>'+esc(x.type||'Support')+'</b><p>'+esc(x.message||'')+'</p><span class="pill">'+esc(x.status||'Open')+'</span><small class="muted">Ticket: '+esc(d.id)+'</small></div>'}).join('')}catch(e){box.textContent='Complaints ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message}}
 
 window.copyHireHubUserId=async function(){const value=String(me?.id||'');if(!value)return;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value)}else{const input=document.createElement('textarea');input.value=value;input.style.position='fixed';input.style.opacity='0';document.body.appendChild(input);input.select();document.execCommand('copy');input.remove()}alert('ನಿಮ್ಮ User ID copy ಆಯಿತು. ಅದನ್ನು ಇನ್ನೊಬ್ಬರಿಗೆ ಕಳುಹಿಸಿ.')}catch(e){alert('Copy ಆಗಲಿಲ್ಲ. User ID ಅನ್ನು ಒತ್ತಿ ಹಿಡಿದು Copy ಮಾಡಿ.')}};
-async function renderHireHubChat(el){el.innerHTML='<div class="card"><h3>HireHub Chat</h3><p class="muted">Worker, Company ಮತ್ತು Customer ನಡುವೆ ನೇರ ಸಂದೇಶ. ಹೊಸ Chat ಆರಂಭಿಸಲು ಎದುರಿನ User ID ನಮೂದಿಸಿ. ನಿಮ್ಮ User ID ಅನ್ನು Profile support ಮೂಲಕ ಹಂಚಿಕೊಳ್ಳಬಹುದು.</p><form id="newChatForm"><div class="field"><label>Recipient User ID Number</label><input id="chatRecipientId" required autocomplete="off" placeholder="ಇನ್ನೊಬ್ಬರ Firebase User ID ನಮೂದಿಸಿ"></div><button class="primary" type="submit">Start Chat</button><p id="chatStatus" class="muted"></p></form></div><div class="card"><h3>Your Conversations</h3><div id="chatThreads">Loading conversations…</div></div>';const list=document.getElementById('chatThreads');try{const snap=await fbDb.collection('conversations').where('participants','array-contains',me.id).get();if(!list)return;const rows=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.updatedAt?.toMillis?.()||0)-(a.updatedAt?.toMillis?.()||0));list.innerHTML=rows.length?rows.map(c=>{const other=(c.participants||[]).find(x=>x!==me.id)||'Unknown';return '<div class="item"><b>'+esc(c.names?.[other]||('User '+other.slice(0,8)))+'</b><p class="muted">'+esc(c.lastMessage||'No messages yet')+'</p><button class="primary" onclick="openHireHubChat(\''+esc(c.id)+'\',\''+esc(other)+'\')">Open Chat</button></div>'}).join(''):'<p class="muted">ಇನ್ನೂ Chat ಇಲ್ಲ. Recipient User ID ಬಳಸಿ ಮೊದಲ Chat ಆರಂಭಿಸಿ.</p>'}catch(err){list.textContent='Chat load ಆಗಲಿಲ್ಲ: '+err.message}document.getElementById('newChatForm').onsubmit=async ev=>{ev.preventDefault();const other=document.getElementById('chatRecipientId').value.trim();const status=document.getElementById('chatStatus');if(!other||other===me.id){status.textContent='ಸರಿಯಾದ ಬೇರೆ User ID ನಮೂದಿಸಿ.';return}try{status.textContent='User ID ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…';const recipientSnap=await fbDb.collection('users').doc(other).get();if(!recipientSnap.exists){status.textContent='ಈ User ID ಸಿಗಲಿಲ್ಲ. ಸರಿಯಾದ User ID Number ಪರಿಶೀಲಿಸಿ.';return}const recipient=recipientSnap.data()||{};if(recipient.active===false){status.textContent='ಈ User account ಸಕ್ರಿಯವಾಗಿಲ್ಲ.';return}const ids=[me.id,other].sort();const id=ids.join('_');const names={};names[me.id]=me.name||'User';names[other]=recipient.name||recipient.companyName||'User';await fbDb.collection('conversations').doc(id).set({participants:ids,names,createdBy:me.id,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});await openHireHubChat(id,other)}catch(err){status.textContent='Chat ಆರಂಭಿಸಲು ಆಗಲಿಲ್ಲ: '+err.message}}}
-async function openHireHubChat(conversationId,otherId){page='chat';const el=document.getElementById('panel');el.innerHTML='<div class="card"><div class="row"><h3>Chat</h3><button onclick="go(\'chat\')">Back</button></div><div id="chatMessages" style="max-height:52vh;overflow:auto"></div><form id="sendChatForm"><div class="field"><label>Message</label><textarea id="chatMessageText" required maxlength="2000" placeholder="ನಿಮ್ಮ ಸಂದೇಶ ಬರೆಯಿರಿ…"></textarea></div><button class="primary" type="submit">Send Message</button><p id="sendChatStatus" class="muted"></p></form></div>';const box=document.getElementById('chatMessages');const renderMessages=snap=>{if(!box)return;box.innerHTML=snap.docs.map(d=>{const m=d.data();const own=m.senderId===me.id;return '<div class="item" style="text-align:'+(own?'right':'left')+'"><div style="display:inline-block;max-width:88%;text-align:left;background:'+(own?'#e6f5f3':'#f0f3f7')+';padding:10px 13px;border-radius:13px"><b>'+esc(own?'You':(m.senderName||'User'))+'</b><div>'+esc(m.text||'')+'</div><small class="muted">'+esc(m.createdAt?.toDate?m.createdAt.toDate().toLocaleString():'Sending…')+'</small></div></div>'}).join('')||'<p class="muted">Start the conversation.</p>';box.scrollTop=box.scrollHeight};if(window.hireHubMessageUnsub)window.hireHubMessageUnsub();window.hireHubMessageUnsub=fbDb.collection('conversations').doc(conversationId).collection('messages').orderBy('createdAt').limit(100).onSnapshot(renderMessages,err=>{if(box)box.textContent='Messages load ಆಗಲಿಲ್ಲ: '+err.message});document.getElementById('sendChatForm').onsubmit=async ev=>{ev.preventDefault();const input=document.getElementById('chatMessageText'),status=document.getElementById('sendChatStatus'),value=input.value.trim();if(!value)return;input.disabled=true;try{const conv=fbDb.collection('conversations').doc(conversationId);await conv.collection('messages').add({senderId:me.id,senderName:me.name||'User',text:value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await conv.set({lastMessage:value.slice(0,180),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});input.value='';status.textContent='Sent'}catch(err){status.textContent='Message ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+err.message}finally{input.disabled=false;input.focus()}}}
+async function getConfirmedBookingContact(bookingId,otherId){
+ const snap=await fbDb.collection('workerBookings').doc(String(bookingId)).get();
+ if(!snap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
+ const b=snap.data(),ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
+ const requester=b.requesterId||b.companyId;
+ if(b.status!=='Confirmed'||!requester||!ids.includes(String(otherId)))throw new Error('Booking Confirm ಆದ ನಂತರ ಮಾತ್ರ Chat / Voice Call ಲಭ್ಯ.');
+ if(me.id!==requester&&!ids.includes(me.id))throw new Error('ಈ Bookingಗೆ ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ.');
+ if(me.id===String(otherId))throw new Error('ನಿಮ್ಮನ್ನೇ ಆಯ್ಕೆ ಮಾಡಲಾಗುವುದಿಲ್ಲ.');
+ if(String(otherId)!==String(requester)&&!ids.includes(String(otherId)))throw new Error('ಈ User ಈ Bookingಗೆ ಸಂಬಂಧಪಟ್ಟವರಲ್ಲ.');
+ return {booking:b,requester,workerIds:ids};
+}
+async function renderHireHubChat(el){
+ el.innerHTML='<div class="card"><h3>HireHub ಸಂಪರ್ಕ</h3><p class="muted">Booking Confirm ಆದ ನಂತರ ಮಾತ್ರ ಸಂಬಂಧಪಟ್ಟ Customer / Company ಮತ್ತು ಸ್ವೀಕರಿಸಿದ Worker ನಡುವೆ Chat ಹಾಗೂ Voice Call ತೆರೆಯುತ್ತದೆ.</p><div id="bookingChatContacts">Confirmed Bookings ಲೋಡ್ ಆಗುತ್ತಿವೆ…</div></div><div class="card"><h3>ನಿಮ್ಮ Conversations</h3><div id="chatThreads">Loading…</div></div>';
+ const contacts=document.getElementById('bookingChatContacts'),list=document.getElementById('chatThreads');
+ try{
+  let q;
+  if(me.role==='worker')q=await fbDb.collection('workerBookings').where('acceptedWorkerIds','array-contains',me.id).get();
+  else if(me.role==='company')q=await fbDb.collection('workerBookings').where('companyId','==',me.id).get();
+  else q=await fbDb.collection('workerBookings').where('requesterId','==',me.id).get();
+  const bookings=q.docs.map(d=>({id:d.id,...d.data()})).filter(b=>b.status==='Confirmed');
+  const rows=[];
+  for(const b of bookings){
+   const requester=b.requesterId||b.companyId,workers=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
+   const others=me.id===requester?workers:[requester];
+   for(const other of others.filter(Boolean)){
+    const u=await fbDb.collection('users').doc(other).get().catch(()=>null);
+    const name=u?.exists?(u.data().name||u.data().companyName||'User'):(b.acceptedWorkers||[]).find(x=>x.workerId===other)?.workerName||'Booking Contact';
+    rows.push({bookingId:b.id,otherId:other,name,category:b.category||'Work',date:b.date||''});
+   }
+  }
+  contacts.innerHTML=rows.length?rows.map(x=>'<div class="item"><b>'+esc(x.name)+'</b><p>'+esc(x.category)+' • '+esc(x.date)+' • Booking '+esc(x.bookingId)+'</p><button class="primary" onclick="startBookingChat(\''+esc(x.bookingId)+'\',\''+esc(x.otherId)+'\')">Chat ತೆರೆಯಿರಿ</button></div>').join(''):'<p class="muted">Confirm ಆದ Booking ಇಲ್ಲ. Booking Confirm ಆದ ಮೇಲೆ ಸಂಪರ್ಕ ಆಯ್ಕೆ ಇಲ್ಲಿ ಕಾಣುತ್ತದೆ.</p>';
+ }catch(e){contacts.textContent='Booking ಸಂಪರ್ಕ ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message}
+ try{
+  const snap=await fbDb.collection('conversations').where('participants','array-contains',me.id).get();
+  const convs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>!!c.bookingId);
+  list.innerHTML=convs.length?convs.map(c=>{const other=(c.participants||[]).find(x=>x!==me.id)||'';return '<div class="item"><b>'+esc(c.names?.[other]||'Booking Contact')+'</b><p class="muted">Booking '+esc(c.bookingId)+' • '+esc(c.lastMessage||'No messages yet')+'</p><button class="primary" onclick="openHireHubChat(\''+esc(c.id)+'\',\''+esc(other)+'\',\''+esc(c.bookingId)+'\')">Open Chat / Call</button></div>'}).join(''):'<p class="muted">ಇನ್ನೂ Conversation ಇಲ್ಲ.</p>';
+ }catch(e){list.textContent='Conversations ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message}
+}
+async function startBookingChat(bookingId,otherId){
+ try{
+  const access=await getConfirmedBookingContact(bookingId,otherId),ids=[me.id,String(otherId)].sort(),id=String(bookingId)+'_'+ids.join('_');
+  const recipient=await fbDb.collection('users').doc(String(otherId)).get(),names={};names[me.id]=me.name||'User';names[otherId]=recipient.exists?(recipient.data().name||recipient.data().companyName||'User'):'Booking Contact';
+  await fbDb.collection('conversations').doc(id).set({bookingId:String(bookingId),participants:ids,names,createdBy:me.id,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  await openHireHubChat(id,String(otherId),String(bookingId));
+ }catch(e){alert('Chat ತೆರೆಯಲಾಗಲಿಲ್ಲ: '+e.message)}
+}
+async function openHireHubChat(conversationId,otherId,bookingId){
+ await getConfirmedBookingContact(bookingId,otherId);
+ page='chat';const el=document.getElementById('panel');
+ el.innerHTML='<div class="card"><div class="row"><h3>HireHub Chat</h3><button onclick="go(\'chat\')">Back</button></div><p class="muted">Confirmed Booking • '+esc(bookingId)+'</p><div class="row"><button class="primary" id="startVoiceCall">Voice Call</button><button id="endVoiceCall" disabled>Call ಮುಗಿಸಿ</button></div><p id="voiceCallStatus" class="muted">Voice Call ಆರಂಭಿಸಲು ಅನುಮತಿ ನೀಡಿ.</p><audio id="remoteVoiceAudio" autoplay playsinline></audio><div id="chatMessages" style="max-height:45vh;overflow:auto"></div><form id="sendChatForm"><div class="field"><label>Message</label><textarea id="chatMessageText" required maxlength="2000" placeholder="ನಿಮ್ಮ ಸಂದೇಶ ಬರೆಯಿರಿ…"></textarea></div><button class="primary" type="submit">Send Message</button><p id="sendChatStatus" class="muted"></p></form></div>';
+ const box=document.getElementById('chatMessages'),conv=fbDb.collection('conversations').doc(conversationId);
+ const renderMessages=snap=>{if(!box)return;box.innerHTML=snap.docs.map(d=>{const m=d.data(),own=m.senderId===me.id;return '<div class="item" style="text-align:'+(own?'right':'left')+'"><div style="display:inline-block;max-width:88%;text-align:left;background:'+(own?'#e6f5f3':'#f0f3f7')+';padding:10px 13px;border-radius:13px"><b>'+esc(own?'You':(m.senderName||'User'))+'</b><div>'+esc(m.text||'')+'</div><small class="muted">'+esc(m.createdAt?.toDate?m.createdAt.toDate().toLocaleString():'Sending…')+'</small></div></div>'}).join('')||'<p class="muted">Start the conversation.</p>';box.scrollTop=box.scrollHeight};
+ if(window.hireHubMessageUnsub)window.hireHubMessageUnsub();
+ window.hireHubMessageUnsub=conv.collection('messages').orderBy('createdAt').limit(100).onSnapshot(renderMessages,e=>{if(box)box.textContent='Messages load ಆಗಲಿಲ್ಲ: '+e.message});
+ document.getElementById('sendChatForm').onsubmit=async ev=>{ev.preventDefault();const input=document.getElementById('chatMessageText'),status=document.getElementById('sendChatStatus'),value=input.value.trim();if(!value)return;input.disabled=true;try{await getConfirmedBookingContact(bookingId,otherId);await conv.collection('messages').add({senderId:me.id,senderName:me.name||'User',text:value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await conv.set({lastMessage:value.slice(0,180),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});input.value='';status.textContent='Sent'}catch(e){status.textContent='Message ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+e.message}finally{input.disabled=false;input.focus()}};
+ document.getElementById('startVoiceCall').onclick=()=>startHireHubVoiceCall(conversationId,otherId,bookingId);
+ document.getElementById('endVoiceCall').onclick=()=>endHireHubVoiceCall();
+}
+async function startHireHubVoiceCall(conversationId,otherId,bookingId){
+ const status=document.getElementById('voiceCallStatus'),start=document.getElementById('startVoiceCall'),end=document.getElementById('endVoiceCall');
+ try{
+  await getConfirmedBookingContact(bookingId,otherId);
+  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection)throw new Error('ಈ ಸಾಧನದ WebView Voice Call ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.');
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}),pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  window.hireHubVoice={pc,stream,conversationId,otherId,bookingId,unsubs:[]};stream.getTracks().forEach(t=>pc.addTrack(t,stream));
+  pc.ontrack=e=>{const a=document.getElementById('remoteVoiceAudio');if(a)a.srcObject=e.streams[0]};
+  const callRef=fbDb.collection('conversations').doc(conversationId).collection('calls').doc();
+  window.hireHubVoice.callRef=callRef;
+  pc.onicecandidate=e=>{if(e.candidate)callRef.collection('callerCandidates').add(e.candidate.toJSON()).catch(console.warn)};
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await callRef.set({bookingId:String(bookingId),callerId:me.id,calleeId:String(otherId),status:'ringing',offer:{type:offer.type,sdp:offer.sdp},createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const unsub=callRef.onSnapshot(async snap=>{const d=snap.data();if(!d||!d.answer||pc.currentRemoteDescription)return;try{await pc.setRemoteDescription(new RTCSessionDescription(d.answer));status.textContent='Voice Call ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…'}catch(e){status.textContent='Call ಸಂಪರ್ಕ ವಿಫಲ: '+e.message}});
+  window.hireHubVoice.unsubs.push(unsub);
+  const cand=callRef.collection('calleeCandidates').onSnapshot(s=>s.docChanges().forEach(c=>{if(c.type==='added')pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(console.warn)}));window.hireHubVoice.unsubs.push(cand);
+  status.textContent='Calling… ಎದುರಿನವರು Answer ಮಾಡುವವರೆಗೆ ಕಾಯಿರಿ.';start.disabled=true;end.disabled=false;
+ }catch(e){status.textContent='Voice Call ಆರಂಭಿಸಲಾಗಲಿಲ್ಲ: '+e.message;end.disabled=true}
+}
+async function endHireHubVoiceCall(){
+ const v=window.hireHubVoice;if(!v)return;
+ try{await v.callRef?.update({status:'ended',endedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});v.unsubs?.forEach(f=>f());v.pc?.close();v.stream?.getTracks().forEach(t=>t.stop())}finally{window.hireHubVoice=null;const s=document.getElementById('voiceCallStatus'),a=document.getElementById('startVoiceCall'),b=document.getElementById('endVoiceCall');if(s)s.textContent='Voice Call ಮುಗಿಸಲಾಗಿದೆ.';if(a)a.disabled=false;if(b)b.disabled=true}
+}
 function hasValidCoordinates(lat,lng){if(lat===null||lat===undefined||lng===null||lng===undefined||String(lat).trim()===''||String(lng).trim()==='')return false;const a=Number(lat),b=Number(lng);return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a)<=90&&Math.abs(b)<=180&&(a!==0||b!==0)}
 function getMyWorkerCoords(){if(hasValidCoordinates(window.workerCurrentCoords?.lat,window.workerCurrentCoords?.lng))return{lat:Number(window.workerCurrentCoords.lat),lng:Number(window.workerCurrentCoords.lng)};const d=db(),p=(d.liveLocations||[]).find(x=>x.worker===me.id&&x.sharing!==false&&hasValidCoordinates(x.lat,x.lng));return p?{lat:Number(p.lat),lng:Number(p.lng)}:null}
 async function geocodeBookingLocation(place){
