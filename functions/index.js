@@ -98,3 +98,44 @@ exports.notifyAdminOnWorkerCompletion = onDocumentUpdated(
     await batch.commit();
   }
 );
+
+
+// Separate Super Admin alert when a worker explicitly presses the dedicated button.
+exports.notifySuperAdminOnExplicitCompletionNotice = onDocumentUpdated(
+  { document: "workerBookings/{bookingId}", region: "asia-south1" },
+  async (event) => {
+    const before = event.data?.before?.data() || {};
+    const after = event.data?.after?.data() || {};
+    if (before.superAdminCompletionNoticeStatus === "submitted" ||
+        after.superAdminCompletionNoticeStatus !== "submitted") return;
+
+    const db = getFirestore();
+    const [a, b] = await Promise.all([
+      db.collection("users").where("role", "==", "superadmin").get(),
+      db.collection("users").where("role", "==", "super_admin").get()
+    ]);
+    const admins = new Map([...a.docs, ...b.docs].map(doc => [doc.id, doc]));
+    const recipients = [...admins.values()].filter(doc => doc.data()?.active !== false);
+    if (!recipients.length) {
+      console.warn("No active Super Admin accounts found for explicit completion notice.");
+      return;
+    }
+    const workerName = String(after.workerName || after.acceptedWorkerName || "Worker");
+    const workName = String(after.category || after.title || "Work");
+    const message = `${workerName} ಅವರು ${workName} ಕೆಲಸ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾಗಿ Super Admin‌ಗೆ ಪ್ರತ್ಯೇಕ ಮಾಹಿತಿ ಕಳುಹಿಸಿದ್ದಾರೆ. Booking ಪರಿಶೀಲಿಸಿ.`.slice(0, 500);
+    const batch = db.batch();
+    recipients.forEach(doc => {
+      batch.set(db.collection("notifications").doc(), {
+        actorId: String(after.superAdminCompletionNoticeBy || after.workerCompletedBy || "system"),
+        recipientId: doc.id,
+        title: "Worker Work Complete — Super Admin Alert",
+        message,
+        eventType: "superadmin_worker_completion_notice",
+        bookingId: event.params.bookingId,
+        createdAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
+        read: false
+      });
+    });
+    await batch.commit();
+  }
+);
