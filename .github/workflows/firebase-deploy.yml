@@ -4,9 +4,11 @@ on:
   push:
     paths:
       - 'firestore.rules'
+      - 'storage.rules'
       - 'functions/**'
       - 'firebase.json'
       - 'worker-app/**'
+      - '.github/workflows/firebase-deploy.yml'
   workflow_dispatch:
     inputs:
       deploy_target:
@@ -14,14 +16,13 @@ on:
         required: true
         type: choice
         options:
-          - hosting-and-rules
           - hosting-only
           - rules-only
+          - hosting-and-rules
           - functions-only
 
 permissions:
   contents: read
-  id-token: write
 
 jobs:
   deploy:
@@ -29,8 +30,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,65 +40,45 @@ jobs:
         run: |
           test -f firebase.json
           test -f firestore.rules
-          node --check scripts/bootstrap-admin.mjs
+          test -f storage.rules
+          test -f worker-app/index.html
           node --check functions/index.js
-
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v2
-        with:
-          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
-          create_credentials_file: true
-          export_environment_variables: true
-          cleanup_credentials: true
 
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
-      - name: Verify Firebase CLI authentication
-        run: |
-          test -n "$GOOGLE_APPLICATION_CREDENTIALS"
-          test -f "$GOOGLE_APPLICATION_CREDENTIALS"
-          firebase projects:list --non-interactive
-
-      - name: Deploy selected Firebase resources
+      - name: Deploy Firebase resources
         env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
           TARGET: ${{ inputs.deploy_target || 'hosting-and-rules' }}
           EVENT_NAME: ${{ github.event_name }}
           BEFORE_SHA: ${{ github.event.before }}
           CURRENT_SHA: ${{ github.sha }}
         run: |
+          if [ -z "$FIREBASE_TOKEN" ]; then
+            echo "::error::FIREBASE_TOKEN GitHub Secret is missing."
+            exit 1
+          fi
           if [ "$EVENT_NAME" = "push" ]; then
             CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
-            if echo "$CHANGED" | grep -Eq '^(functions/|firebase.json$)'; then
-              firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive
-            fi
-            if echo "$CHANGED" | grep -q '^firestore.rules          else
-            case "$TARGET" in
-              hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
-              hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
-              rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
-              functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
-              *) echo "::error::Unknown deploy target"; exit 1 ;;
-            esac
-          fi
-      - name: Remove temporary credentials
-        if: always()
-        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
-; then
-              firebase deploy --project nexvadoraq --only firestore:rules --non-interactive
-            fi
             if echo "$CHANGED" | grep -q '^worker-app/'; then
-              firebase deploy --project nexvadoraq --only hosting --non-interactive
+              firebase deploy --project nexvadoraq --only hosting --token "$FIREBASE_TOKEN" --non-interactive
+            fi
+            if echo "$CHANGED" | grep -Eq '^(firestore.rules|storage.rules)$'; then
+              firebase deploy --project nexvadoraq --only firestore:rules,storage --token "$FIREBASE_TOKEN" --non-interactive
+            fi
+            if echo "$CHANGED" | grep -q '^functions/'; then
+              firebase deploy --project nexvadoraq --only functions:sendHireHubPush --token "$FIREBASE_TOKEN" --non-interactive
+            fi
+            if echo "$CHANGED" | grep -q '^firebase.json$'; then
+              firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --token "$FIREBASE_TOKEN" --non-interactive
             fi
           else
             case "$TARGET" in
-              hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --non-interactive ;;
-              hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
-              rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
-              functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --non-interactive ;;
+              hosting-only) firebase deploy --project nexvadoraq --only hosting --token "$FIREBASE_TOKEN" --non-interactive ;;
+              rules-only) firebase deploy --project nexvadoraq --only firestore:rules,storage --token "$FIREBASE_TOKEN" --non-interactive ;;
+              hosting-and-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules,storage --token "$FIREBASE_TOKEN" --non-interactive ;;
+              functions-only) firebase deploy --project nexvadoraq --only functions:sendHireHubPush --token "$FIREBASE_TOKEN" --non-interactive ;;
               *) echo "::error::Unknown deploy target"; exit 1 ;;
             esac
           fi
-      - name: Remove temporary credentials
-        if: always()
-        run: rm -f "$RUNNER_TEMP/firebase-service-account.json"
