@@ -701,7 +701,7 @@ async function workerNotifySuperAdminCompletion(id){
    const b=snap.data(),ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
    if(!ids.includes(me.id))throw new Error('ಈ Booking ನಿಮಗೆ ಸೇರಿಲ್ಲ.');
    if(b.workerCompletionStatus!=='submitted'&&b.status!=='Completed')throw new Error('ಮೊದಲು Work Complete ಸಲ್ಲಿಸಿ.');
-   await ref.update({superAdminCompletionNoticeStatus:'submitted',superAdminCompletionNoticeAt:firebase.firestore.FieldValue.serverTimestamp(),superAdminCompletionNoticeBy:me.id,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
+   await ref.update({workerCompletionStatus:'submitted',workerCompletedAt:firebase.firestore.FieldValue.serverTimestamp(),workerCompletedBy:me.id,superAdminCompletionNoticeStatus:'submitted',superAdminCompletionNoticeAt:firebase.firestore.FieldValue.serverTimestamp(),superAdminCompletionNoticeBy:me.id,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});
    alert('Super Admin‌ಗೆ ಕೆಲಸ ಪೂರ್ಣಗೊಂಡ ಮಾಹಿತಿ ಕಳುಹಿಸಲಾಗಿದೆ.');
    go('mybookings');
   }catch(e){alert('Super Admin‌ಗೆ ಮಾಹಿತಿ ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+(e.code||e.message))}
