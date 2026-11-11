@@ -686,8 +686,10 @@ async function getConfirmedBookingContact(bookingId,otherId){
  if(!snap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
  const b=snap.data(),ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
  const requester=b.requesterId||b.companyId;
- if(b.status!=='Confirmed'||!requester||!ids.includes(String(otherId)))throw new Error('Booking Confirm ಆದ ನಂತರ ಮಾತ್ರ Chat / Voice Call ಲಭ್ಯ.');
+ if(b.status!=='Confirmed'||!requester)throw new Error('Booking Confirm ಆದ ನಂತರ ಮಾತ್ರ Chat / Voice Call ಲಭ್ಯ.');
  if(me.id!==requester&&!ids.includes(me.id))throw new Error('ಈ Bookingಗೆ ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ.');
+ if(me.id===requester&&!ids.includes(String(otherId)))throw new Error('ಈ Worker ಈ Bookingಗೆ ಸ್ವೀಕರಿಸಿಲ್ಲ.');
+ if(me.id!==requester&&String(otherId)!==String(requester))throw new Error('ಈ Booking requester ಮಾತ್ರ ಸಂಪರ್ಕಕ್ಕೆ ಲಭ್ಯ.');
  if(me.id===String(otherId))throw new Error('ನಿಮ್ಮನ್ನೇ ಆಯ್ಕೆ ಮಾಡಲಾಗುವುದಿಲ್ಲ.');
  if(String(otherId)!==String(requester)&&!ids.includes(String(otherId)))throw new Error('ಈ User ಈ Bookingಗೆ ಸಂಬಂಧಪಟ್ಟವರಲ್ಲ.');
  return {booking:b,requester,workerIds:ids};
