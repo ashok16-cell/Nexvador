@@ -128,7 +128,8 @@ exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (r
     const role = String(user.role || "");
     const prefix = role === "worker" ? "WKR" : role === "company" ? "CMP" : role === "customer" ? "CUS" : null;
     if (!prefix) throw new HttpsError("failed-precondition", "ಈ accountಗೆ Display ID ನೀಡಲಾಗುವುದಿಲ್ಲ.");
-    const counterRef = db.collection("systemCounters").doc("hireHub_" + prefix);
+    // One shared counter guarantees the numeric sequence is unique across every account type.
+    const counterRef = db.collection("systemCounters").doc("hireHub_global");
     const counterSnap = await tx.get(counterRef);
     const next = Number(counterSnap.exists ? counterSnap.data().value || 0 : 0) + 1;
     if (!Number.isSafeInteger(next) || next > 999999) throw new HttpsError("resource-exhausted", "Display ID ಮಿತಿ ಮುಗಿದಿದೆ.");
