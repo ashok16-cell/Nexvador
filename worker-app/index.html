@@ -364,7 +364,10 @@ document.getElementById('authForm').onsubmit=async e=>{
   me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
  }catch(err){
   console.error('HireHub auth error at ['+authStage+']:',err.code||err.message,err);
-  msg.textContent='ಹಂತ: '+authStage+' — '+authError(err);
+  const nativePlatform=window.Capacitor?.getPlatform?.()||((window.Capacitor?.isNativePlatform?.())?'native':'web');
+  const upstreamAuthMessage=err?.customData?._tokenResponse?.error?.message||err?.customData?.serverResponse?.error?.message||'';
+  const authDiagnostic='\nDiagnostics: platform='+nativePlatform+'; origin='+location.origin+'; project='+String(window.NEXVADORAQ_FIREBASE?.projectId||'unknown')+'; sdk='+String(firebase.SDK_VERSION||'unknown')+'; code='+String(err?.code||'unknown')+(upstreamAuthMessage?'; server='+String(upstreamAuthMessage).slice(0,180):'');
+  msg.textContent='ಹಂತ: '+authStage+' — '+authError(err)+authDiagnostic;
   // Keep a newly-created Firebase account signed in so the user can repair its missing profile.
   if(action==='register'&&fbAuth.currentUser){
    mode='repair';authSync();document.getElementById('email').value=email;
