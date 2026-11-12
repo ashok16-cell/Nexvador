@@ -383,10 +383,9 @@ document.getElementById('authForm').onsubmit=async e=>{
    }else{
     profile={uid:user.uid,name,mobile:document.getElementById('mobile').value.trim(),city,email,role:selectedRole,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
     authStage='Firestore profile save';
+    // A resolved Firestore set() is the server acknowledgement. Avoid an
+    // unnecessary second read round-trip on slower Android WebViews.
     await userRef.set(profile,{merge:false});
-    const verify=await userRef.get();
-    if(!verify.exists)throw new Error('Account ಸೃಷ್ಟಿಯಾಗಿದೆ; Profile save ಆಗಿಲ್ಲ. ಮತ್ತೆ Complete profile ಪ್ರಯತ್ನಿಸಿ.');
-    profile=verify.data();
    }
   }
   authStage='Creating HireHub Display ID';
