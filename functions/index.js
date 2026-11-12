@@ -146,7 +146,7 @@ exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (r
  * Secure worker booking acceptance. Admin SDK performs the atomic booking + active-lock
  * transaction after verifying the caller's authenticated worker profile.
  */
-exports.acceptWorkerBooking = onCall({ region: "asia-south1" }, async (request) => {
+exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }, async (request) => {
   if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Worker login ಅಗತ್ಯ.");
   const uid = request.auth.uid;
   const bookingId = String(request.data?.bookingId || "").trim();
