@@ -140,3 +140,70 @@ exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (r
     return { displayId };
   });
 });
+
+
+/**
+ * Secure worker booking acceptance. Admin SDK performs the atomic booking + active-lock
+ * transaction after verifying the caller's authenticated worker profile.
+ */
+exports.acceptWorkerBooking = onCall({ region: "asia-south1" }, async (request) => {
+  if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Worker login ಅಗತ್ಯ.");
+  const uid = request.auth.uid;
+  const bookingId = String(request.data?.bookingId || "").trim();
+  if (!bookingId || bookingId.length > 160) throw new HttpsError("invalid-argument", "Booking ID ಸರಿಯಾಗಿಲ್ಲ.");
+  const db = getFirestore();
+  const userRef = db.collection("users").doc(uid);
+  const bookingRef = db.collection("workerBookings").doc(bookingId);
+  const lockRef = db.collection("workerActiveBookings").doc(uid);
+  return db.runTransaction(async (tx) => {
+    const [userSnap, bookingSnap, lockSnap] = await Promise.all([
+      tx.get(userRef), tx.get(bookingRef), tx.get(lockRef)
+    ]);
+    if (!userSnap.exists || userSnap.data()?.role !== "worker" || userSnap.data()?.active === false) {
+      throw new HttpsError("permission-denied", "ಸಕ್ರಿಯ Worker account ಮಾತ್ರ ಕೆಲಸ ಸ್ವೀಕರಿಸಬಹುದು.");
+    }
+    if (!bookingSnap.exists) throw new HttpsError("not-found", "ಕೆಲಸದ Booking ಲಭ್ಯವಿಲ್ಲ.");
+    const b = bookingSnap.data() || {};
+    if (!["Pending", "Partially Filled"].includes(String(b.status || "Pending"))) {
+      throw new HttpsError("failed-precondition", "ಈ ಕೆಲಸದ ಎಲ್ಲಾ ಸ್ಥಾನಗಳು ಈಗಾಗಲೇ ತುಂಬಿವೆ ಅಥವಾ Booking ಮುಚ್ಚಲಾಗಿದೆ.");
+    }
+    if (b.selectedWorkerId && b.selectedWorkerId !== uid) {
+      throw new HttpsError("permission-denied", "ಈ Booking ಬೇರೆ Worker‌ಗೆ ಆಯ್ಕೆಯಾಗಿದೆ.");
+    }
+    const ids = Array.isArray(b.acceptedWorkerIds) ? b.acceptedWorkerIds.map(String) : (b.workerId ? [String(b.workerId)] : []);
+    if (ids.includes(uid)) throw new HttpsError("already-exists", "ನೀವು ಈಗಾಗಲೇ ಈ ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದೀರಿ.");
+    const required = Math.max(1, Number(b.count) || 1);
+    if (ids.length >= required) throw new HttpsError("failed-precondition", "ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.");
+    if (lockSnap.exists && String(lockSnap.data()?.bookingId || "") !== bookingId) {
+      const oldId = String(lockSnap.data()?.bookingId || "");
+      const oldRef = oldId ? db.collection("workerBookings").doc(oldId) : null;
+      const oldSnap = oldRef ? await tx.get(oldRef) : null;
+      const old = oldSnap?.exists ? oldSnap.data() : null;
+      const oldIds = Array.isArray(old?.acceptedWorkerIds) ? old.acceptedWorkerIds.map(String) : (old?.workerId ? [String(old.workerId)] : []);
+      if (old && ["Pending", "Partially Filled", "Confirmed"].includes(String(old.status || "Pending")) && oldIds.includes(uid)) {
+        throw new HttpsError("failed-precondition", "ನೀವು ಈಗಾಗಲೇ ಮತ್ತೊಂದು Booking ಸ್ವೀಕರಿಸಿದ್ದೀರಿ (" + oldId + "). ಅದನ್ನು Completed, Rejected ಅಥವಾ Cancelled ಮಾಡಿದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.");
+      }
+    }
+    const acceptedIds = [...ids, uid];
+    const acceptedCount = acceptedIds.length;
+    const remaining = Math.max(0, required - acceptedCount);
+    const status = remaining === 0 ? "Confirmed" : "Partially Filled";
+    const oldRoster = Array.isArray(b.acceptedWorkers) ? b.acceptedWorkers : [];
+    const roster = ids.map((workerId, index) => ({
+      workerId,
+      workerName: oldRoster.find(x => x && String(x.workerId) === workerId)?.workerName || (index === 0 ? (b.workerName || "Worker") : "Worker")
+    }));
+    roster.push({ workerId: uid, workerName: String(userSnap.data()?.name || "Worker") });
+    const now = require("firebase-admin/firestore").FieldValue.serverTimestamp();
+    const patch = {
+      count: required, acceptedWorkerIds: acceptedIds, acceptedWorkers: roster,
+      acceptedCount, workerId: acceptedIds[0],
+      workerName: acceptedCount === 1 ? String(userSnap.data()?.name || "Worker") : (b.workerName || String(userSnap.data()?.name || "Worker")),
+      status, acceptedAt: now, updatedAt: now, confirmationMode: "multi-worker-auto-confirm"
+    };
+    if (remaining === 0) patch.confirmedAt = now;
+    tx.update(bookingRef, patch);
+    tx.set(lockRef, { workerId: uid, bookingId, createdAt: now, updatedAt: now });
+    return { bookingId, acceptedWorkerIds: acceptedIds, acceptedWorkers: roster, acceptedCount, count: required, status, remaining, workerName: String(userSnap.data()?.name || "Worker") };
+  });
+});
