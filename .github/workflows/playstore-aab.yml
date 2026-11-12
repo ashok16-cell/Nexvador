@@ -101,7 +101,7 @@ jobs:
                   }
               }
               buildTypes {""", 1)
-          a=re.sub(r"(buildTypes\\s*\\{\\s*release\\s*\\{)", r"\\1\\n            signingConfig signingConfigs.release", a, count=1)
+          a=re.sub(r"(buildTypes\s*\{\s*release\s*\{)", r"\1\n            signingConfig signingConfigs.release", a, count=1)
           if "signingConfig signingConfigs.release" not in a:
               raise SystemExit("Could not configure release signing block")
           app.write_text(a)
