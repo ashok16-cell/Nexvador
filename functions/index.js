@@ -93,9 +93,12 @@ exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
     const workName = String(after.category || after.title || "Work");
     const location = String(after.location || after.city || "ಸ್ಥಳ ತಿಳಿಸಿಲ್ಲ");
     const message = `${workerName} ಅವರು ${workName} ಕೆಲಸ ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾಗಿ ತಿಳಿಸಿದ್ದಾರೆ. ಸ್ಥಳ: ${location}. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ.`.slice(0, 500);
+    // Deterministic IDs make this trigger idempotent: duplicate event delivery
+    // updates the same notification instead of creating duplicate alerts.
     const batch = db.batch();
     recipients.forEach(uid => {
-      batch.set(db.collection("notifications").doc(), {
+      const notificationId = `worker_completion_${event.params.bookingId}_${uid}`;
+      batch.set(db.collection("notifications").doc(notificationId), {
         actorId: String(after.workerCompletedBy || "system"),
         recipientId: uid,
         title: "Worker Work Complete — Review Required",
@@ -104,7 +107,7 @@ exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
         bookingId: event.params.bookingId,
         createdAt: require("firebase-admin/firestore").FieldValue.serverTimestamp(),
         read: false
-      });
+      }, { merge: true });
     });
     await batch.commit();
     console.log("Worker completion notifications delivered to", recipients.size, "recipients.");
