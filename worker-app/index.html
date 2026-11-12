@@ -843,16 +843,20 @@ async function drawNearbyWorkRequests(){
  const list=document.getElementById('nearbyRequestList');if(!list)return;
  list.innerHTML=filtered.length?'<p class="muted">'+filtered.length+' ಕೆಲಸಗಳು ಲಭ್ಯ • GPS Radius: '+(radius>=1000?'All available':radius+' km')+'</p>'+filtered.map(b=>'<div class="card"><div class="row"><span class="pill">'+esc(b.status||'Pending')+'</span><b>'+(b._distance!==null?b._distance.toFixed(1)+' km '+(b._distancePrecision==='locality'?'from locality':b._distancePrecision==='nearest-town'?'from nearest town':'approx.'):(hasValidCoordinates(b.requestLat,b.requestLng)?'GPS ON ಮಾಡಿದರೆ KM Distance ಕಾಣುತ್ತದೆ':'Location not found — address ಪರಿಶೀಲಿಸಿ'))+'</b></div><h3>'+esc(b.category)+'</h3><p><b>'+esc(b.count)+' workers ಬೇಕು</b> • '+esc(b.location)+'</p>'+(b._matchedLocation?'<p class="muted">Map match: '+esc(b._matchedLocation)+'</p>':'')+'<p>'+esc(b.bookingType||'Daily')+' • '+esc(b.date)+' • '+esc(b.shift||'Time not specified')+' • '+esc(b.pay||'Payment negotiable')+'</p><p><b>Booking ಮಾಡಿದವರು:</b> '+esc(b.requesterName||b.companyName||'Customer / Company ಹೆಸರು ಲಭ್ಯವಿಲ್ಲ')+' • '+esc(b.requesterRole==='company'?'Company / HR':b.requesterRole==='customer'?'Customer':'Booking requester')+'</p><p class="muted">Booking ID: '+esc(b.id)+'</p>'+(b.requesterMobilePrefix?'<p class="muted">Customer Mobile: '+esc(String(b.requesterMobilePrefix).slice(0,4))+'****** (ಮೊದಲ 4 ಅಂಕೆಗಳು ಮಾತ್ರ)</p>':'')+'<p>'+esc(b.details||'')+'</p><button class="primary" onclick="acceptWorkerRequest(\''+b.id+'\')">Accept Work</button></div>').join(''):'<div class="locbox"><b>'+(window.cloudSyncErrors?.openBookings?'Booking Sync Error':'ಈಗ ಕೆಲಸಗಳಿಲ್ಲ')+'</b><p>'+(window.cloudSyncErrors?.openBookings?'Firebase Rules / Worker account access ಸಮಸ್ಯೆ: '+esc(window.cloudSyncErrors.openBookings):'ಈಗ Pending Booking ಕಾಣುತ್ತಿಲ್ಲ. All available ಆಯ್ಕೆ ಮಾಡಿ, ಪುಟ Refresh ಮಾಡಿ.')+'</p></div>';
  const mapEl=document.getElementById('requestMap');if(!mapEl)return;
+ const drawToken=String(Date.now())+'_'+Math.random().toString(36).slice(2);window.workerRequestMapDrawToken=drawToken;
  if(!window.L){mapEl.textContent='Map library loading… Internet connection ಪರಿಶೀಲಿಸಿ.';return}
- if(window.workerRequestMap){try{window.workerRequestMap.remove()}catch(e){}}
- const center=pos?[pos.lat,pos.lng]:[12.9716,77.5946],map=L.map(mapEl,{preferCanvas:true}).setView(center,pos?12:5);window.workerRequestMap=map;
- const tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
- let tileErrors=0;tiles.on('tileerror',()=>{tileErrors++;if(tileErrors>=3&&!mapEl.dataset.tileWarning){mapEl.dataset.tileWarning='1';const note=document.createElement('div');note.className='locbox';note.style.cssText='position:absolute;z-index:500;left:8px;right:8px;bottom:8px;margin:0;background:#fff';note.textContent='Map tiles load ಆಗುತ್ತಿಲ್ಲ. Internet ಪರಿಶೀಲಿಸಿ; KM distance ಮಾಹಿತಿ ಪ್ರತ್ಯೇಕವಾಗಿ ಲಭ್ಯ.';mapEl.appendChild(note)}});
- const points=[];
- if(pos){L.marker([pos.lat,pos.lng]).addTo(map).bindPopup('ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸ್ಥಳ (You)');points.push([pos.lat,pos.lng])}
- filtered.filter(x=>hasValidCoordinates(x.requestLat,x.requestLng)).forEach(x=>{const point=[Number(x.requestLat),Number(x.requestLng)];L.marker(point).addTo(map).bindPopup(esc(x.category)+' • '+esc(x.location));points.push(point)});
- if(points.length>1)map.fitBounds(points,{padding:[24,24],maxZoom:14});else if(points.length===1)map.setView(points[0],12);
- setTimeout(()=>map.invalidateSize(true),250);
+ if(window.workerRequestMap){try{window.workerRequestMap.stop()}catch(e){}try{window.workerRequestMap.remove()}catch(e){}window.workerRequestMap=null}
+ mapEl.replaceChildren();if(!mapEl.isConnected)return;
+ try{
+  const center=pos?[pos.lat,pos.lng]:[12.9716,77.5946];
+  const map=L.map(mapEl,{preferCanvas:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView(center,pos?12:5,{animate:false});window.workerRequestMap=map;
+  const tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  let tileErrors=0;tiles.on('tileerror',()=>{if(window.workerRequestMapDrawToken!==drawToken||!mapEl.isConnected)return;tileErrors++;if(tileErrors>=3&&!mapEl.dataset.tileWarning){mapEl.dataset.tileWarning='1';const note=document.createElement('div');note.className='locbox';note.style.cssText='position:absolute;z-index:500;left:8px;right:8px;bottom:8px;margin:0;background:#fff';note.textContent='Map tiles load ಆಗುತ್ತಿಲ್ಲ. Internet ಪರಿಶೀಲಿಸಿ; KM distance ಮಾಹಿತಿ ಪ್ರತ್ಯೇಕವಾಗಿ ಲಭ್ಯ.';mapEl.appendChild(note)}});
+  const points=[];if(pos){L.marker([pos.lat,pos.lng]).addTo(map).bindPopup('ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸ್ಥಳ (You)');points.push([pos.lat,pos.lng])}
+  filtered.filter(x=>hasValidCoordinates(x.requestLat,x.requestLng)).forEach(x=>{const point=[Number(x.requestLat),Number(x.requestLng)];L.marker(point).addTo(map).bindPopup(esc(x.category)+' • '+esc(x.location));points.push(point)});
+  if(points.length>1)map.fitBounds(points,{padding:[24,24],maxZoom:14,animate:false});else if(points.length===1)map.setView(points[0],12,{animate:false});
+  setTimeout(()=>{if(window.workerRequestMapDrawToken===drawToken&&window.workerRequestMap===map&&mapEl.isConnected&&map.getContainer()===mapEl){try{map.invalidateSize({pan:false,animate:false})}catch(e){console.warn('Map resize skipped',e)}}},300);
+ }catch(mapError){console.error('Nearby request map render failed',mapError);if(mapEl.isConnected)mapEl.textContent='Map ತಾತ್ಕಾಲಿಕವಾಗಿ ಲಭ್ಯವಿಲ್ಲ. KM distance ಪ್ರತ್ಯೇಕವಾಗಿ ಕಾಣಿಸುತ್ತದೆ.'}
 }
 window.toggleCaptainAvailability=async function(){
  const button=document.getElementById('captainAvailabilityButton');
