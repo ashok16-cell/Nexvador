@@ -947,15 +947,13 @@ async function workerSubmitCompletion(id){
   const b=snap.data(),ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
   if(!ids.includes(me.id))throw new Error('ಈ Booking ನಿಮಗೆ ಸೇರಿಲ್ಲ.');
   if(b.workerCompletionStatus==='submitted')throw new Error('ಈ ಕೆಲಸದ ಪೂರ್ಣತೆ ಮಾಹಿತಿ ಈಗಾಗಲೇ ಕಳುಹಿಸಲಾಗಿದೆ.');
-  const customerIds=[...new Set([b.requesterId,b.companyId].filter(x=>x&&String(x)!==String(me.id)).map(String))];
-  if(!customerIds.length)throw new Error('ಈ Booking ಗೆ Customer / Company account ID ಲಭ್ಯವಿಲ್ಲ. Admin ಸಂಪರ್ಕಿಸಿ.');
-  const now=firebase.firestore.FieldValue.serverTimestamp(),batch=fbDb.batch();
-  batch.update(ref,{workerCompletionStatus:'submitted',workerCompletedAt:now,workerCompletedBy:me.id,updatedAt:now});
-  customerIds.forEach(recipientId=>{const note=fbDb.collection('notifications').doc();batch.set(note,{actorId:me.id,recipientId,title:'Worker Work Complete',message:(me.name||'Worker')+' ಅವರು '+(b.category||b.title||'ಕೆಲಸ')+' ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾರೆ. ದಯವಿಟ್ಟು ಪರಿಶೀಲಿಸಿ.',eventType:'worker_completion_submitted',bookingId:String(id),createdAt:now,read:false})});
-  const adminNote=fbDb.collection('notifications').doc();
-  batch.set(adminNote,{actorId:me.id,recipientId:'__admins__',audience:'admins',title:'Worker Work Complete — Review Required',message:(me.name||'Worker')+' ಅವರು '+(b.category||b.title||'ಕೆಲಸ')+' ಪೂರ್ಣಗೊಳಿಸಿದ್ದಾರೆ. Booking ID: '+String(id),eventType:'worker_completion_submitted',bookingId:String(id),createdAt:now,readBy:[]});
-  await batch.commit();
-  alert('ಕೆಲಸ ಪೂರ್ಣಗೊಂಡ ಮಾಹಿತಿ Customer ಮತ್ತು ಎಲ್ಲಾ Admin / Super Adminಗಳಿಗೆ In-App Notifications ಮೂಲಕ ಕಳುಹಿಸಲಾಗಿದೆ.');
+  const customerId=b.requesterId||b.customerId||b.companyId;
+  if(!customerId)throw new Error('ಈ Booking ಗೆ Customer / Company account ID ಲಭ್ಯವಿಲ್ಲ. Admin ಸಂಪರ್ಕಿಸಿ.');
+  // Write one authoritative completion event. Cloud Function fans out notifications
+  // to the requester/company and all active Admin/Super Admin accounts.
+  const now=firebase.firestore.FieldValue.serverTimestamp();
+  await ref.update({workerCompletionStatus:'submitted',workerCompletedAt:now,workerCompletedBy:me.id,updatedAt:now});
+  alert('ಕೆಲಸ ಪೂರ್ಣಗೊಂಡ ಮಾಹಿತಿ Serverಗೆ ಕಳುಹಿಸಲಾಗಿದೆ. Customer, Admin ಮತ್ತು Super Adminಗಳಿಗೆ Notifications ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ.');
   go('mybookings');
  }catch(e){alert('ಮಾಹಿತಿ ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+(e.code||e.message))}
 }
