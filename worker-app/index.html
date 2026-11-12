@@ -390,7 +390,8 @@ document.getElementById('authForm').onsubmit=async e=>{
    }
   }
   authStage='Creating HireHub Display ID';
-  try{const idResult=await firebase.app().functions('asia-south1').httpsCallable('getOrCreateHireHubDisplayId')();if(idResult?.data?.displayId)profile={...profile,displayId:idResult.data.displayId};}catch(idError){console.warn('HireHub Display ID service unavailable; showing existing Firebase ID until retry:',idError.code||idError.message);}
+  // Firebase Spark mode: do not call the paid Cloud Functions Display ID endpoint. Keep the existing public ID or Firebase UID.
+  if(!profile.displayId)profile.displayId=user.uid;
   authStage='Opening account dashboard';
   me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
  }catch(err){
@@ -896,7 +897,48 @@ window.toggleCaptainAvailability=async function(){
   if(button)button.disabled=false;
  }
 };
-async function acceptWorkerRequest(id){let accepted=false;let data=null,slotsLeft=0,acceptedRoster=[],acceptedIds=[],requiredCount=1,finalStatus='Partially Filled';try{const bookingId=String(id),ref=fbDb.collection('workerBookings').doc(bookingId),lockRef=fbDb.collection('workerActiveBookings').doc(me.id);const acceptCall=firebase.app().functions('asia-south1').httpsCallable('acceptWorkerBooking');const result=await acceptCall({bookingId});const acceptedData=result.data||{};acceptedIds=Array.isArray(acceptedData.acceptedWorkerIds)?acceptedData.acceptedWorkerIds:[];acceptedRoster=Array.isArray(acceptedData.acceptedWorkers)?acceptedData.acceptedWorkers:[];requiredCount=Number(acceptedData.count)||1;slotsLeft=Number(acceptedData.remaining)||0;finalStatus=String(acceptedData.status||'Partially Filled');data=await ref.get().then(x=>x.data()||{});accepted=true;window.activeWorkerBookingId=String(id);const local=db();local.bookings=local.bookings||[];const cached=local.bookings.findIndex(x=>String(x.id)===String(id));const updated={...(cached>=0?local.bookings[cached]:{}),...(data||{}),id:String(id),count:requiredCount,acceptedWorkerIds:acceptedIds,acceptedWorkers:acceptedRoster,acceptedCount:acceptedIds.length,workerId:acceptedIds[0],status:finalStatus};if(cached>=0)local.bookings[cached]=updated;else local.bookings.unshift(updated);save(local);try{const recipients=[...new Set([data.companyId,data.requesterId,data.customerId].filter(x=>x&&x!==me.id))];await Promise.all(recipients.map(recipient=>createHireHubNotification(recipient,slotsLeft===0?'Work fully staffed':'Worker accepted your work',me.name+' '+(data.category||'Work')+' ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದಾರೆ. '+(slotsLeft?slotsLeft+' Worker ಸ್ಥಾನಗಳು ಬಾಕಿ.':'ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.'),{eventType:'worker_accepted',bookingId:String(id)})))}catch(notifyErr){console.warn('Acceptance notification failed',notifyErr)}alert(slotsLeft?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ. ಇನ್ನೂ '+slotsLeft+' Worker ಬೇಕು.':'ಕೆಲಸಕ್ಕೆ ಬೇಕಾದ ಎಲ್ಲಾ Workers Confirm ಆಗಿದ್ದಾರೆ.');startWorkerLocation();render()}catch(e){const msg=e.code==='permission-denied'?'Firebase permission-denied: Firestore Rules ಒಂದು write ಅನ್ನು ತಿರಸ್ಕರಿಸಿದೆ. Details: '+(e.message||'write rejected')+' | UID: '+(fbAuth.currentUser?.uid||'not signed in')+' | Booking: '+String(id):((e.code?e.code+': ':'')+(e.message||'Unknown error'));console.error('Worker booking accept failed',e);alert((accepted?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ; ಆದರೆ':'Accept ಆಗಲಿಲ್ಲ: ')+msg)}}
+async function acceptWorkerRequest(id){
+ let accepted=false;
+ try{
+  const bookingId=String(id),uid=String(me.id),ref=fbDb.collection('workerBookings').doc(bookingId),lockRef=fbDb.collection('workerActiveBookings').doc(uid);
+  if(!uid||!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
+  const result=await fbDb.runTransaction(async tx=>{
+   const bookingSnap=await tx.get(ref),lockSnap=await tx.get(lockRef);
+   if(!bookingSnap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
+   const b=bookingSnap.data()||{},status=String(b.status||'Pending');
+   if(!['Pending','Partially Filled'].includes(status))throw new Error('ಈ Booking ಈಗ ಸ್ವೀಕರಿಸಲು ಲಭ್ಯವಿಲ್ಲ.');
+   if(b.selectedWorkerId&&String(b.selectedWorkerId)!==uid)throw new Error('ಈ Booking ಬೇರೆ Worker‌ಗೆ ಆಯ್ಕೆಯಾಗಿದೆ.');
+   const ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds.map(String):(b.workerId?[String(b.workerId)]:[]);
+   if(ids.includes(uid))throw new Error('ನೀವು ಈಗಾಗಲೇ ಈ ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದೀರಿ.');
+   const required=Math.max(1,Number(b.count)||1);
+   if(ids.length>=required)throw new Error('ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.');
+   if(lockSnap.exists&&String(lockSnap.data()?.bookingId||'')!==bookingId){
+    const oldId=String(lockSnap.data()?.bookingId||'');
+    if(oldId){
+     const oldRef=fbDb.collection('workerBookings').doc(oldId),oldSnap=await tx.get(oldRef),old=oldSnap.exists?oldSnap.data()||{}:null;
+     const oldIds=Array.isArray(old?.acceptedWorkerIds)?old.acceptedWorkerIds.map(String):(old?.workerId?[String(old.workerId)]:[]);
+     if(old&&['Pending','Partially Filled','Confirmed'].includes(String(old.status||'Pending'))&&oldIds.includes(uid))throw new Error('ನೀವು ಈಗಾಗಲೇ ಇನ್ನೊಂದು Booking ಸ್ವೀಕರಿಸಿದ್ದೀರಿ ('+oldId+'). ಅದನ್ನು Completed, Rejected ಅಥವಾ Cancelled ಮಾಡಿದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+    }
+   }
+   const acceptedIds=[...ids,uid],acceptedCount=acceptedIds.length,remaining=Math.max(0,required-acceptedCount),finalStatus=remaining===0?'Confirmed':'Partially Filled';
+   const oldRoster=Array.isArray(b.acceptedWorkers)?b.acceptedWorkers:[];
+   const roster=ids.map((workerId,index)=>({workerId,workerName:oldRoster.find(x=>x&&String(x.workerId)===workerId)?.workerName||(index===0?(b.workerName||'Worker'):'Worker')}));
+   roster.push({workerId:uid,workerName:String(me.name||'Worker')});
+   const now=firebase.firestore.FieldValue.serverTimestamp();
+   tx.update(ref,{count:required,acceptedWorkerIds:acceptedIds,acceptedWorkers:roster,acceptedCount,workerId:acceptedIds[0],workerName:acceptedCount===1?String(me.name||'Worker'):(b.workerName||String(me.name||'Worker')),status:finalStatus,acceptedAt:now,updatedAt:now,confirmationMode:'multi-worker-auto-confirm',...(remaining===0?{confirmedAt:now}:{})});
+   tx.set(lockRef,{workerId:uid,bookingId,createdAt:lockSnap.exists?(lockSnap.data()?.createdAt||now):now,updatedAt:now});
+   return {bookingId,acceptedWorkerIds:acceptedIds,acceptedWorkers:roster,acceptedCount,count:required,status:finalStatus,remaining,booking:b};
+  });
+  accepted=true;window.activeWorkerBookingId=bookingId;
+  const data=result.booking||{},slotsLeft=result.remaining,local=db();local.bookings=local.bookings||[];
+  const cached=local.bookings.findIndex(x=>String(x.id)===bookingId);
+  const updated={...(cached>=0?local.bookings[cached]:{}),...data,id:bookingId,count:result.count,acceptedWorkerIds:result.acceptedWorkerIds,acceptedWorkers:result.acceptedWorkers,acceptedCount:result.acceptedCount,workerId:result.acceptedWorkerIds[0],status:result.status};
+  if(cached>=0)local.bookings[cached]=updated;else local.bookings.unshift(updated);save(local);
+  try{const recipients=[...new Set([data.companyId,data.requesterId,data.customerId].filter(x=>x&&x!==uid))];await Promise.all(recipients.map(recipient=>createHireHubNotification(recipient,slotsLeft===0?'Work fully staffed':'Worker accepted your work',(me.name||'Worker')+' '+(data.category||'Work')+' ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದಾರೆ. '+(slotsLeft?slotsLeft+' Worker ಸ್ಥಾನಗಳು ಬಾಕಿ.':'ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.'),{eventType:'worker_accepted',bookingId})));}catch(notifyErr){console.warn('Acceptance in-app notification failed',notifyErr);}
+  alert(slotsLeft?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ. ಇನ್ನೂ '+slotsLeft+' Worker ಬೇಕು.':'ಕೆಲಸಕ್ಕೆ ಬೇಕಾದ ಎಲ್ಲಾ Workers Confirm ಆಗಿದ್ದಾರೆ.');
+  startWorkerLocation();render();
+ }catch(e){console.error('Worker booking accept failed',e);alert((accepted?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ; ಆದರೆ':'Accept ಆಗಲಿಲ್ಲ: ')+(e.message||e.code||'Unknown error'));}
+}
 async function workerSubmitCompletion(id){
  if(!confirm('ಈ Booking‌ನ ಕೆಲಸವನ್ನು ನೀವು ಪೂರ್ಣಗೊಳಿಸಿದ್ದೀರಾ? Customer, Admin ಮತ್ತು Super Admin ಎಲ್ಲರಿಗೂ ಒಂದೇ ಬಾರಿ In-App Notification ಕಳುಹಿಸಬೇಕೇ?'))return;
  try{
