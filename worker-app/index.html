@@ -1070,7 +1070,26 @@ function job(j,canApply,canDelete=false){return '<article class="job"><span clas
 async function setApplicationStatus(id,status){try{const target=(db().apps||[]).find(x=>String(x.id)===String(id));await fbDb.collection('applications').doc(String(id)).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(target?.workerId||target?.worker)await fbDb.collection('notifications').add({actorId:me.id,recipientId:target.workerId||target.worker,title:'Application status updated',message:'ನಿಮ್ಮ '+(target.title||'job')+' ಅರ್ಜಿಯ ಸ್ಥಿತಿ: '+status,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});const d=db();d.apps=(d.apps||[]).map(x=>String(x.id)===String(id)?{...x,status}:x);d.notifications=d.notifications||[];d.notifications.unshift({title:'Application updated',message:'Status: '+status,createdAt:Date.now()});saveLocal(d);render()}catch(err){alert('Status update failed: '+err.message)}}
 let notificationUnsub=null;let notificationSeenIds=new Set(),notificationFirstSnapshot=true;
 async function createHireHubNotification(recipientId,title,message,extra={}){if(!recipientId||recipientId===me?.id)return;try{await fbDb.collection('notifications').add({actorId:me?.id||'system',recipientId:String(recipientId),title,message,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false,...extra})}catch(err){console.warn('Notification write failed for',recipientId,err.code||err.message)}}
-async function notifyActiveWorkersAboutJob(jobId,job){try{const snap=await fbDb.collection('users').where('role','==','worker').where('active','==',true).get();const workers=snap.docs.filter(d=>d.id!==me.id);await Promise.all(workers.map(w=>createHireHubNotification(w.id,'ಹೊಸ Job ಲಭ್ಯವಿದೆ: '+(job.title||'ಹೊಸ ಕೆಲಸ'),(job.city||'ಸ್ಥಳ ತಿಳಿಸಿಲ್ಲ')+' • '+(job.pay||'ವೇತನ ವಿವರ ನೋಡಿ')+' — HireHub ನಲ್ಲಿ Job ನೋಡಿ.',{eventType:'job_posted',jobId:String(jobId)})))}catch(err){console.warn('Worker job broadcast failed',err.code||err.message)}}
+async function notifyActiveWorkersAboutJob(jobId,job){
+ try{
+  let origin=null;
+  if(Number.isFinite(Number(job.requestLat))&&Number.isFinite(Number(job.requestLng))&&Math.abs(Number(job.requestLat))<=90&&Math.abs(Number(job.requestLng))<=180)origin={lat:Number(job.requestLat),lng:Number(job.requestLng)};
+  if(!origin){const companyLocation=await fbDb.collection('locations').doc(String(me.id)).get().catch(()=>null);const p=companyLocation?.exists?companyLocation.data():null;if(p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng)))origin={lat:Number(p.lat),lng:Number(p.lng)}}
+  if(!origin)origin=await currentDevicePosition();
+  if(!origin||!Number.isFinite(Number(origin.lat))||!Number.isFinite(Number(origin.lng))){console.warn('Nearby job notifications skipped: company GPS unavailable');return 0}
+  const snap=await fbDb.collection('workerPublicProfiles').where('availability','==','available').limit(500).get();
+  const now=Date.now(),radiusKm=15;
+  const recipients=snap.docs.map(d=>({id:d.id,...d.data()})).filter(w=>{
+   if(w.id===me.id||!Number.isFinite(Number(w.lat))||!Number.isFinite(Number(w.lng)))return false;
+   const seen=w.lastSeen?.toDate?w.lastSeen.toDate().getTime():0;
+   return seen>0&&now-seen<180000&&hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)})<=radiusKm;
+  }).sort((a,b)=>hireHubDistanceKm(origin,{lat:Number(a.lat),lng:Number(a.lng)})-hireHubDistanceKm(origin,{lat:Number(b.lat),lng:Number(b.lng)})).slice(0,100);
+  const results=await Promise.all(recipients.map(async w=>{
+   try{await fbDb.collection('notifications').add({actorId:me.id,recipientId:w.id,title:'ಹೊಸ ಹತ್ತಿರದ Job: '+(job.title||'ಹೊಸ ಕೆಲಸ'),message:(job.city||'')+' • '+(job.pay||'ವೇತನ ವಿವರ ನೋಡಿ')+' • ನಿಮ್ಮಿಂದ '+hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)}).toFixed(1)+' km ದೂರ. HireHub ತೆರೆಯಿರಿ ಮತ್ತು Apply ಮಾಡಿ.',eventType:'job_posted',jobId:String(jobId),distanceKm:Number(hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)}).toFixed(2)),createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});return true}catch(err){console.warn('Nearby job notification failed for',w.id,err.code||err.message);return false}
+  }));
+  const sent=results.filter(Boolean).length;console.info('Nearby job notifications sent:',sent,'of',recipients.length);return sent;
+ }catch(err){console.warn('Nearby job notification broadcast failed',err.code||err.message);return 0}
+}
 async function enableBrowserNotifications(){
  const el=document.getElementById('notificationPermissionStatus');
  try{
