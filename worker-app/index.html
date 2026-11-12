@@ -259,7 +259,7 @@ function applyAppLanguage(){
 }
 document.addEventListener('DOMContentLoaded',applyAppLanguage);
 const samples=[]; // Show only real employer-posted jobs; no fabricated demo vacancies.
-function db(){try{return JSON.parse(localStorage.getItem(KEY))||{users:[],jobs:[],apps:[],bookings:[],liveLocations:[]}}catch(e){return{users:[],jobs:[],apps:[],bookings:[],liveLocations:[]}}}
+function db(){const empty={users:[],jobs:[],apps:[],bookings:[],workerBookings:[],notifications:[],liveLocations:[],openBookings:[]};try{const parsed=JSON.parse(localStorage.getItem(KEY));if(!parsed||typeof parsed!=='object'||Array.isArray(parsed))return empty;for(const key of Object.keys(empty)){if(!Array.isArray(parsed[key]))parsed[key]=empty[key];else parsed[key]=parsed[key].filter(item=>item&&typeof item==='object'&&!Array.isArray(item));}return parsed}catch(e){console.warn('HireHub local cache was invalid; using empty safe cache',e);return empty}}
 function save(d){saveLocal(d);if(!fbAuth.currentUser||!me)return;
  // Only sync documents owned by the signed-in account. Never replay another account's cached records.
  (d.jobs||[]).filter(x=>!String(x.id).startsWith('s')&&(x.ownerId===me.id||x.owner===me.id)).forEach(x=>{const doc={...x,ownerId:me.id,status:x.status||'published',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};delete doc.owner;fbDb.collection('jobs').doc(String(x.id)).set(doc,{merge:true}).catch(err=>console.warn('Job sync failed:',err.message))});
