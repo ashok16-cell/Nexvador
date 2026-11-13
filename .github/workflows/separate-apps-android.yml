@@ -31,17 +31,6 @@ jobs:
           SDKMANAGER="$(find "${ANDROID_HOME:-/usr/local/lib/android/sdk}/cmdline-tools" -name sdkmanager -type f | head -n 1)"
           yes | "$SDKMANAGER" --licenses
           "$SDKMANAGER" 'platform-tools' 'platforms;android-35' 'build-tools;35.0.0'
-      - name: Deploy Firebase Storage Rules when credentials are configured
-        env:
-          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ }}
-        run: |
-          if [ -z "${FIREBASE_SERVICE_ACCOUNT_JSON:-}" ]; then
-            echo "::warning::Storage rules were validated but not deployed. Add FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ repository secret to enable deployment."
-            exit 0
-          fi
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-service-account.json"
-          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-service-account.json"
-          npx --yes firebase-tools@latest deploy --only storage,firestore:rules,functions --project nexvadoraq --non-interactive
       - name: Validate HireHub JavaScript
         working-directory: worker-app
         run: |
