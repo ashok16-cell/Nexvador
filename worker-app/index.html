@@ -906,8 +906,7 @@ async function acceptWorkerRequest(id){
   if(!bookingId)throw new Error('Booking ID ಸರಿಯಾಗಿಲ್ಲ.');
   if(!uid||!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
   if(typeof firebase.functions!=='function')throw new Error('Firebase Functions SDK ಲಭ್ಯವಿಲ್ಲ. ಪುಟವನ್ನು Refresh ಮಾಡಿ.');
-  const bookingSnap=await fbDb.collection('workerBookings').doc(bookingId).get();
-  if(!bookingSnap.exists)throw new Error('ಈ Booking Firestoreನಲ್ಲಿ ಲಭ್ಯವಿಲ್ಲ ಅಥವಾ ಹಳೆಯ cache entry ಆಗಿದೆ. Refresh ಮಾಡಿ Nearby Work ಪಟ್ಟಿಯಿಂದ ಹೊಸ Booking ಆಯ್ಕೆಮಾಡಿ.');
+  // Avoid client Firestore pre-read: the authenticated callable performs the authoritative server transaction.
   const functionsClient=firebase.app().functions('asia-south1');
   const acceptCall=functionsClient.httpsCallable('acceptWorkerBooking');
   const response=await acceptCall({bookingId});
