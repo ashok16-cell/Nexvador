@@ -899,43 +899,27 @@ window.toggleCaptainAvailability=async function(){
 async function acceptWorkerRequest(id){
  let accepted=false;
  try{
-  const bookingId=String(id),uid=String(me.id),ref=fbDb.collection('workerBookings').doc(bookingId),lockRef=fbDb.collection('workerActiveBookings').doc(uid);
+  const bookingId=String(id||'').trim(),uid=String(me?.id||'');
+  if(!bookingId)throw new Error('Booking ID ಸರಿಯಾಗಿಲ್ಲ.');
   if(!uid||!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
-  const result=await fbDb.runTransaction(async tx=>{
-   const bookingSnap=await tx.get(ref),lockSnap=await tx.get(lockRef);
-   if(!bookingSnap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
-   const b=bookingSnap.data()||{},status=String(b.status||'Pending');
-   if(!['Pending','Partially Filled'].includes(status))throw new Error('ಈ Booking ಈಗ ಸ್ವೀಕರಿಸಲು ಲಭ್ಯವಿಲ್ಲ.');
-   if(b.selectedWorkerId&&String(b.selectedWorkerId)!==uid)throw new Error('ಈ Booking ಬೇರೆ Worker‌ಗೆ ಆಯ್ಕೆಯಾಗಿದೆ.');
-   const ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds.map(String):(b.workerId?[String(b.workerId)]:[]);
-   if(ids.includes(uid))throw new Error('ನೀವು ಈಗಾಗಲೇ ಈ ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದೀರಿ.');
-   const required=Math.max(1,Number(b.count)||1);
-   if(ids.length>=required)throw new Error('ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.');
-   if(lockSnap.exists&&String(lockSnap.data()?.bookingId||'')!==bookingId){
-    const oldId=String(lockSnap.data()?.bookingId||'');
-    if(oldId){
-     const oldRef=fbDb.collection('workerBookings').doc(oldId),oldSnap=await tx.get(oldRef),old=oldSnap.exists?oldSnap.data()||{}:null;
-     const oldIds=Array.isArray(old?.acceptedWorkerIds)?old.acceptedWorkerIds.map(String):(old?.workerId?[String(old.workerId)]:[]);
-     if(old&&['Pending','Partially Filled','Confirmed'].includes(String(old.status||'Pending'))&&oldIds.includes(uid))throw new Error('ನೀವು ಈಗಾಗಲೇ ಇನ್ನೊಂದು Booking ಸ್ವೀಕರಿಸಿದ್ದೀರಿ ('+oldId+'). ಅದನ್ನು Completed, Rejected ಅಥವಾ Cancelled ಮಾಡಿದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
-    }
-   }
-   const acceptedIds=[...ids,uid],acceptedCount=acceptedIds.length,remaining=Math.max(0,required-acceptedCount),finalStatus=remaining===0?'Confirmed':'Partially Filled';
-   const oldRoster=Array.isArray(b.acceptedWorkers)?b.acceptedWorkers:[];
-   const roster=ids.map((workerId,index)=>({workerId,workerName:oldRoster.find(x=>x&&String(x.workerId)===workerId)?.workerName||(index===0?(b.workerName||'Worker'):'Worker')}));
-   roster.push({workerId:uid,workerName:String(me.name||'Worker')});
-   const now=firebase.firestore.FieldValue.serverTimestamp();
-   tx.update(ref,{count:required,acceptedWorkerIds:acceptedIds,acceptedWorkers:roster,acceptedCount,workerId:acceptedIds[0],workerName:acceptedCount===1?String(me.name||'Worker'):(b.workerName||String(me.name||'Worker')),status:finalStatus,acceptedAt:now,updatedAt:now,confirmationMode:'multi-worker-auto-confirm',...(remaining===0?{confirmedAt:now}:{})});
-   tx.set(lockRef,{workerId:uid,bookingId,createdAt:lockSnap.exists?(lockSnap.data()?.createdAt||now):now,updatedAt:now});
-   return {bookingId,acceptedWorkerIds:acceptedIds,acceptedWorkers:roster,acceptedCount,count:required,status:finalStatus,remaining,booking:b};
-  });
+  if(typeof firebase.functions!=='function')throw new Error('Firebase Functions SDK ಲಭ್ಯವಿಲ್ಲ. ಪುಟವನ್ನು Refresh ಮಾಡಿ.');
+  const acceptCall=firebase.functions('asia-south1').httpsCallable('acceptWorkerBooking');
+  const response=await acceptCall({bookingId});
+  const result=response?.data||{};
+  if(result.bookingId!==bookingId)throw new Error('Server acceptance confirmation ಸಿಗಲಿಲ್ಲ.');
   accepted=true;window.activeWorkerBookingId=bookingId;
-  const data=result.booking||{},slotsLeft=result.remaining,local=db();local.bookings=local.bookings||[];
+  const slotsLeft=Math.max(0,Number(result.remaining)||0),local=db();local.bookings=local.bookings||[];
   const cached=local.bookings.findIndex(x=>String(x.id)===bookingId);
-  const updated={...(cached>=0?local.bookings[cached]:{}),...data,id:bookingId,count:result.count,acceptedWorkerIds:result.acceptedWorkerIds,acceptedWorkers:result.acceptedWorkers,acceptedCount:result.acceptedCount,workerId:result.acceptedWorkerIds[0],status:result.status};
+  const previous=cached>=0?local.bookings[cached]:{};
+  const updated={...previous,id:bookingId,count:Number(result.count)||previous.count||1,acceptedWorkerIds:Array.isArray(result.acceptedWorkerIds)?result.acceptedWorkerIds:[],acceptedWorkers:Array.isArray(result.acceptedWorkers)?result.acceptedWorkers:[],acceptedCount:Number(result.acceptedCount)||0,workerId:(result.acceptedWorkerIds||[])[0]||uid,workerName:result.workerName||me.name||'Worker',status:result.status||'Partially Filled'};
   if(cached>=0)local.bookings[cached]=updated;else local.bookings.unshift(updated);save(local);
-  try{const recipients=[...new Set([data.companyId,data.requesterId,data.customerId].filter(x=>x&&x!==uid))];await Promise.all(recipients.map(recipient=>createHireHubNotification(recipient,slotsLeft===0?'Work fully staffed':'Worker accepted your work',(me.name||'Worker')+' '+(data.category||'Work')+' ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದಾರೆ. '+(slotsLeft?slotsLeft+' Worker ಸ್ಥಾನಗಳು ಬಾಕಿ.':'ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.'),{eventType:'worker_accepted',bookingId})));}catch(notifyErr){console.warn('Acceptance in-app notification failed',notifyErr);}
+  try{
+   const snap=await fbDb.collection('workerBookings').doc(bookingId).get(),data=snap.exists?snap.data()||{}:{};
+   const recipients=[...new Set([data.companyId,data.requesterId,data.customerId].filter(x=>x&&x!==uid))];
+   await Promise.all(recipients.map(recipient=>createHireHubNotification(recipient,slotsLeft===0?'Work fully staffed':'Worker accepted your work',(me.name||'Worker')+' '+(data.category||'Work')+' ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದಾರೆ. '+(slotsLeft?slotsLeft+' Worker ಸ್ಥಾನಗಳು ಬಾಕಿ.':'ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.'),{eventType:'worker_accepted',bookingId})));
+  }catch(notifyErr){console.warn('Acceptance notification follow-up failed',notifyErr);}
   alert(slotsLeft?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ. ಇನ್ನೂ '+slotsLeft+' Worker ಬೇಕು.':'ಕೆಲಸಕ್ಕೆ ಬೇಕಾದ ಎಲ್ಲಾ Workers Confirm ಆಗಿದ್ದಾರೆ.');
-  startWorkerLocation();render();
+  startWorkerLocation().catch(err=>console.warn('GPS start after acceptance failed',err));render();
  }catch(e){console.error('Worker booking accept failed',e);alert((accepted?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ; ಆದರೆ':'Accept ಆಗಲಿಲ್ಲ: ')+(e.message||e.code||'Unknown error'));}
 }
 async function workerSubmitCompletion(id){
