@@ -925,7 +925,7 @@ async function acceptWorkerRequest(id){
   }catch(notifyErr){console.warn('Acceptance notification follow-up failed',notifyErr);}
   alert(slotsLeft?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ. ಇನ್ನೂ '+slotsLeft+' Worker ಬೇಕು.':'ಕೆಲಸಕ್ಕೆ ಬೇಕಾದ ಎಲ್ಲಾ Workers Confirm ಆಗಿದ್ದಾರೆ.');
   startWorkerLocation().catch(err=>console.warn('GPS start after acceptance failed',err));render();
- }catch(e){console.error('Worker booking accept failed',e);alert((accepted?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ; ಆದರೆ':'Accept ಆಗಲಿಲ್ಲ: ')+(e.message||e.code||'Unknown error'));}
+ }catch(e){console.error('Worker booking accept failed',{bookingId:String(id||''),uid:String(me?.id||''),code:e?.code||'',message:e?.message||'',details:e?.details||null,error:e});const code=String(e?.code||'').replace(/^functions\//,'');const detail=e?.message||e?.details?.message||'Unknown error';alert((accepted?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ; ಆದರೆ':'Accept ಆಗಲಿಲ್ಲ: ')+detail+'\nCode: '+(code||'unknown')+'\nBooking ID: '+String(id||''));}
 }
 async function workerSubmitCompletion(id){
  if(!confirm('ಈ Booking‌ನ ಕೆಲಸವನ್ನು ನೀವು ಪೂರ್ಣಗೊಳಿಸಿದ್ದೀರಾ? Customer, Admin ಮತ್ತು Super Admin ಎಲ್ಲರಿಗೂ ಒಂದೇ ಬಾರಿ In-App Notification ಕಳುಹಿಸಬೇಕೇ?'))return;
