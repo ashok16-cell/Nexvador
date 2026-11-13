@@ -69,7 +69,6 @@ jobs:
             CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
             if echo "$CHANGED" | grep -q '^worker-app/'; then
               firebase deploy --project nexvadoraq --only hosting --non-interactive
-              # Worker dashboard calls acceptWorkerBooking; deploy callable backend with Worker platform updates.
               firebase deploy --project nexvadoraq --only functions --non-interactive
             fi
             if echo "$CHANGED" | grep -Eq '^(firestore.rules|\.github/workflows/firebase-deploy.yml)$'; then
@@ -78,21 +77,7 @@ jobs:
             if echo "$CHANGED" | grep -q '^storage.rules$'; then
               firebase deploy --project nexvadoraq --only storage --non-interactive
             fi
-            if echo "$CHANGED" | grep -Eq '^(functions/|\.github/workflows/firebase-deploy.yml)
-            if echo "$CHANGED" | grep -q '^firebase.json$'; then
-              firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive
-            fi
-          else
-            case "$TARGET" in
-              hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
-              firestore-rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
-              hosting-and-firestore-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive ;;
-              storage-only) firebase deploy --project nexvadoraq --only storage --non-interactive ;;
-              functions-only) firebase deploy --project nexvadoraq --only functions --non-interactive ;;
-              *) echo "::error::Unknown deploy target"; exit 1 ;;
-            esac
-          fi
-; then
+            if echo "$CHANGED" | grep -Eq '^(functions/|\.github/workflows/firebase-deploy.yml)$'; then
               firebase deploy --project nexvadoraq --only functions --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^firebase.json$'; then
