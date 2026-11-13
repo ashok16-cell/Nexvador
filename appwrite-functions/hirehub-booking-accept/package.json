@@ -1,0 +1,12 @@
+{
+  "name": "hirehub-booking-accept",
+  "private": true,
+  "version": "1.0.0",
+  "main": "src/index.js",
+  "engines": { "node": "20" },
+  "scripts": { "lint": "node --check src/index.js" },
+  "dependencies": {
+    "appwrite": "^21.1.0",
+    "firebase-admin": "^12.7.0"
+  }
+}
