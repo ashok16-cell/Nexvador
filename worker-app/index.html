@@ -1046,7 +1046,7 @@ async function startWorkerLocation(){
   throw err;
  }
 }
-async async function stopWorkerLocation(){
+async function stopWorkerLocation(){
  const watch=locationWatchId;locationWatchId=null;
  if(watch!==null){const value=String(watch);try{
   if(value.startsWith('background:'))await window.NexBackgroundGeolocation?.removeWatcher({id:value.slice(11)});
