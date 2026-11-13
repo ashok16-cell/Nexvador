@@ -88,18 +88,6 @@ module.exports = async ({ req, res, log, error }) => {
       return { bookingId, acceptedWorkerIds: acceptedIds, acceptedWorkers: roster, acceptedCount, count: required, status, remaining, workerName: String(user.name || "Worker") };
     });
 
-    // Preserve the existing Firestore notification pipeline. The notification trigger
-    // already sends FCM to the recipient; do not send duplicate FCM directly here.
-    const requesterId = String((await bookingRef.get()).data()?.requesterId || (await bookingRef.get()).data()?.customerId || "");
-    if (requesterId) {
-      await db.collection("notifications").add({
-        actorId: uid, recipientId: requesterId,
-        title: "Worker accepted your booking",
-        message: result.workerName + " ನಿಮ್ಮ ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದಾರೆ.",
-        eventType: "worker_booking_accepted", bookingId,
-        createdAt: FieldValue.serverTimestamp(), read: false
-      });
-    }
     log("acceptWorkerBooking success: " + bookingId + " by " + uid);
     return response(res, 200, { success: true, ...result });
   } catch (e) {
