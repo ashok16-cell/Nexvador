@@ -34,9 +34,10 @@ module.exports = async ({ req, res, log, error }) => {
     const lockRef = db.collection("workerActiveBookings").doc(uid);
 
     const result = await db.runTransaction(async (tx) => {
-      const [userSnap, bookingSnap, lockSnap] = await Promise.all([
-        tx.get(userRef), tx.get(bookingRef), tx.get(lockRef)
-      ]);
+      // Match the existing Firebase callable: complete all transaction reads sequentially before writes.
+      const userSnap = await tx.get(userRef);
+      const bookingSnap = await tx.get(bookingRef);
+      const lockSnap = await tx.get(lockRef);
       const user = userSnap.data() || {};
       if (!userSnap.exists || String(user.role || "").toLowerCase() !== "worker" || user.active === false) {
         const e = new Error("ಸಕ್ರಿಯ Worker account ಮಾತ್ರ ಕೆಲಸ ಸ್ವೀಕರಿಸಬಹುದು."); e.status = 403; e.code = "permission-denied"; throw e;
