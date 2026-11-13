@@ -68,27 +68,27 @@ jobs:
           if [ "$EVENT_NAME" = "push" ]; then
             CHANGED="$(git diff --name-only "$BEFORE_SHA" "$CURRENT_SHA")"
             if echo "$CHANGED" | grep -q '^worker-app/'; then
-              firebase deploy --project nexvadoraq-hirehub --only hosting --non-interactive
+              firebase deploy --project nexvadoraq --only hosting --non-interactive
             fi
             if echo "$CHANGED" | grep -Eq '^(firestore.rules|\.github/workflows/firebase-deploy.yml)$'; then
-              firebase deploy --project nexvadoraq-hirehub --only firestore:rules --non-interactive
+              firebase deploy --project nexvadoraq --only firestore:rules --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^storage.rules$'; then
-              firebase deploy --project nexvadoraq-hirehub --only storage --non-interactive
+              firebase deploy --project nexvadoraq --only storage --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^functions/'; then
-              firebase deploy --project nexvadoraq-hirehub --only functions --non-interactive
+              firebase deploy --project nexvadoraq --only functions --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^firebase.json$'; then
-              firebase deploy --project nexvadoraq-hirehub --only hosting,firestore:rules --non-interactive
+              firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive
             fi
           else
             case "$TARGET" in
-              hosting-only) firebase deploy --project nexvadoraq-hirehub --only hosting --non-interactive ;;
-              firestore-rules-only) firebase deploy --project nexvadoraq-hirehub --only firestore:rules --non-interactive ;;
-              hosting-and-firestore-rules) firebase deploy --project nexvadoraq-hirehub --only hosting,firestore:rules --non-interactive ;;
-              storage-only) firebase deploy --project nexvadoraq-hirehub --only storage --non-interactive ;;
-              functions-only) firebase deploy --project nexvadoraq-hirehub --only functions --non-interactive ;;
+              hosting-only) firebase deploy --project nexvadoraq --only hosting --non-interactive ;;
+              firestore-rules-only) firebase deploy --project nexvadoraq --only firestore:rules --non-interactive ;;
+              hosting-and-firestore-rules) firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive ;;
+              storage-only) firebase deploy --project nexvadoraq --only storage --non-interactive ;;
+              functions-only) firebase deploy --project nexvadoraq --only functions --non-interactive ;;
               *) echo "::error::Unknown deploy target"; exit 1 ;;
             esac
           fi
