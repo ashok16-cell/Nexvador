@@ -20,7 +20,7 @@ service cloud.firestore {
   }
   match /workerPublicProfiles/{uid}{
    allow read:if active();
-   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.userId==request.auth.uid&&request.resource.data.keys().hasOnly(['userId','name','photoURL','city','area','pincode','mainSkill','secondSkill','skills','experience','dailyWage','hourlyRate','upiId','workingDays','workingTime','workRange','availability','updatedAt','rating','lat','lng','accuracy','lastSeen']);
+   allow create,update:if worker()&&request.auth.uid==uid&&request.resource.data.userId==request.auth.uid&&request.resource.data.keys().hasOnly(['userId','name','photoURL','state','city','area','pincode','mainSkill','secondSkill','skills','experience','dailyWage','hourlyRate','upiId','workingDays','workingTime','workRange','availability','updatedAt','rating','lat','lng','accuracy','lastSeen']);
    allow delete:if worker()&&request.auth.uid==uid||admin();
   }
   match /jobs/{id}{
