@@ -223,7 +223,7 @@ body.workspace-mode #dashboardOverview .dash-stat{background:#fff;border:1px sol
  <section class="portal-jobs"><h2>ಹೊಸ ಉದ್ಯೋಗ ಅವಕಾಶಗಳು <span>/ Latest Jobs</span></h2><div id="publicJobs" class="grid"></div></section>
 </section>
 <section id="auth" class="card hidden"><div class="row"><h2 id="authTitle">Worker Account</h2><button onclick="closeAuth()">✕</button></div><p class="pill" id="accountRoleLabel">Worker account</p><div class="tabs"><button id="reg" type="button" class="tab active" onclick="setMode('register')">Create account</button><button id="log" type="button" class="tab" onclick="setMode('login')">Login</button></div><form id="authForm"><div id="regFields"><div class="field"><label>ನಿಮ್ಮ ಹೆಸರು / ಕಂಪನಿ ಹೆಸರು</label><input id="name" required></div><div class="field"><label>Mobile</label><input id="mobile" maxlength="10"></div><div class="field"><label>City</label><input id="city" required></div></div><div class="field"><label>Email</label><input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required></div><div class="field"><label>Password (6+ characters)</label><input id="password" type="password" minlength="6" required></div><button class="primary" id="submitAuth" type="submit">Create account</button></form><button id="forgotBtn" type="button" onclick="forgotPassword()">Forgot password?</button><p class="muted" style="font-size:12px">Login ಸಮಸ್ಯೆ ಬಂದರೆ Internet ಪರಿಶೀಲಿಸಿ. Firebase ನಲ್ಲಿ Email/Password sign-in ಮತ್ತು Authorized domain enable ಆಗಿರಬೇಕು.</p><p id="authMsg" class="muted" role="status" aria-live="polite"></p></section>
-<section id="dash" class="hidden"><div class="brand" style="color:#087d79;margin:8px 0 14px">NEXVADORAQ HIREHUB <small style="color:#647985">WORKER & COMPANY DASHBOARD • VERSION 2.1</small></div><div class="row"><div><h2 id="welcome"></h2><p id="roleText" class="muted"></p></div><button class="danger" onclick="logout()">Log out</button></div><div id="dashboardOverview"></div><div id="nav" class="tabs"></div><div id="panel"></div></section>
+<section id="dash" class="hidden"><div class="brand" style="color:#087d79;margin:8px 0 14px">NEXVADORAQ HIREHUB <small style="color:#647985">WORKER & COMPANY DASHBOARD • VERSION 3.0</small></div><div class="row"><div><h2 id="welcome"></h2><p id="roleText" class="muted"></p></div><button class="danger" onclick="logout()">Log out</button></div><div id="dashboardOverview"></div><div id="nav" class="tabs"></div><div id="panel"></div></section>
 <div class="notice">Firebase-connected preview: sign-in, jobs, applications, worker locations and notifications use cloud services when Firebase Authentication, Firestore and Storage are enabled and deployed. Live GPS sharing is opt-in. Android APK uses a persistent foreground notification for background tracking; browser preview tracks only while active. Tracking is not an emergency or safety service.</div></main><footer>© 2026 NEXVADORAQ • HireHub<br><a href="./privacy.html">Privacy Policy</a> · <a href="./terms.html">Terms of Use</a></footer>
 <script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script><script crossorigin="anonymous" src="./firebase-config.js"></script><script crossorigin="anonymous" src="./push-bridge.js"></script>
 <script>
@@ -1007,25 +1007,38 @@ async function startWorkerLocation(){
  const show=(title,message)=>{if(status)status.innerHTML='<b>'+esc(title)+'</b><p>'+esc(message)+'</p>'};
  show('GPS ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…','Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ.');
  try{
-  if(!nativeGeo?.getCurrentPosition||!nativeGeo?.watchPosition)throw new Error('Android GPS plugin ಲಭ್ಯವಿಲ್ಲ. ಹೊಸ APK Install ಮಾಡಿ.');
-  if(nativeGeo.requestPermissions){
-   const permission=await nativeGeo.requestPermissions();
-   if(permission.location!=='granted'&&permission.coarseLocation!=='granted')throw new Error('App Settings ನಲ್ಲಿ Location permission Allow ಮಾಡಿ.');
-  }
-  const first=await nativeGeo.getCurrentPosition({enableHighAccuracy:true,timeout:30000,maximumAge:0});
-  if(!valid(first))throw new Error('GPS coordinates ಸಿಗಲಿಲ್ಲ. ಫೋನ್ Location ON ಮಾಡಿ, ಹೊರಾಂಗಣದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
-  handleWorkerPosition(first);
   try{
    const lock=await fbDb.collection('workerActiveBookings').doc(me.id).get();
    window.activeWorkerBookingId=lock.exists?String(lock.data().bookingId||''):'';
   }catch(err){console.warn('Active booking lookup failed',err)}
-  const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:30000,maximumAge:0},(pos,err)=>{
-   if(err){console.error('Native GPS watch error',err);show('GPS signal ಸಮಸ್ಯೆ',err.message||'GPS signal ಮತ್ತೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ.');return;}
-   if(pos&&valid(pos)){handleWorkerPosition(pos);show('Live GPS Tracking ON','ನಿಮ್ಮ ಸ್ಥಳ update ಆಗುತ್ತಿದೆ. Offline ಮಾಡಿದಾಗ Tracking ನಿಲ್ಲುತ್ತದೆ.');}
-  });
-  if(!id)throw new Error('GPS watcher ಆರಂಭವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
-  locationWatchId='native:'+id;
-  show('Live GPS Tracking ON','ನಿಮ್ಮ ಸ್ಥಳ update ಆಗುತ್ತಿದೆ. App foreground ನಲ್ಲಿ ಇರಿಸಿದಾಗ GPS ನಿರಂತರವಾಗಿ update ಆಗುತ್ತದೆ.');
+  if(nativeGeo?.getCurrentPosition&&nativeGeo?.watchPosition){
+   if(nativeGeo.requestPermissions){
+    const permission=await nativeGeo.requestPermissions();
+    if(permission.location!=='granted'&&permission.coarseLocation!=='granted')throw new Error('App Settings ನಲ್ಲಿ Location permission Allow ಮಾಡಿ.');
+   }
+   const first=await nativeGeo.getCurrentPosition({enableHighAccuracy:true,timeout:30000,maximumAge:0});
+   if(!valid(first))throw new Error('GPS coordinates ಸಿಗಲಿಲ್ಲ. ಫೋನ್ Location ON ಮಾಡಿ, ಹೊರಾಂಗಣದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+   handleWorkerPosition(first);
+   const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:30000,maximumAge:0},(pos,err)=>{
+    if(err){console.error('Native GPS watch error',err);show('GPS signal ಸಮಸ್ಯೆ',err.message||'GPS signal ಮತ್ತೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ.');return;}
+    if(pos&&valid(pos)){handleWorkerPosition(pos);show('Live GPS Tracking ON','Native GPS ಮೂಲಕ ಸ್ಥಳ update ಆಗುತ್ತಿದೆ.');}
+   });
+   if(!id)throw new Error('GPS watcher ಆರಂಭವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+   locationWatchId='native:'+id;
+   show('Live GPS Tracking ON','Native GPS ಮೂಲಕ ಸ್ಥಳ update ಆಗುತ್ತಿದೆ.');
+   return true;
+  }
+  // Foreground-only fallback for WebView/browser builds without the native GPS plugin.
+  if(!navigator.geolocation)throw new Error('ಈ APKನಲ್ಲಿ Native GPS Plugin ಇಲ್ಲ ಮತ್ತು WebView GPS ಕೂಡ ಲಭ್ಯವಿಲ್ಲ. Native GPS Plugin ಇರುವ APK ಅಗತ್ಯ.');
+  const first=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:30000,maximumAge:0}));
+  if(!valid(first))throw new Error('GPS coordinates ಸಿಗಲಿಲ್ಲ. ಫೋನ್ Location ON ಮಾಡಿ, ಹೊರಾಂಗಣದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+  handleWorkerPosition(first);
+  const id=navigator.geolocation.watchPosition(pos=>{
+   if(pos&&valid(pos)){handleWorkerPosition(pos);show('Live GPS Tracking ON','WebView GPS ಮೂಲಕ App ತೆರೆದಿರುವಾಗ ಮಾತ್ರ ಸ್ಥಳ update ಆಗುತ್ತದೆ. Background GPSಗೆ Native APK ಅಗತ್ಯ.');}
+  },err=>{console.error('WebView GPS watch error',err);show('GPS signal ಸಮಸ್ಯೆ',err.message||'GPS signal ಮತ್ತೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ.');},{enableHighAccuracy:true,timeout:30000,maximumAge:0});
+  if(id===undefined||id===null)throw new Error('WebView GPS watcher ಆರಂಭವಾಗಲಿಲ್ಲ.');
+  locationWatchId=id;
+  show('Live GPS Tracking ON','WebView GPS ಮೂಲಕ App ತೆರೆದಿರುವಾಗ ಮಾತ್ರ ಸ್ಥಳ update ಆಗುತ್ತದೆ. Background GPSಗೆ Native APK ಅಗತ್ಯ.');
   return true;
  }catch(err){
   console.error('Could not start worker GPS',err);
