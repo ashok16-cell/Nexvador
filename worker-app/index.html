@@ -903,7 +903,8 @@ async function acceptWorkerRequest(id){
   if(!bookingId)throw new Error('Booking ID ಸರಿಯಾಗಿಲ್ಲ.');
   if(!uid||!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
   if(typeof firebase.functions!=='function')throw new Error('Firebase Functions SDK ಲಭ್ಯವಿಲ್ಲ. ಪುಟವನ್ನು Refresh ಮಾಡಿ.');
-  const acceptCall=firebase.functions('asia-south1').httpsCallable('acceptWorkerBooking');
+  const functionsClient=firebase.app().functions('asia-south1');
+  const acceptCall=functionsClient.httpsCallable('acceptWorkerBooking');
   const response=await acceptCall({bookingId});
   const result=response?.data||{};
   if(result.bookingId!==bookingId)throw new Error('Server acceptance confirmation ಸಿಗಲಿಲ್ಲ.');
