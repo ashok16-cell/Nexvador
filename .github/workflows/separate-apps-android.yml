@@ -6,6 +6,7 @@ on:
     paths:
       - 'worker-app/**'
       - 'functions/**'
+      - 'appwrite-functions/**'
       - 'firestore.rules'
       - 'storage.rules'
       - 'firebase.json'
@@ -45,6 +46,11 @@ jobs:
           Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
+      - name: Validate Appwrite booking function
+        working-directory: appwrite-functions/hirehub-booking-accept
+        run: |
+          node --check src/index.js
+          node -e "const p=require('./package.json'); if(p.engines?.node !== '22') throw new Error('Appwrite function must target Node 22'); if(!p.dependencies?.['firebase-admin']) throw new Error('firebase-admin dependency missing'); console.log('Appwrite function syntax and runtime checks passed.');"
       - name: Validate Firebase and release configuration
         run: |
           node --check functions/index.js
