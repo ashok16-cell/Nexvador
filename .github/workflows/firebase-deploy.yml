@@ -63,6 +63,9 @@ jobs:
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
+      - name: Install Cloud Functions dependencies
+        run: npm install --prefix functions
+
       - name: Deploy Firebase resources
         env:
           TARGET: ${{ inputs.deploy_target || 'hosting-and-firestore-rules' }}
