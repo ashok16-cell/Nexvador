@@ -125,14 +125,45 @@ exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (r
     const userSnap = await tx.get(userRef);
     if (!userSnap.exists) throw new HttpsError("not-found", "User profile ಸಿಗಲಿಲ್ಲ.");
     const user = userSnap.data() || {};
-    // Keep an already-issued valid ID unchanged; this also supports older accounts.
-    if (typeof user.displayId === "string" && /^NH-(WKR|CMP|CUS)-\d{6}$/.test(user.displayId)) {
+    const role = String(user.role || "").toLowerCase();
+
+    // Worker-facing ID is numeric and independent from Firebase Auth UID.
+    // The immutable registry and monotonic counter prevent duplicates/reuse.
+    if (role === "worker") {
+      const existing = String(user.workerId || "");
+      if (/^1[0-9]{5,}$/.test(existing)) {
+        const registryRef = db.collection("workerNumericIds").doc(existing);
+        const registrySnap = await tx.get(registryRef);
+        if (!registrySnap.exists) tx.create(registryRef, { uid, createdAt: require("firebase-admin/firestore").FieldValue.serverTimestamp() });
+        if (user.displayId !== existing) tx.update(userRef, { workerId: existing, displayId: existing });
+        return { workerId: existing, displayId: existing };
+      }
+      const counterRef = db.collection("systemCounters").doc("worker_numeric_id");
+      const counterSnap = await tx.get(counterRef);
+      let next = Math.max(100000, Number(counterSnap.exists ? counterSnap.data().value || 0 : 100000));
+      let workerId;
+      let registryRef;
+      let registrySnap;
+      do {
+        next += 1;
+        if (!Number.isSafeInteger(next)) throw new HttpsError("resource-exhausted", "Worker ID ಮಿತಿ ಮುಗಿದಿದೆ.");
+        workerId = String(next);
+        registryRef = db.collection("workerNumericIds").doc(workerId);
+        registrySnap = await tx.get(registryRef);
+      } while (registrySnap.exists);
+      const now = require("firebase-admin/firestore").FieldValue.serverTimestamp();
+      tx.set(counterRef, { value: next, updatedAt: now }, { merge: true });
+      tx.create(registryRef, { uid, createdAt: now });
+      tx.update(userRef, { workerId, displayId: workerId });
+      return { workerId, displayId: workerId };
+    }
+
+    // Preserve existing public IDs for non-worker accounts.
+    if (typeof user.displayId === "string" && /^NH-(CMP|CUS)-\\d{6}$/.test(user.displayId)) {
       return { displayId: user.displayId };
     }
-    const role = String(user.role || "").toLowerCase();
-    const prefix = role === "worker" ? "WKR" : role === "company" ? "CMP" : role === "customer" ? "CUS" : null;
+    const prefix = role === "company" ? "CMP" : role === "customer" ? "CUS" : null;
     if (!prefix) throw new HttpsError("failed-precondition", "ಈ accountಗೆ Display ID ನೀಡಲಾಗುವುದಿಲ್ಲ.");
-    // Shared global counter ensures sequential numbers across all account types.
     const counterRef = db.collection("systemCounters").doc("hireHub_global");
     const counterSnap = await tx.get(counterRef);
     const next = Number(counterSnap.exists ? counterSnap.data().value || 0 : 0) + 1;
