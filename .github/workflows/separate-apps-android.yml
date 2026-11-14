@@ -21,7 +21,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
@@ -54,6 +54,7 @@ jobs:
       - name: Validate Firebase and release configuration
         run: |
           node --check functions/index.js
+          node --check scripts/plan-auth-uid-migration.js
           node - <<'NODE'
           const fs = require('fs');
           const config = fs.readFileSync('worker-app/firebase-config.js', 'utf8');
