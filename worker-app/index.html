@@ -956,23 +956,25 @@ function renderWorkerLocation(el){
  if(saved){document.getElementById('myLocDetails').innerHTML='<p><b>Last location:</b> '+Number(saved.lat).toFixed(5)+', '+Number(saved.lng).toFixed(5)+'</p><p class="muted">Updated: '+new Date(saved.updatedAt).toLocaleString()+'</p><a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+saved.lat+'&mlon='+saved.lng+'#map=16/'+saved.lat+'/'+saved.lng+'">Open Map</a>'}
 }
 async function handleWorkerPosition(pos){
+ if(!me||me.role!=='worker'||!fbAuth.currentUser||String(fbAuth.currentUser.uid)!==String(me.id))throw new Error('GPS update ನಿಲ್ಲಿಸಲಾಗಿದೆ: Worker Firebase User ID ಹೊಂದಾಣಿಕೆಯಾಗಿಲ್ಲ. ಮತ್ತೆ Login ಮಾಡಿ.');
  const d=db();d.liveLocations=d.liveLocations||[];
- const lat=Number(pos?.coords?.latitude??pos?.latitude),lng=Number(pos?.coords?.longitude??pos?.longitude),accuracy=Number(pos?.coords?.accuracy??pos?.accuracy??0);
+ const lat=Number(pos?.coords?.latitude??pos?.latitude),lng=Number(pos?.coords?.longitude??pos?.longitude),rawAccuracy=Number(pos?.coords?.accuracy??pos?.accuracy??0);
  if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)throw new Error('GPS coordinates invalid');
+ const accuracy=Number.isFinite(rawAccuracy)&&rawAccuracy>=0?Math.round(rawAccuracy):null;
  const now=Date.now();window.workerCurrentCoords={lat,lng,accuracy,updatedAt:now};
- const item={worker:me.id,role:'worker',name:me.name,city:me.city,lat,lng,accuracy:Math.round(accuracy),updatedAt:now,sharing:true};
+ const item={worker:fbAuth.currentUser.uid,role:'worker',name:me.name,city:me.city,lat,lng,accuracy,updatedAt:now,sharing:true};
  d.liveLocations=d.liveLocations.filter(x=>x.worker!==me.id);d.liveLocations.push(item);save(d);
  const stamp=firebase.firestore.FieldValue.serverTimestamp();
  await Promise.all([
-  fbDb.collection('workerPublicProfiles').doc(me.id).set({userId:me.id,name:me.name||'',photoURL:me.photoURL||'',city:me.city||'',area:me.area||'',pincode:me.pincode||'',mainSkill:me.mainSkill||'',secondSkill:me.secondSkill||'',skills:me.skills||[],experience:me.experience||'',dailyWage:me.dailyWage||0,hourlyRate:me.hourlyRate||0,rating:me.rating||0,availability:'available',lat:item.lat,lng:item.lng,accuracy:item.accuracy,lastSeen:stamp,updatedAt:stamp},{merge:true}),
-  fbDb.collection('locations').doc(me.id).set({uid:me.id,role:'worker',name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:stamp,sharing:true},{merge:true})
+  fbDb.collection('workerPublicProfiles').doc(fbAuth.currentUser.uid).set({userId:fbAuth.currentUser.uid,name:me.name||'',photoURL:me.photoURL||'',city:me.city||'',area:me.area||'',pincode:me.pincode||'',mainSkill:me.mainSkill||'',secondSkill:me.secondSkill||'',skills:me.skills||[],experience:me.experience||'',dailyWage:me.dailyWage||0,hourlyRate:me.hourlyRate||0,rating:me.rating||0,availability:'available',lat:item.lat,lng:item.lng,accuracy:item.accuracy,lastSeen:stamp,updatedAt:stamp},{merge:true}),
+  fbDb.collection('locations').doc(fbAuth.currentUser.uid).set({uid:fbAuth.currentUser.uid,role:'worker',name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:stamp,sharing:true},{merge:true})
  ]);
  const s=document.getElementById('locStatus');if(s)s.innerHTML='<b><span class="locdot"></span>Live location sharing ON</b><p>'+item.lat.toFixed(5)+', '+item.lng.toFixed(5)+' • Accuracy about '+item.accuracy+' m</p>';
  const details=document.getElementById('myLocDetails');if(details)details.innerHTML='<a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+item.lat+'&mlon='+item.lng+'#map=16/'+item.lat+'/'+item.lng+'">Open My Location Map</a>';
  // Write directly to the accepted booking first; local booking cache may still be stale just after Accept.
  const bookingIds=new Set((d.bookings||[]).filter(b=>['Pending','Partially Filled','Confirmed'].includes(b.status||'')&&((Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))||b.workerId===me.id)).map(b=>String(b.id)));
  if(window.activeWorkerBookingId)bookingIds.add(String(window.activeWorkerBookingId));
- const trackingResults=await Promise.allSettled([...bookingIds].map(bookingId=>fbDb.collection('workerBookings').doc(bookingId).collection('tracking').doc(me.id).set({workerId:me.id,workerName:me.name,lat:item.lat,lng:item.lng,accuracy:item.accuracy,sharing:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})));
+ const trackingResults=await Promise.allSettled([...bookingIds].map(bookingId=>fbDb.collection('workerBookings').doc(bookingId).collection('tracking').doc(fbAuth.currentUser.uid).set({workerId:fbAuth.currentUser.uid,workerName:me.name,lat:item.lat,lng:item.lng,accuracy:item.accuracy,sharing:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})));
  const failed=trackingResults.filter(x=>x.status==='rejected');
  if(failed.length)console.warn('Booking GPS sync failed for',failed.length,'booking(s)',failed.map(x=>x.reason?.message||x.reason));
 }
