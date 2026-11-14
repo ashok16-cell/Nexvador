@@ -55,6 +55,11 @@ jobs:
           create_credentials_file: true
           export_environment_variables: true
 
+      - name: Report deploy service account identity
+        shell: bash
+        run: |
+          node -e 'const fs=require("fs"); const p=process.env.GOOGLE_APPLICATION_CREDENTIALS; if(!p || !fs.existsSync(p)) { console.error("Google credentials file unavailable"); process.exit(1); } const c=JSON.parse(fs.readFileSync(p,"utf8")); if(!c.client_email) { console.error("client_email missing from credentials"); process.exit(1); } console.log("Firebase deploy principal:", c.client_email);'
+
       - name: Install Firebase CLI
         run: npm install --global firebase-tools
 
