@@ -390,13 +390,20 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
     await userRef.set(profile,{merge:false});
    }
   }
-  authStage='Assigning numeric Worker ID';
-  if(String(profile.role||'').toLowerCase()==='worker'){
-   const idResult=await firebase.app().functions('asia-south1').httpsCallable('getOrCreateHireHubDisplayId')({});
-   const assigned=String(idResult?.data?.workerId||idResult?.data?.displayId||'');
-   if(!/^1[0-9]{5,}$/.test(assigned))throw new Error('Numeric Worker ID ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
-   profile.workerId=assigned;profile.displayId=assigned;
-  }else if(!profile.displayId)profile.displayId=user.uid;
+    if(action==='register'){
+   authStage='Assigning numeric public User ID';
+   const idResult=await firebase.app().functions('asia-south1').httpsCallable('getOrCreateHireHubDisplayId')({newAccount:true});
+   const assigned=String(idResult?.data?.displayId||'');
+   const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
+   if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+   profile.displayId=assigned;
+   if(profile.role==='worker')profile.workerId=assigned;
+   if(profile.role==='company')profile.companyId=assigned;
+   if(profile.role==='customer')profile.customerId=assigned;
+   await userRef.set({displayId:assigned,...(profile.workerId?{workerId:assigned}:{}),...(profile.companyId?{companyId:assigned}:{}),...(profile.customerId?{customerId:assigned}:{})},{merge:true});
+  }else{
+   profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
+  }
   authStage='Opening account dashboard';
   me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
  }catch(err){
