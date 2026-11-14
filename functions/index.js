@@ -115,63 +115,43 @@ exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
 );
 
 
-// Assign a stable sequential public HireHub ID to both new and existing accounts on login.
+// Assign a unique numeric public HireHub ID to newly registered Worker, Company and Customer accounts.
 exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (request) => {
   if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Login ಅಗತ್ಯ.");
-  const db = getFirestore();
-  const uid = request.auth.uid;
+  const db = getFirestore(), uid = request.auth.uid;
   const userRef = db.collection("users").doc(uid);
   return db.runTransaction(async (tx) => {
     const userSnap = await tx.get(userRef);
     if (!userSnap.exists) throw new HttpsError("not-found", "User profile ಸಿಗಲಿಲ್ಲ.");
-    const user = userSnap.data() || {};
-    const role = String(user.role || "").toLowerCase();
-
-    // Worker-facing ID is numeric and independent from Firebase Auth UID.
-    // The immutable registry and monotonic counter prevent duplicates/reuse.
-    if (role === "worker") {
-      const existing = String(user.workerId || "");
-      if (/^1[0-9]{5,}$/.test(existing)) {
-        const registryRef = db.collection("workerNumericIds").doc(existing);
-        const registrySnap = await tx.get(registryRef);
-        if (!registrySnap.exists) tx.create(registryRef, { uid, createdAt: require("firebase-admin/firestore").FieldValue.serverTimestamp() });
-        if (user.displayId !== existing) tx.update(userRef, { workerId: existing, displayId: existing });
-        return { workerId: existing, displayId: existing };
-      }
-      const counterRef = db.collection("systemCounters").doc("worker_numeric_id");
-      const counterSnap = await tx.get(counterRef);
-      let next = Math.max(100000, Number(counterSnap.exists ? counterSnap.data().value || 0 : 100000));
-      let workerId;
-      let registryRef;
-      let registrySnap;
-      do {
-        next += 1;
-        if (!Number.isSafeInteger(next)) throw new HttpsError("resource-exhausted", "Worker ID ಮಿತಿ ಮುಗಿದಿದೆ.");
-        workerId = String(next);
-        registryRef = db.collection("workerNumericIds").doc(workerId);
-        registrySnap = await tx.get(registryRef);
-      } while (registrySnap.exists);
-      const now = require("firebase-admin/firestore").FieldValue.serverTimestamp();
-      tx.set(counterRef, { value: next, updatedAt: now }, { merge: true });
-      tx.create(registryRef, { uid, createdAt: now });
-      tx.update(userRef, { workerId, displayId: workerId });
-      return { workerId, displayId: workerId };
+    const user = userSnap.data() || {}, role = String(user.role || "").toLowerCase();
+    const config = {
+      worker: { prefix: "1", field: "workerId", counter: "worker_numeric_id" },
+      company: { prefix: "2", field: "companyId", counter: "company_numeric_id" },
+      customer: { prefix: "3", field: "customerId", counter: "customer_numeric_id" }
+    }[role];
+    if (!config) throw new HttpsError("failed-precondition", "ಈ accountಗೆ Numeric ID ನೀಡಲಾಗುವುದಿಲ್ಲ.");
+    const current = String(user.displayId || user[config.field] || "");
+    if (new RegExp("^" + config.prefix + "[0-9]{5,}$").test(current)) {
+      if (user.displayId !== current || user[config.field] !== current) tx.update(userRef, { displayId: current, [config.field]: current });
+      return { displayId: current, [config.field]: current };
     }
-
-    // Preserve existing public IDs for non-worker accounts.
-    if (typeof user.displayId === "string" && /^NH-(CMP|CUS)-\d{6}$/.test(user.displayId)) {
-      return { displayId: user.displayId };
-    }
-    const prefix = role === "company" ? "CMP" : role === "customer" ? "CUS" : null;
-    if (!prefix) throw new HttpsError("failed-precondition", "ಈ accountಗೆ Display ID ನೀಡಲಾಗುವುದಿಲ್ಲ.");
-    const counterRef = db.collection("systemCounters").doc("hireHub_global");
+    if (request.data?.newAccount !== true) throw new HttpsError("failed-precondition", "ಹಳೆಯ Accountಗೆ ಹೊಸ Numeric ID ನೀಡುವುದಿಲ್ಲ.");
+    const counterRef = db.collection("systemCounters").doc(config.counter);
     const counterSnap = await tx.get(counterRef);
-    const next = Number(counterSnap.exists ? counterSnap.data().value || 0 : 0) + 1;
-    if (!Number.isSafeInteger(next) || next > 999999) throw new HttpsError("resource-exhausted", "Display ID ಮಿತಿ ಮುಗಿದಿದೆ.");
-    const displayId = "NH-" + prefix + "-" + String(next).padStart(6, "0");
-    tx.set(counterRef, { value: next }, { merge: true });
-    tx.update(userRef, { displayId });
-    return { displayId };
+    let next = Math.max(100000, Number(counterSnap.exists ? counterSnap.data().value || 0 : 100000));
+    let numericId, registryRef, registrySnap;
+    do {
+      next++;
+      if (!Number.isSafeInteger(next) || next > 999999) throw new HttpsError("resource-exhausted", "Numeric ID ಮಿತಿ ಮುಗಿದಿದೆ.");
+      numericId = config.prefix + String(next);
+      registryRef = db.collection("hireHubNumericIds").doc(numericId);
+      registrySnap = await tx.get(registryRef);
+    } while (registrySnap.exists);
+    const now = require("firebase-admin/firestore").FieldValue.serverTimestamp();
+    tx.set(counterRef, { value: next, updatedAt: now }, { merge: true });
+    tx.create(registryRef, { uid, role, createdAt: now });
+    tx.update(userRef, { displayId: numericId, [config.field]: numericId });
+    return { displayId: numericId, [config.field]: numericId };
   });
 });
 
