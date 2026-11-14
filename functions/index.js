@@ -159,7 +159,7 @@ exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (r
     }
 
     // Preserve existing public IDs for non-worker accounts.
-    if (typeof user.displayId === "string" && /^NH-(CMP|CUS)-\\d{6}$/.test(user.displayId)) {
+    if (typeof user.displayId === "string" && /^NH-(CMP|CUS)-\d{6}$/.test(user.displayId)) {
       return { displayId: user.displayId };
     }
     const prefix = role === "company" ? "CMP" : role === "customer" ? "CUS" : null;
