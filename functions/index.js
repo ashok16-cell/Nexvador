@@ -169,8 +169,8 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
       }
       if (!bookingSnap.exists) throw new HttpsError("not-found", "ಕೆಲಸದ Booking ಲಭ್ಯವಿಲ್ಲ.");
       const b = bookingSnap.data() || {};
-      const currentStatus = String(b.status || "Pending");
-      if (!["Pending", "Partially Filled"].includes(currentStatus)) {
+      const currentStatus = String(b.status || "Pending").trim().toLowerCase();
+      if (!["pending", "partially filled"].includes(currentStatus)) {
         throw new HttpsError("failed-precondition", "ಈ ಕೆಲಸದ ಎಲ್ಲಾ ಸ್ಥಾನಗಳು ಈಗಾಗಲೇ ತುಂಬಿವೆ ಅಥವಾ Booking ಮುಚ್ಚಲಾಗಿದೆ.");
       }
       if (b.selectedWorkerId && String(b.selectedWorkerId) !== uid) {
