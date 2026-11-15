@@ -51,4 +51,5 @@ jobs:
             --entry-point=hirehubApi \
             --trigger-http \
             --allow-unauthenticated \
+            --set-env-vars=ALLOWED_ORIGINS=https://nexvadoraq.web.app,https://nexvadoraq.firebaseapp.com,https://localhost,http://localhost,capacitor://localhost \
             --quiet
