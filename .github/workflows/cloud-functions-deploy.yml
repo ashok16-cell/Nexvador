@@ -1,0 +1,40 @@
+name: NEXVADORAQ Google Cloud Run Functions Deploy
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'cloud-functions/**'
+      - '.github/workflows/cloud-functions-deploy.yml'
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate Cloud Functions
+        run: |
+          node --check cloud-functions/index.js
+          npm install --prefix cloud-functions
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+      - name: Deploy authenticated HTTP Cloud Run Function
+        run: |
+          gcloud functions deploy hirehubApi \
+            --gen2 \
+            --project=nexvadoraq \
+            --region=asia-south1 \
+            --runtime=nodejs22 \
+            --source=cloud-functions \
+            --entry-point=hirehubApi \
+            --trigger-http \
+            --allow-unauthenticated \
+            --quiet
