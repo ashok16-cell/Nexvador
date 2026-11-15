@@ -233,12 +233,20 @@ const firebaseApp=firebase.initializeApp(window.NEXVADORAQ_FIREBASE);let appChec
 async function callHireHubApi(action,payload={}){
  const user=fbAuth.currentUser;
  if(!user)throw new Error('ದಯವಿಟ್ಟು ಮೊದಲು Login ಮಾಡಿ.');
- const token=await user.getIdToken(true);
- const response=await fetch(HIREHUB_API_URL,{method:'POST',mode:'cors',cache:'no-store',credentials:'omit',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify({action,...payload})});
- const body=await response.json().catch(()=>({}));
- if(!response.ok)throw new Error(body.error||('HireHub API ದೋಷ: '+response.status));
- if(!body||!Object.prototype.hasOwnProperty.call(body,'data'))throw new Error('HireHub API response ಸರಿಯಾಗಿಲ್ಲ.');
- return body.data;
+ // Use the Firebase callable function in the same Firebase project as this app.
+ // This prevents the Android client from accepting against a separately configured
+ // Cloud Run service / Firestore project.
+ try{
+  const callable=firebase.app().functions('asia-south1').httpsCallable(action);
+  const result=await callable(payload);
+  if(!result||!result.data)throw new Error('Booking server confirmation ಲಭ್ಯವಿಲ್ಲ.');
+  return result.data;
+ }catch(error){
+  const code=String(error?.code||'');
+  console.error('Firebase callable booking API failed:',{action,code,message:error?.message});
+  if(code.startsWith('functions/'))throw error;
+  throw new Error('Firebase Booking Function ಸಂಪರ್ಕ ವಿಫಲ: '+(error?.message||code||'Unknown error'));
+ }
 }const fbDb=firebase.firestore();fbDb.settings({experimentalForceLongPolling:true,useFetchStreams:false});const fbStorage=firebase.storage();const authReady=fbAuth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(err=>{console.warn('LOCAL auth persistence unavailable; trying SESSION:',err);return fbAuth.setPersistence(firebase.auth.Auth.Persistence.SESSION)}).catch(err=>{console.warn('SESSION auth persistence unavailable; using in-memory auth:',err);return fbAuth.setPersistence(firebase.auth.Auth.Persistence.NONE)});
 const KEY='nexvadoraq_local_v1',SK='nexvadoraq_session_v1';var role='worker',mode='register',me=null,page='jobs',locationWatchId=null,companyWatchId=null,authSubmitting=false,authStage='initializing';
 const LANG_KEY='nexvadoraq_language_v1';
