@@ -347,6 +347,7 @@ async function readUserProfileWithRetry(userRef){
  try{return await readUserProfileViaRest(userRef,lastError);}
  catch(restError){console.error('Firestore REST fallback failed:',restError);throw restError;}
 }
+function withAuthTimeout(promise,stage,ms=20000){let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(stage+' ಸಮಯ ಮೀರಿದೆ. Internet/Firebase ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.')),ms)})]).finally(()=>clearTimeout(timer))}
 const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit=async e=>{
  e.preventDefault();
  if(authSubmitting)return;
@@ -354,7 +355,7 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
  const msg=document.getElementById('authMsg'),btn=document.getElementById('submitAuth');
  const email=document.getElementById('email').value.trim().toLowerCase();
  const pass=document.getElementById('password').value;
- const action=mode,selectedRole=role;
+ let action=mode;const selectedRole=role;
  btn.disabled=true;msg.textContent='Connecting securely…';
  try{
   authStage='Firebase initialization';
@@ -363,11 +364,11 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
   if(action==='register'&&selectedRole==='admin')throw new Error('Admin ಖಾತೆಯನ್ನು Super Admin ಮಾತ್ರ ಸುರಕ್ಷಿತವಾಗಿ provision ಮಾಡಬೇಕು.');
   if(action==='register'){
    authStage='Firebase account creation';
-   const cred=await fbAuth.createUserWithEmailAndPassword(email,pass);
-   user=cred.user;
+   try{const cred=await withAuthTimeout(fbAuth.createUserWithEmailAndPassword(email,pass),'Firebase ಖಾತೆ ರಚನೆ');user=cred.user}
+   catch(createError){if(createError?.code!=='auth/email-already-in-use')throw createError;authStage='Existing Firebase account recovery';const cred=await withAuthTimeout(fbAuth.signInWithEmailAndPassword(email,pass),'ಈಗಿರುವ ಖಾತೆಗೆ Login');user=cred.user;action='repair';mode='repair';authSync();document.getElementById('email').value=email;}
   }else if(action==='login'){
    authStage='Firebase email/password sign-in';
-   const cred=await fbAuth.signInWithEmailAndPassword(email,pass);
+   const cred=await withAuthTimeout(fbAuth.signInWithEmailAndPassword(email,pass),'Firebase Login');
    user=cred.user;
   }else if(action==='repair'){
    if(!user)throw new Error('Session ಮುಗಿದಿದೆ. Login ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
@@ -382,7 +383,7 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
   let snap=null;
   if(action!=='register'){
    authStage='Firestore user profile read';
-   snap=await readUserProfileWithRetry(userRef);
+   snap=await withAuthTimeout(readUserProfileWithRetry(userRef),'Firestore Profile ಓದು');
   }
 
   if(action==='login'&&snap.exists){
@@ -406,12 +407,12 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
     authStage='Firestore profile save';
     // A resolved Firestore set() is the server acknowledgement. Avoid an
     // unnecessary second read round-trip on slower Android WebViews.
-    await userRef.set(profile,{merge:false});
+    await withAuthTimeout(userRef.set(profile,{merge:false}),'Firestore Profile ಉಳಿಸುವಿಕೆ');
    }
   }
     if(action==='register'){
    authStage='Assigning numeric public User ID';
-   const idResult=await callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true});
+   const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಸೃಷ್ಟಿ');
    const assigned=String(idResult?.displayId||'');
    const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
    if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
@@ -426,7 +427,7 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    // succeeded before the numeric-ID callable failed on a slow/mobile connection.
    if(!profile.displayId){
     authStage='Completing pending public User ID';
-    const idResult=await callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true});
+    const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಮರುಪಡೆಯುವಿಕೆ');
     const assigned=String(idResult?.displayId||'');
     const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
     if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}
@@ -438,7 +439,7 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
   const authDiagnostic='\nDiagnostics: platform='+nativePlatform+'; origin='+location.origin+'; project='+String(window.NEXVADORAQ_FIREBASE?.projectId||'unknown')+'; sdk='+String(firebase.SDK_VERSION||'unknown')+'; code='+String(err?.code||'unknown')+(upstreamAuthMessage?'; server='+String(upstreamAuthMessage).slice(0,180):'');
   msg.textContent='ಹಂತ: '+authStage+' — '+authError(err)+authDiagnostic;
   // Keep a newly-created Firebase account signed in so the user can repair its missing profile.
-  if(action==='register'&&fbAuth.currentUser){
+  if(['register','repair'].includes(action)&&fbAuth.currentUser){
    mode='repair';authSync();document.getElementById('email').value=email;
    msg.textContent='Firebase account ಸೃಷ್ಟಿಯಾಗಿದೆ; Profile ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ಹಂತ: '+authStage+' — '+authError(err)+' Name/City ಪರಿಶೀಲಿಸಿ Complete profile ಒತ್ತಿ.';
   }
