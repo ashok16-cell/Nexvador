@@ -45,9 +45,9 @@ jobs:
               raise SystemExit("No inline application script found")
           last_close=html.rfind("</script>")
           tail=html[last_close+len("</script>"):]
-          if not re.fullmatch(r"\\s*</body>\\s*</html>\\s*", tail, re.I):
+          if not re.fullmatch(r"\s*</body>\s*</html>\s*", tail, re.I):
               raise SystemExit("Unexpected content after final script: possible stray JavaScript rendered as page text")
-          Path("/tmp/hirehub-inline.js").write_text("\\n".join(inline))
+          Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
       - name: Validate Appwrite booking function
