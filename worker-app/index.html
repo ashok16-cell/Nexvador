@@ -423,14 +423,20 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    await withAuthTimeout(userRef.set({displayId:assigned,...(profile.workerId?{workerId:assigned}:{}),...(profile.companyId?{companyId:assigned}:{}),...(profile.customerId?{customerId:assigned}:{})},{merge:true}),'Numeric ID Profile ಉಳಿಸುವಿಕೆ');
   }else{
    profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
-   // Resume incomplete registrations: Firebase Auth or Firestore profile may have
-   // succeeded before the numeric-ID callable failed on a slow/mobile connection.
+   // Resume incomplete registrations when Auth/Profile saved but ID assignment did not.
    if(!profile.displayId){
     authStage='Completing pending public User ID';
     const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಮರುಪಡೆಯುವಿಕೆ');
     const assigned=String(idResult?.displayId||'');
     const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
-    if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}
+    if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID ಇನ್ನೂ ಸೃಷ್ಟಿಯಾಗಿಲ್ಲ. ಮತ್ತೆ Complete profile ಒತ್ತಿ.');
+    profile.displayId=assigned;
+    if(profile.role==='worker')profile.workerId=assigned;
+    if(profile.role==='company')profile.companyId=assigned;
+    if(profile.role==='customer')profile.customerId=assigned;
+    await withAuthTimeout(userRef.set({displayId:assigned,...(profile.workerId?{workerId:assigned}:{}),...(profile.companyId?{companyId:assigned}:{}),...(profile.customerId?{customerId:assigned}:{})},{merge:true}),'Numeric ID Profile ಉಳಿಸುವಿಕೆ');
+   }
+  }
   me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
  }catch(err){
   console.error('HireHub auth error at ['+authStage+']:',err.code||err.message,err);
