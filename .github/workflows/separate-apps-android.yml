@@ -137,7 +137,7 @@ jobs:
           import re
           p=Path("www/index.html")
           s=p.read_text()
-          s,n=re.subn(r'<script crossorigin="anonymous" src="https://www\\.gstatic\\.com/firebasejs/10\\.12\\.2/firebase-[^"]+-compat\\.js"></script>', '', s)
+          s,n=re.subn(r'<script crossorigin="anonymous" src="https://www\.gstatic\.com/firebasejs/10\.12\.2/firebase-[^"]+-compat\.js"></script>', '', s)
           if n != 6: raise SystemExit(f"Expected 6 Firebase CDN scripts, found {n}")
           marker='<script crossorigin="anonymous" src="./firebase-config.js"></script>'
           if marker not in s: raise SystemExit("Firebase config script tag not found")
