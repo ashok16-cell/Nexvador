@@ -412,16 +412,22 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    }
   }
     if(action==='register'){
-   setAuthStage('Assigning numeric public User ID');
-   const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಸೃಷ್ಟಿ');
-   const assigned=String(idResult?.displayId||'');
-   const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
-   if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID ಪಡೆಯಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
-   profile.displayId=assigned;
-   if(profile.role==='worker')profile.workerId=assigned;
-   if(profile.role==='company')profile.companyId=assigned;
-   if(profile.role==='customer')profile.customerId=assigned;
-   await withAuthTimeout(userRef.set({displayId:assigned,...(profile.workerId?{workerId:assigned}:{}),...(profile.companyId?{companyId:assigned}:{}),...(profile.customerId?{customerId:assigned}:{})},{merge:true}),'Numeric ID Profile ಉಳಿಸುವಿಕೆ');
+   // Open the worker/customer/company dashboard as soon as Firebase Auth and
+   // the Firestore profile have been acknowledged. Numeric ID assignment is
+   // non-blocking; the existing repair path completes it on the next login
+   // if the callable is temporarily unavailable.
+   me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
+   const pendingRole=profile.role;
+   callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}).then(async idResult=>{
+    const assigned=String(idResult?.displayId||'');
+    const prefix=pendingRole==='worker'?'1':pendingRole==='company'?'2':pendingRole==='customer'?'3':'';
+    if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID format ಸರಿಯಿಲ್ಲ.');
+    const idFields={displayId:assigned,...(pendingRole==='worker'?{workerId:assigned}:{}),...(pendingRole==='company'?{companyId:assigned}:{}),...(pendingRole==='customer'?{customerId:assigned}:{})};
+    await userRef.set(idFields,{merge:true});
+    me={...me,...idFields};
+    console.info('HireHub public User ID assigned:',assigned);
+   }).catch(err=>console.error('Background User ID assignment pending; it will retry during next login:',err.code||err.message));
+   return;
   }else{
    profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
    // Resume incomplete registrations when Auth/Profile saved but ID assignment did not.
