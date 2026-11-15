@@ -5,7 +5,15 @@ const { getAuth } = require("firebase-admin/auth");
 const { getFirestore, FieldValue } = require("firebase-admin/firestore");
 initializeApp();
 const db = getFirestore();
-const corsOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map(s=>s.trim()).filter(Boolean);
+const defaultCorsOrigins = [
+ "https://nexvadoraq.web.app",
+ "https://nexvadoraq.firebaseapp.com",
+ "https://localhost",
+ "http://localhost",
+ "capacitor://localhost"
+];
+const configuredCorsOrigins = (process.env.ALLOWED_ORIGINS || "").split(",").map(s=>s.trim()).filter(Boolean);
+const corsOrigins = [...new Set([...defaultCorsOrigins, ...configuredCorsOrigins])];
 function fail(code,message){const e=new Error(message);e.status=code;throw e;}
 async function authenticate(req){
  const token=(req.headers.authorization||"").match(/^Bearer (.+)$/i)?.[1];
@@ -15,7 +23,7 @@ async function authenticate(req){
 functions.http("hirehubApi",async(req,res)=>{
  res.set("Cache-Control","no-store");
  const origin=req.headers.origin;
- if(origin && corsOrigins.includes(origin)){res.set("Access-Control-Allow-Origin",origin);res.set("Vary","Origin");res.set("Access-Control-Allow-Headers","Authorization,Content-Type");res.set("Access-Control-Allow-Methods","POST,OPTIONS");}
+ if(origin && corsOrigins.includes(origin)){res.set("Access-Control-Allow-Origin",origin);res.set("Vary","Origin");res.set("Access-Control-Allow-Headers","Authorization,Content-Type");res.set("Access-Control-Allow-Methods","POST,OPTIONS");res.set("Access-Control-Max-Age","3600");}
  if(req.method==="OPTIONS")return res.status(corsOrigins.includes(origin)?204:403).end();
  if(req.method!=="POST")return res.status(405).json({error:"Method not allowed"});
  try{
