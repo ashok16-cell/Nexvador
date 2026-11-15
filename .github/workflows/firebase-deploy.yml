@@ -85,10 +85,12 @@ jobs:
             if echo "$CHANGED" | grep -q '^storage.rules$'; then
               firebase deploy --project nexvadoraq --only storage --non-interactive
             fi
-            # This workflow only runs for Firebase-related changes. Always deploy
-            # Functions on a push so callable endpoints cannot remain missing/stale.
-            echo "Deploying all Firebase Cloud Functions..."
-            firebase deploy --project nexvadoraq --only functions --non-interactive
+            # Deploy legacy Firebase Functions only when their source changes.
+            # Hosting-only updates must not trigger unrelated Cloud Billing/API enablement.
+            if echo "$CHANGED" | grep -q '^functions/'; then
+              echo "Deploying Firebase Cloud Functions..."
+              firebase deploy --project nexvadoraq --only functions --non-interactive
+            fi
             if echo "$CHANGED" | grep -q '^firebase.json$'; then
               firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive
             fi
