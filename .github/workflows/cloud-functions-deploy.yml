@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
   id-token: write
+concurrency:
+  group: hirehub-cloud-functions-deploy
+  cancel-in-progress: false
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -26,6 +29,16 @@ jobs:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_NEXVADORAQ_HIREHUB }}
       - name: Setup Google Cloud CLI
         uses: google-github-actions/setup-gcloud@v2
+      - name: Prepare dedicated Cloud Functions staging bucket
+        run: |
+          BUCKET="gs://nexvadoraq-hirehub-stage-759393901892"
+          if ! gcloud storage buckets describe "$BUCKET" --project=nexvadoraq >/dev/null 2>&1; then
+            gcloud storage buckets create "$BUCKET" \
+              --project=nexvadoraq \
+              --location=asia-south1 \
+              --uniform-bucket-level-access
+          fi
+          gcloud storage buckets describe "$BUCKET" --project=nexvadoraq
       - name: Deploy authenticated HTTP Cloud Run Function
         run: |
           gcloud functions deploy hirehubApi \
@@ -34,6 +47,7 @@ jobs:
             --region=asia-south1 \
             --runtime=nodejs22 \
             --source=cloud-functions \
+            --stage-bucket=nexvadoraq-hirehub-stage-759393901892 \
             --entry-point=hirehubApi \
             --trigger-http \
             --allow-unauthenticated \
