@@ -84,7 +84,7 @@ jobs:
             "version": "1.0.0",
             "private": true,
             "scripts": { "build:android": "cap sync android" },
-            "dependencies": { "@capacitor/core": "^6.2.0", "@capacitor/geolocation": "^6.0.2", "@capacitor-community/background-geolocation": "1.2.17", "@capacitor/camera": "^6.0.2", "@capacitor/push-notifications": "^6.0.2", "@capacitor/local-notifications": "^6.0.2" },
+            "dependencies": { "@capacitor/core": "^6.2.0", "@capacitor/geolocation": "^6.0.2", "@capacitor-community/background-geolocation": "1.2.17", "@capacitor/camera": "^6.0.2", "@capacitor/push-notifications": "^6.0.2", "@capacitor/local-notifications": "^6.0.2", "firebase": "10.12.2" },
             "devDependencies": { "@capacitor/cli": "^6.2.0", "@capacitor/android": "^6.2.0", "esbuild": "^0.24.0" }
           }
           EOF
@@ -99,6 +99,16 @@ jobs:
           }
           EOF
           npm install
+          # Bundle Firebase compat SDK locally so Android WebView does not depend on CDN availability.
+          cat > firebase-compat-entry.js <<'JS'
+          import 'firebase/compat/app';
+          import 'firebase/compat/auth';
+          import 'firebase/compat/firestore';
+          import 'firebase/compat/storage';
+          import 'firebase/compat/functions';
+          import 'firebase/compat/app-check';
+          JS
+          npx esbuild firebase-compat-entry.js --bundle --format=iife --outfile=www/firebase-compat.js
           npx cap add android
           python3 - <<'PY'
           from pathlib import Path
@@ -124,13 +134,17 @@ jobs:
           npx esbuild push-bridge.js --bundle --format=iife --outfile=www/push-bridge.js
           python3 - <<'PY'
           from pathlib import Path
+          import re
           p=Path("www/index.html")
           s=p.read_text()
-          tag='<script src="./push-bridge.js"></script>'
-          if tag not in s:
-              s=s.replace("</body>", tag+"</body>")
+          s,n=re.subn(r'<script crossorigin="anonymous" src="https://www\\.gstatic\\.com/firebasejs/10\\.12\\.2/firebase-[^"]+-compat\\.js"></script>', '', s)
+          if n != 6: raise SystemExit(f"Expected 6 Firebase CDN scripts, found {n}")
+          marker='<script crossorigin="anonymous" src="./firebase-config.js"></script>'
+          if marker not in s: raise SystemExit("Firebase config script tag not found")
+          s=s.replace(marker, '<script src="./firebase-compat.js"></script>'+marker, 1)
           p.write_text(s)
           PY
+
           npx cap sync android
           # Firebase native config is required for Play Integrity App Check.
           if [ -z "${GOOGLE_SERVICES_JSON_BASE64:-}" ]; then
