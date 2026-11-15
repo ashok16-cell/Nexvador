@@ -348,6 +348,7 @@ async function readUserProfileWithRetry(userRef){
  catch(restError){console.error('Firestore REST fallback failed:',restError);throw restError;}
 }
 function withAuthTimeout(promise,stage,ms=20000){let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(stage+' ಸಮಯ ಮೀರಿದೆ. Internet/Firebase ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.')),ms)})]).finally(()=>clearTimeout(timer))}
+function setAuthStage(stage){authStage=stage;const msg=document.getElementById('authMsg');if(msg)msg.textContent='ಪ್ರಗತಿ: '+stage+'…';}
 const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit=async e=>{
  e.preventDefault();
  if(authSubmitting)return;
@@ -356,18 +357,18 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
  const email=document.getElementById('email').value.trim().toLowerCase();
  const pass=document.getElementById('password').value;
  let action=mode;const selectedRole=role;
- btn.disabled=true;msg.textContent='Connecting securely…';
+ btn.disabled=true;setAuthStage('Firebase ಸಂಪರ್ಕ ಆರಂಭಿಸುತ್ತಿದೆ');
  try{
-  authStage='Firebase initialization';
+  setAuthStage('Firebase initialization');
   await authReady;
   let user=fbAuth.currentUser,profile;
   if(action==='register'&&selectedRole==='admin')throw new Error('Admin ಖಾತೆಯನ್ನು Super Admin ಮಾತ್ರ ಸುರಕ್ಷಿತವಾಗಿ provision ಮಾಡಬೇಕು.');
   if(action==='register'){
-   authStage='Firebase account creation';
+   setAuthStage('Firebase account creation');
    try{const cred=await withAuthTimeout(fbAuth.createUserWithEmailAndPassword(email,pass),'Firebase ಖಾತೆ ರಚನೆ');user=cred.user}
-   catch(createError){if(createError?.code!=='auth/email-already-in-use')throw createError;authStage='Existing Firebase account recovery';const cred=await withAuthTimeout(fbAuth.signInWithEmailAndPassword(email,pass),'ಈಗಿರುವ ಖಾತೆಗೆ Login');user=cred.user;action='repair';mode='repair';authSync();document.getElementById('email').value=email;}
+   catch(createError){if(createError?.code!=='auth/email-already-in-use')throw createError;setAuthStage('Existing Firebase account recovery');const cred=await withAuthTimeout(fbAuth.signInWithEmailAndPassword(email,pass),'ಈಗಿರುವ ಖಾತೆಗೆ Login');user=cred.user;action='repair';mode='repair';authSync();document.getElementById('email').value=email;}
   }else if(action==='login'){
-   authStage='Firebase email/password sign-in';
+   setAuthStage('Firebase email/password sign-in');
    const cred=await withAuthTimeout(fbAuth.signInWithEmailAndPassword(email,pass),'Firebase Login');
    user=cred.user;
   }else if(action==='repair'){
@@ -382,7 +383,7 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
   // Existing login/repair flows still read the profile and retain retry handling.
   let snap=null;
   if(action!=='register'){
-   authStage='Firestore user profile read';
+   setAuthStage('Firestore user profile read');
    snap=await withAuthTimeout(readUserProfileWithRetry(userRef),'Firestore Profile ಓದು');
   }
 
@@ -404,14 +405,14 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
     if(profile.role!==selectedRole)throw new Error('ಈ Email ಬೇರೆ account type ಗೆ ಸೇರಿದೆ. ಸರಿಯಾದ Worker / Company ಆಯ್ಕೆಮಾಡಿ.');
    }else{
     profile={uid:user.uid,name,mobile:document.getElementById('mobile').value.trim(),city,email,role:selectedRole,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
-    authStage='Firestore profile save';
+    setAuthStage('Firestore profile save');
     // A resolved Firestore set() is the server acknowledgement. Avoid an
     // unnecessary second read round-trip on slower Android WebViews.
     await withAuthTimeout(userRef.set(profile,{merge:false}),'Firestore Profile ಉಳಿಸುವಿಕೆ');
    }
   }
     if(action==='register'){
-   authStage='Assigning numeric public User ID';
+   setAuthStage('Assigning numeric public User ID');
    const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಸೃಷ್ಟಿ');
    const assigned=String(idResult?.displayId||'');
    const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
@@ -425,7 +426,7 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
    // Resume incomplete registrations when Auth/Profile saved but ID assignment did not.
    if(!profile.displayId){
-    authStage='Completing pending public User ID';
+    setAuthStage('Completing pending public User ID');
     const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಮರುಪಡೆಯುವಿಕೆ');
     const assigned=String(idResult?.displayId||'');
     const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
