@@ -647,7 +647,7 @@ if(page==='booking'&&me.role==='company'){el.innerHTML='<div class="card"><h3>Re
 if(page==='requests'&&me.role==='worker'){
  const mine=d.bookings||[];const pendingMine=mine.filter(b=>['Pending','Partially Filled'].includes(String(b.status||''))&&(String(b.workerId||'')===String(me.id)||Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id)));const mergedRows=[...(d.openBookings||[]),...pendingMine];const seenBookingIds=new Set();const baseRows=mergedRows.filter(b=>{const id=String(b.id||'');if(!id||seenBookingIds.has(id))return false;seenBookingIds.add(id);return true}).map(b=>({...b,_distance:null}));
  const online=me.availability==='available';
- el.innerHTML='<div class="row"><div><h3>Captain Home • Nearby Work</h3><span id="captainAvailabilityBadge" class="pill">'+(online?'ONLINE':'OFFLINE')+'</span></div><button id="captainAvailabilityButton" class="primary" onclick="toggleCaptainAvailability()">'+(online?'Go Offline':'Go Online')+'</button></div><p class="muted">HireHub ನಲ್ಲಿ: Online ಮಾಡಿದಾಗ ಮಾತ್ರ ನಿಮ್ಮ GPS ಹಂಚಿಕೆ ಆರಂಭವಾಗುತ್ತದೆ. Request ನೋಡಿ, Accept ಮಾಡಿ, ಕೆಲಸದ ಸ್ಥಳಕ್ಕೆ ತೆರಳಿ. Privacy ಗಾಗಿ Offline ಮಾಡಿದಾಗ GPS ನಿಲ್ಲುತ್ತದೆ.</p><p class="muted">GPS ON ಇದ್ದರೆ ಕೆಲಸದ ಸ್ಥಳದಿಂದ ನಿಮ್ಮ ದೂರ KM ನಲ್ಲಿ ಕಾಣುತ್ತದೆ. Village, Post, Taluk ಮತ್ತು City ವಿಳಾಸಗಳನ್ನು ಸಹ ಸ್ಥಳವಾಗಿ ಗುರುತಿಸಲು ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತದೆ.</p><div class="field"><label>Search radius</label><select id="requestRadius" onchange="drawNearbyWorkRequests()"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="1000" selected>All available</option></select></div><div id="requestMap" class="mapcanvas"></div><div id="nearbyRequestList"></div><h3>My Accepted Work</h3><div id="acceptedWorkList">'+(mine.length?mine.map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.location)+'<p><b>Booking ಮಾಡಿದವರು:</b> '+esc(b.requesterName||b.companyName||'ಹೆಸರು ಲಭ್ಯವಿಲ್ಲ')+' ('+esc(b.requesterRole==='company'?'Company / HR':b.requesterRole==='customer'?'Customer':'Booking requester')+')</p><p>Booking ID: '+esc(b.id)+' • '+esc(b.date||'ದಿನಾಂಕ ನೀಡಿಲ್ಲ')+' • '+esc(Number(b.acceptedCount??(Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds.length:0)))+' / '+esc(b.count||1)+' Workers • <span class="pill">'+esc(b.status||'Pending')+'</span></p><p>Shift: '+esc(b.shift||'—')+' • Pay: '+esc(b.pay||'—')+'</p>'+'<p>'+(hasValidCoordinates(b.requestLat,b.requestLng)&&getMyWorkerCoords()?workerDistanceKm(getMyWorkerCoords(),{lat:Number(b.requestLat),lng:Number(b.requestLng)}).toFixed(1)+' km ದೂರ':'KM ದೂರ ಪಡೆಯಲು GPS Refresh ಮಾಡಿ')+'</p>'+((['Pending','Partially Filled'].includes(String(b.status||''))&&!(Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))&&String(b.workerId||'')!==String(me.id))?'<button class="primary" onclick="acceptWorkerRequest(&quot;'+String(b.id).replace(/"/g,'')+'&quot;)">Accept Work</button>':'')+'</div>').join(''):'<p class="muted">ಇನ್ನೂ ಕೆಲಸ ಸ್ವೀಕರಿಸಿಲ್ಲ.</p>')+'</div>';
+ el.innerHTML='<div class="row"><div><h3>Captain Home • Nearby Work</h3><span id="captainAvailabilityBadge" class="pill">'+(online?'ONLINE':'OFFLINE')+'</span></div><div class="row" style="gap:8px;flex-wrap:wrap"><button id="captainOnlineButton" class="primary" type="button" onclick="setCaptainAvailability(true)" '+(online?'disabled':'')+'>ONLINE</button><button id="captainOfflineButton" class="danger" type="button" onclick="setCaptainAvailability(false)" '+(!online?'disabled':'')+'>OFFLINE</button></div></div><p class="muted">HireHub ನಲ್ಲಿ: Online ಮಾಡಿದಾಗ ಮಾತ್ರ ನಿಮ್ಮ GPS ಹಂಚಿಕೆ ಆರಂಭವಾಗುತ್ತದೆ. Request ನೋಡಿ, Accept ಮಾಡಿ, ಕೆಲಸದ ಸ್ಥಳಕ್ಕೆ ತೆರಳಿ. Privacy ಗಾಗಿ Offline ಮಾಡಿದಾಗ GPS ನಿಲ್ಲುತ್ತದೆ.</p><p class="muted">GPS ON ಇದ್ದರೆ ಕೆಲಸದ ಸ್ಥಳದಿಂದ ನಿಮ್ಮ ದೂರ KM ನಲ್ಲಿ ಕಾಣುತ್ತದೆ. Village, Post, Taluk ಮತ್ತು City ವಿಳಾಸಗಳನ್ನು ಸಹ ಸ್ಥಳವಾಗಿ ಗುರುತಿಸಲು ಪ್ರಯತ್ನಿಸಲಾಗುತ್ತದೆ.</p><div class="field"><label>Search radius</label><select id="requestRadius" onchange="drawNearbyWorkRequests()"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="1000" selected>All available</option></select></div><div id="requestMap" class="mapcanvas"></div><div id="nearbyRequestList"></div><h3>My Accepted Work</h3><div id="acceptedWorkList">'+(mine.length?mine.map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.location)+'<p><b>Booking ಮಾಡಿದವರು:</b> '+esc(b.requesterName||b.companyName||'ಹೆಸರು ಲಭ್ಯವಿಲ್ಲ')+' ('+esc(b.requesterRole==='company'?'Company / HR':b.requesterRole==='customer'?'Customer':'Booking requester')+')</p><p>Booking ID: '+esc(b.id)+' • '+esc(b.date||'ದಿನಾಂಕ ನೀಡಿಲ್ಲ')+' • '+esc(Number(b.acceptedCount??(Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds.length:0)))+' / '+esc(b.count||1)+' Workers • <span class="pill">'+esc(b.status||'Pending')+'</span></p><p>Shift: '+esc(b.shift||'—')+' • Pay: '+esc(b.pay||'—')+'</p>'+'<p>'+(hasValidCoordinates(b.requestLat,b.requestLng)&&getMyWorkerCoords()?workerDistanceKm(getMyWorkerCoords(),{lat:Number(b.requestLat),lng:Number(b.requestLng)}).toFixed(1)+' km ದೂರ':'KM ದೂರ ಪಡೆಯಲು GPS Refresh ಮಾಡಿ')+'</p>'+((['Pending','Partially Filled'].includes(String(b.status||''))&&!(Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))&&String(b.workerId||'')!==String(me.id))?'<button class="primary" onclick="acceptWorkerRequest(&quot;'+String(b.id).replace(/"/g,'')+'&quot;)">Accept Work</button>':'')+'</div>').join(''):'<p class="muted">ಇನ್ನೂ ಕೆಲಸ ಸ್ವೀಕರಿಸಿಲ್ಲ.</p>')+'</div>';
  window.nearbyWorkRows=baseRows;
  drawNearbyWorkRequests();
  // Resolve the device GPS and each booking address independently. Address pins remain
@@ -882,44 +882,54 @@ async function drawNearbyWorkRequests(){
  }catch(mapError){console.error('Nearby request map render failed',mapError);if(mapEl.isConnected)mapEl.textContent='Map ತಾತ್ಕಾಲಿಕವಾಗಿ ಲಭ್ಯವಿಲ್ಲ. KM distance ಪ್ರತ್ಯೇಕವಾಗಿ ಕಾಣಿಸುತ್ತದೆ.'}
 }
 window.refreshWorkerNearbyGps=async function(){const note=document.getElementById('nearbyRequestList');try{const p=await captureRequestLocation();if(!hasValidCoordinates(p.requestLat,p.requestLng))throw new Error('GPS location ಸಿಗಲಿಲ್ಲ. Android Location ON ಮಾಡಿ Permission Allow ಮಾಡಿ.');const workerPoint={lat:Number(p.requestLat),lng:Number(p.requestLng)};window.workerCurrentCoords=workerPoint;const rows=window.nearbyWorkRows||[];for(const b of rows){if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){const place=await geocodeBookingLocation(b.location);if(place){b.requestLat=place.lat;b.requestLng=place.lng;b._distancePrecision=place.precision||'approximate';b._matchedLocation=place.matchedName||''}}b._distance=hasValidCoordinates(b.requestLat,b.requestLng)?workerDistanceKm(workerPoint,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null}window.nearbyWorkRows=rows.sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);await drawNearbyWorkRequests();if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">GPS update ಆಯಿತು. Distance ಲಭ್ಯವಿರುವ Bookingಗಳಿಗೆ KM ತೋರಿಸಲಾಗಿದೆ.</p>')}catch(e){console.warn('Manual worker GPS refresh failed',e);if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">GPS / KM update ಆಗಲಿಲ್ಲ: '+esc(e.message)+'</p>')}};
-window.toggleCaptainAvailability=async function(){
- const button=document.getElementById('captainAvailabilityButton');
+window.setCaptainAvailability=async function(shouldBeOnline){
+ const onlineButton=document.getElementById('captainOnlineButton');
+ const offlineButton=document.getElementById('captainOfflineButton');
  const badge=document.getElementById('captainAvailabilityBadge');
- if(button)button.disabled=true;
+ [onlineButton,offlineButton].forEach(button=>{if(button)button.disabled=true});
  try{
+  if(!me||me.role!=='worker'||!fbAuth.currentUser||String(fbAuth.currentUser.uid)!==String(me.id))throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
   const userRef=fbDb.collection('users').doc(me.id);
-  const isOnline=me.availability==='available';
-  if(isOnline){
-   await stopWorkerLocation();
-   await userRef.set({availability:'unavailable',autoOnline:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-   await fbDb.collection('workerPublicProfiles').doc(me.id).set({availability:'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-   me.availability='unavailable';
-   if(badge)badge.textContent='OFFLINE';
-   if(button)button.textContent='Go Online';
-   alert('ನೀವು Offline ಆಗಿದ್ದೀರಿ. GPS Tracking ನಿಲ್ಲಿಸಲಾಗಿದೆ.');
-  }else{
-   me.availability='unavailable';
-   const started=await startWorkerLocation();
-   if(!started||locationWatchId===null)throw new Error('GPS ಆರಂಭವಾಗಲಿಲ್ಲ. Location ON ಮಾಡಿ, Permission Allow ಮಾಡಿ. ನೀವು Offline ಆಗಿಯೇ ಉಳಿದಿದ್ದೀರಿ.');
-   await userRef.set({availability:'available',autoOnline:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-   await fbDb.collection('workerPublicProfiles').doc(me.id).set({availability:'available',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  const profileRef=fbDb.collection('workerPublicProfiles').doc(me.id);
+  if(shouldBeOnline){
+   // Publish ONLINE only after a GPS watcher has successfully started and obtained a fix.
+   if(locationWatchId===null){
+    const started=await startWorkerLocation();
+    if(!started||locationWatchId===null)throw new Error('GPS ಆರಂಭವಾಗಲಿಲ್ಲ. Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ.');
+   }
+   await Promise.all([
+    userRef.set({availability:'available',autoOnline:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}),
+    profileRef.set({availability:'available',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+   ]);
    me.availability='available';
    if(badge)badge.textContent='ONLINE';
-   if(button)button.textContent='Go Offline';
-   alert('ನೀವು Online ಆಗಿದ್ದೀರಿ. Live GPS ಹಂಚಿಕೆ ಆರಂಭವಾಗಿದೆ.');
+   alert('ನೀವು ONLINE ಆಗಿದ್ದೀರಿ. Live GPS Tracking ಆರಂಭವಾಗಿದೆ.');
+  }else{
+   // Stop GPS first; only then publish OFFLINE.
+   await stopWorkerLocation();
+   await Promise.all([
+    userRef.set({availability:'unavailable',autoOnline:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}),
+    profileRef.set({availability:'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+   ]);
+   me.availability='unavailable';
+   if(badge)badge.textContent='OFFLINE';
+   alert('ನೀವು OFFLINE ಆಗಿದ್ದೀರಿ. Live GPS Tracking ನಿಲ್ಲಿಸಲಾಗಿದೆ.');
   }
   render();
  }catch(e){
   console.error('Availability change failed',e);
-  me.availability='unavailable';
-  if(locationWatchId!==null)await stopWorkerLocation().catch(console.warn);
-  if(button)button.textContent='Go Online';
-  if(badge)badge.textContent='OFFLINE';
-  alert('Availability ಬದಲಾಯಿಸಲು ಆಗಲಿಲ್ಲ: '+(e.code||e.message)+'\nನೀವು Offline ಆಗಿಯೇ ಉಳಿದಿದ್ದೀರಿ.');
+  if(shouldBeOnline){
+   me.availability='unavailable';
+   if(locationWatchId!==null)await stopWorkerLocation().catch(console.warn);
+   if(badge)badge.textContent='OFFLINE';
+  }
+  alert('Availability ಬದಲಾಯಿಸಲು ಆಗಲಿಲ್ಲ: '+(e.code||e.message));
+  render();
  }finally{
-  if(button)button.disabled=false;
+  [onlineButton,offlineButton].forEach(button=>{if(button)button.disabled=false});
  }
 };
+window.toggleCaptainAvailability=async function(){return window.setCaptainAvailability(me?.availability!=='available')};
 async function acceptWorkerRequest(id){
  let accepted=false;
  try{
