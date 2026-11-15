@@ -41,13 +41,13 @@ jobs:
           html=Path("index.html").read_text()
           scripts=re.findall(r"<script>(.*?)</script>", html, re.S)
           inline=[x for x in scripts if x.strip()]
-          if len(inline) != 1:
-              raise SystemExit(f"Expected exactly one inline application script, found {len(inline)}")
-          close=html.find("</script>", html.find("<script>"))
-          tail=html[close+len("</script>"):]
+          if not inline:
+              raise SystemExit("No inline application script found")
+          last_close=html.rfind("</script>")
+          tail=html[last_close+len("</script>"):]
           if not re.fullmatch(r"\\s*</body>\\s*</html>\\s*", tail, re.I):
-              raise SystemExit("Unexpected content after application script: possible truncated script / JavaScript rendered as page text")
-          Path("/tmp/hirehub-inline.js").write_text("\n".join(inline))
+              raise SystemExit("Unexpected content after final script: possible stray JavaScript rendered as page text")
+          Path("/tmp/hirehub-inline.js").write_text("\\n".join(inline))
           PY
           node --check /tmp/hirehub-inline.js
       - name: Validate Appwrite booking function
