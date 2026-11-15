@@ -105,12 +105,15 @@ jobs:
           npm install
           # Bundle Firebase compat SDK locally so Android WebView does not depend on CDN availability.
           cat > firebase-compat-entry.js <<'JS'
-          import 'firebase/compat/app';
+          // Import the compat SDK and explicitly expose its namespace for the
+          // legacy HireHub web layer, which calls the global firebase object.
+          import firebase from 'firebase/compat/app';
           import 'firebase/compat/auth';
           import 'firebase/compat/firestore';
           import 'firebase/compat/storage';
           import 'firebase/compat/functions';
           import 'firebase/compat/app-check';
+          window.firebase = firebase;
           JS
           npx esbuild firebase-compat-entry.js --bundle --format=iife --outfile=www/firebase-compat.js
           npx cap add android
