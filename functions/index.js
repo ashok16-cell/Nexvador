@@ -170,11 +170,15 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
   const userRef = db.collection("users").doc(uid);
   const bookingRef = db.collection("workerBookings").doc(bookingId);
   const lockRef = db.collection("workerActiveBookings").doc(uid);
+  let stage = "transaction-start";
   try {
     return await db.runTransaction(async (tx) => {
+      stage = "read-worker-profile";
       // Keep transaction reads sequential and complete all reads before any write.
       const userSnap = await tx.get(userRef);
+      stage = "read-booking";
       const bookingSnap = await tx.get(bookingRef);
+      stage = "read-worker-active-lock";
       const lockSnap = await tx.get(lockRef);
       if (!userSnap.exists || String(userSnap.data()?.role || "").toLowerCase() !== "worker" || userSnap.data()?.active === false) {
         throw new HttpsError("permission-denied", "ಸಕ್ರಿಯ Worker account ಮಾತ್ರ ಕೆಲಸ ಸ್ವೀಕರಿಸಬಹುದು.");
@@ -203,6 +207,7 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
           }
         }
       }
+      stage = "prepare-acceptance";
       const acceptedIds = [...ids, uid];
       const acceptedCount = acceptedIds.length;
       const remaining = Math.max(0, required - acceptedCount);
@@ -214,6 +219,7 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
       }));
       roster.push({ workerId: uid, workerName: String(userSnap.data()?.name || "Worker") });
       const now = require("firebase-admin/firestore").FieldValue.serverTimestamp();
+      stage = "write-booking-and-worker-lock";
       tx.update(bookingRef, {
         count: required, acceptedWorkerIds: acceptedIds, acceptedWorkers: roster,
         acceptedCount, workerId: acceptedIds[0],
@@ -222,11 +228,13 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
         ...(remaining === 0 ? { confirmedAt: now } : {})
       });
       tx.set(lockRef, { workerId: uid, bookingId, createdAt: now, updatedAt: now });
+      stage = "transaction-committed";
       return { bookingId, acceptedWorkerIds: acceptedIds, acceptedWorkers: roster, acceptedCount, count: required, status, remaining, workerName: String(userSnap.data()?.name || "Worker") };
     });
   } catch (error) {
-    console.error("acceptWorkerBooking failed", { uid, bookingId, code: error?.code || "unknown", message: error?.message || String(error), stack: error?.stack });
+    console.error("acceptWorkerBooking failed", { uid, bookingId, stage, code: error?.code || "unknown", message: error?.message || String(error), stack: error?.stack });
     if (error instanceof HttpsError) throw error;
-    throw new HttpsError("internal", "Booking ಸ್ವೀಕರಿಸುವಾಗ ಸರ್ವರ್ ದೋಷ ಉಂಟಾಗಿದೆ. ದಯವಿಟ್ಟು ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", { cause: String(error?.message || error) });
+    // Return a safe diagnostic stage to the authenticated app; full stack remains in Cloud Logging.
+    throw new HttpsError("internal", "Booking ಸ್ವೀಕರಿಸುವಾಗ ಸರ್ವರ್ ದೋಷ ಉಂಟಾಗಿದೆ.", { stage, cause: String(error?.message || error).slice(0, 300) });
   }
 });
