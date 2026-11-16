@@ -420,32 +420,31 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    }
   }
     if(action==='register'){
-   // Open the worker/customer/company dashboard as soon as Firebase Auth and
-   // the Firestore profile have been acknowledged. Numeric ID assignment is
-   // non-blocking; the existing repair path completes it on the next login
-   // if the callable is temporarily unavailable.
    me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
    const pendingRole=profile.role;
    callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}).then(async idResult=>{
     const assigned=String(idResult?.displayId||'');
     const prefix=pendingRole==='worker'?'1':pendingRole==='company'?'2':pendingRole==='customer'?'3':'';
     if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID format ಸರಿಯಿಲ್ಲ.');
-    const idFields={displayId:assigned,...(pendingRole==='worker'?{workerId:assigned}:{}),...(pendingRole==='company'?{companyId:assigned}:{}),...(pendingRole==='customer'?{customerId:assigned}:{})};
-    await userRef.set(idFields,{merge:true});
-    me={...me,...idFields};
-    console.info('HireHub public User ID assigned:',assigned);
-   }).catch(err=>console.error('Background User ID assignment pending; it will retry during next login:',err.code||err.message));
+    const fields={displayId:assigned,...(pendingRole==='worker'?{workerId:assigned}:{}),...(pendingRole==='company'?{companyId:assigned}:{}),...(pendingRole==='customer'?{customerId:assigned}:{})};
+    await userRef.set(fields,{merge:true});
+    if(me?.id===user.uid)me={...me,...fields};
+   }).catch(err=>console.warn('Public User ID pending; dashboard is available:',err.code||err.message));
    return;
-  }else{
-   profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
-   // Public numeric ID is supplementary: never block a valid login on its
-   // callable deployment. Retry it quietly in the background.
-   if(!profile.displayId&&['worker','company','customer'].includes(profile.role)){
-    const pendingRole=profile.role;
-    callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}).then(async idResult=>{
-     const assigned=String(idResult?.displayId||'');
-     const prefix=pendingRole==='worker'?'1':pendingRole==='company'?'2':'3';
-     if(!new RegExp('^'+prefix+'[0-9]{5,}localStorage.setItem(SK,user.uid);enter();
+  }
+  profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
+  if(!profile.displayId&&['worker','company','customer'].includes(profile.role)){
+   const pendingRole=profile.role;
+   callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}).then(async idResult=>{
+    const assigned=String(idResult?.displayId||'');
+    const prefix=pendingRole==='worker'?'1':pendingRole==='company'?'2':'3';
+    if(!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID format ಸರಿಯಿಲ್ಲ.');
+    const fields={displayId:assigned,...(pendingRole==='worker'?{workerId:assigned}:{}),...(pendingRole==='company'?{companyId:assigned}:{}),...(pendingRole==='customer'?{customerId:assigned}:{})};
+    await userRef.set(fields,{merge:true});
+    if(me?.id===user.uid)me={...me,...fields};
+   }).catch(err=>console.warn('Public User ID pending; login is not blocked:',err.code||err.message));
+  }
+  me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
  }catch(err){
   console.error('HireHub auth error at ['+authStage+']:',err.code||err.message,err);
   const nativePlatform=window.Capacitor?.getPlatform?.()||((window.Capacitor?.isNativePlatform?.())?'native':'web');
