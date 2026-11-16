@@ -2,3 +2,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://ashok16-cell.github.io/Nexvador/sitemap.xml
+Sitemap: https://ashok16-cell.github.io/Nexvador/worker-app/sitemap.xml
