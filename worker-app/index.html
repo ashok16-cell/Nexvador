@@ -222,7 +222,7 @@ body.workspace-mode #dashboardOverview .dash-stat{background:#fff;border:1px sol
  <div class="portal-admin"><button type="button" onclick="authOpenAdmin()">Super Admin Login</button></div>
  <section class="portal-jobs"><h2>ಹೊಸ ಉದ್ಯೋಗ ಅವಕಾಶಗಳು <span>/ Latest Jobs</span></h2><div id="publicJobs" class="grid"></div></section>
 </section>
-<section id="auth" class="card hidden"><div class="row"><h2 id="authTitle">Worker Account</h2><button onclick="closeAuth()">✕</button></div><p class="pill" id="accountRoleLabel">Worker account</p><div class="tabs"><button id="reg" type="button" class="tab active" onclick="setMode('register')">Create account</button><button id="log" type="button" class="tab" onclick="setMode('login')">Login</button></div><form id="authForm"><div id="regFields"><div class="field"><label>ನಿಮ್ಮ ಹೆಸರು / ಕಂಪನಿ ಹೆಸರು</label><input id="name" required></div><div class="field"><label>Mobile</label><input id="mobile" maxlength="10"></div><div class="field"><label>City</label><input id="city" required></div></div><div class="field"><label>Email</label><input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required></div><div class="field"><label>Password (6+ characters)</label><input id="password" type="password" minlength="6" required></div><button class="primary" id="submitAuth" type="submit">Create account</button></form><button id="forgotBtn" type="button" onclick="forgotPassword()">Forgot password?</button><p class="muted" style="font-size:12px">Login ಸಮಸ್ಯೆ ಬಂದರೆ Internet ಪರಿಶೀಲಿಸಿ. Firebase ನಲ್ಲಿ Email/Password sign-in ಮತ್ತು Authorized domain enable ಆಗಿರಬೇಕು.</p><p id="authMsg" class="muted" role="status" aria-live="polite"></p></section>
+<section id="auth" class="card hidden"><div class="row"><h2 id="authTitle">Worker Account</h2><button onclick="closeAuth()">✕</button></div><p class="pill" id="accountRoleLabel">Worker account</p><div class="tabs"><button id="reg" type="button" class="tab active" onclick="setMode('register')">Create account</button><button id="log" type="button" class="tab" onclick="setMode('login')">Login</button></div><form id="authForm"><div id="regFields"><div class="field"><label>ನಿಮ್ಮ ಹೆಸರು / ಕಂಪನಿ ಹೆಸರು</label><input id="name" required></div><div class="field"><label>Mobile</label><input id="mobile" maxlength="10"></div><div class="field"><label>City</label><input id="city" placeholder="City (optional)"></div></div><div class="field"><label>Email</label><input id="email" type="email" inputmode="email" autocomplete="email" autocapitalize="none" spellcheck="false" required></div><div class="field"><label>Password (6+ characters)</label><input id="password" type="password" minlength="6" required></div><button class="primary" id="submitAuth" type="submit">Create account</button></form><button id="forgotBtn" type="button" onclick="forgotPassword()">Forgot password?</button><p class="muted" style="font-size:12px">Login ಸಮಸ್ಯೆ ಬಂದರೆ Internet ಪರಿಶೀಲಿಸಿ. Firebase ನಲ್ಲಿ Email/Password sign-in ಮತ್ತು Authorized domain enable ಆಗಿರಬೇಕು.</p><p id="authMsg" class="muted" role="status" aria-live="polite"></p></section>
 <section id="dash" class="hidden"><div class="brand" style="color:#087d79;margin:8px 0 14px">NEXVADORAQ HIREHUB <small style="color:#647985">WORKER & COMPANY DASHBOARD • VERSION 3.0</small></div><div class="row"><div><h2 id="welcome"></h2><p id="roleText" class="muted"></p></div><button class="danger" onclick="logout()">Log out</button></div><div id="dashboardOverview"></div><div id="nav" class="tabs"></div><div id="panel"></div></section>
 <div class="notice">Firebase-connected preview: sign-in, jobs, applications, worker locations and notifications use cloud services when Firebase Authentication, Firestore and Storage are enabled and deployed. Live GPS sharing is opt-in. Android APK uses a persistent foreground notification for background tracking; browser preview tracks only while active. Tracking is not an emergency or safety service.</div></main><footer>© 2026 NEXVADORAQ • HireHub<br><a href="./privacy.html">Privacy Policy</a> · <a href="./terms.html">Terms of Use</a></footer>
 <script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script><script crossorigin="anonymous" src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script><script crossorigin="anonymous" src="./firebase-config.js"></script><script crossorigin="anonymous" src="./push-bridge.js"></script>
@@ -298,7 +298,7 @@ function saveLocal(d){localStorage.setItem(KEY,JSON.stringify(d))}function uid()
 function authOpenAdmin(){role='admin';mode='login';document.getElementById('landing').classList.add('hidden');document.getElementById('dash').classList.add('hidden');document.getElementById('auth').classList.remove('hidden');authSync();document.getElementById('authTitle').textContent='NEXVADORAQ Admin Login';document.getElementById('accountRoleLabel').textContent='Restricted admin access';document.getElementById('reg').classList.add('hidden');document.getElementById('regFields').classList.add('hidden');document.getElementById('submitAuth').textContent='Secure Admin Login';document.getElementById('authMsg').textContent='Admin account ಅನ್ನು ಸಾರ್ವಜನಿಕವಾಗಿ ರಚಿಸಲಾಗುವುದಿಲ್ಲ.';}
 function authOpen(r){role=['company','customer'].includes(r)?r:'worker';mode='register';document.getElementById('landing').classList.add('hidden');document.getElementById('dash').classList.add('hidden');document.getElementById('auth').classList.remove('hidden');authSync();}
 function closeAuth(){document.getElementById('auth').classList.add('hidden');document.getElementById('landing').classList.remove('hidden')}function setRole(r){if(!['worker','company','customer'].includes(r))return;role=r;authSync()}function setMode(m){mode=m;authSync()}
-function authSync(){document.getElementById('authTitle').textContent=role==='admin'?'NEXVADORAQ Admin Login':(role==='worker'?'Worker Account':role==='customer'?'Customer / Local Booking Account':'HR / Company Account');document.getElementById('accountRoleLabel').textContent=role==='admin'?'Restricted admin access':(role==='worker'?'Worker account':role==='customer'?'Customer account':'HR / Company account');document.getElementById('reg').classList.toggle('hidden',role==='admin');document.getElementById('reg').classList.toggle('active',mode==='register');document.getElementById('log').classList.toggle('active',mode==='login');document.getElementById('regFields').classList.toggle('hidden',mode==='login'||role==='admin');['name','city'].forEach(x=>document.getElementById(x).required=mode!=='login');document.getElementById('submitAuth').textContent=role==='admin'?'Secure Admin Login':(mode==='register'?'Create account':mode==='repair'?'Complete profile':'Login');document.getElementById('submitAuth').disabled=false;document.getElementById('forgotBtn').classList.toggle('hidden',mode!=='login');document.getElementById('password').autocomplete=mode==='register'?'new-password':'current-password';document.getElementById('authMsg').textContent=''}
+function authSync(){document.getElementById('authTitle').textContent=role==='admin'?'NEXVADORAQ Admin Login':(role==='worker'?'Worker Account':role==='customer'?'Customer / Local Booking Account':'HR / Company Account');document.getElementById('accountRoleLabel').textContent=role==='admin'?'Restricted admin access':(role==='worker'?'Worker account':role==='customer'?'Customer account':'HR / Company account');document.getElementById('reg').classList.toggle('hidden',role==='admin');document.getElementById('reg').classList.toggle('active',mode==='register');document.getElementById('log').classList.toggle('active',mode==='login');document.getElementById('regFields').classList.toggle('hidden',mode==='login'||role==='admin');document.getElementById('name').required=mode!=='login';document.getElementById('city').required=false;document.getElementById('submitAuth').textContent=role==='admin'?'Secure Admin Login':(mode==='register'?'Create account':mode==='repair'?'Complete profile':'Login');document.getElementById('submitAuth').disabled=false;document.getElementById('forgotBtn').classList.toggle('hidden',mode!=='login');document.getElementById('password').autocomplete=mode==='register'?'new-password':'current-password';document.getElementById('authMsg').textContent=''}
 async function forgotPassword(){const email=document.getElementById('email').value.trim().toLowerCase(),msg=document.getElementById('authMsg');if(!email){msg.textContent='ಮೊದಲು Email ನಮೂದಿಸಿ.';document.getElementById('email').focus();return}try{await fbAuth.sendPasswordResetEmail(email);msg.textContent='Password reset link ನಿಮ್ಮ Email ಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.'}catch(e){msg.textContent=authError(e)}}
 function authError(err){const code=err?.code||'';const map={'auth/invalid-email':'Email ಸರಿಯಾದ format ನಲ್ಲಿ ನಮೂದಿಸಿ.','auth/user-not-found':'ಈ Email ನಲ್ಲಿ account ಇಲ್ಲ. Create account ಆಯ್ಕೆಮಾಡಿ.','auth/wrong-password':'Password ತಪ್ಪಾಗಿದೆ. Forgot password ಬಳಸಿ reset ಮಾಡಿ.','auth/invalid-credential':'Email ಅಥವಾ Password ತಪ್ಪಾಗಿದೆ.','auth/invalid-login-credentials':'Email ಅಥವಾ Password ತಪ್ಪಾಗಿದೆ.','auth/email-already-in-use':'ಈ Email ಈಗಾಗಲೇ ನೋಂದಾಯಿಸಲಾಗಿದೆ. Login ಆಯ್ಕೆಮಾಡಿ.','auth/weak-password':'ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳ Password ಬಳಸಿ.','auth/operation-not-allowed':'Firebase Console → Authentication → Sign-in method ನಲ್ಲಿ Email/Password Enable ಮಾಡಿ.','auth/network-request-failed':'Internet connection ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','auth/too-many-requests':'ಹೆಚ್ಚು ಪ್ರಯತ್ನಗಳಾಗಿವೆ. ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.','auth/user-disabled':'ಈ ಖಾತೆಯನ್ನು ನಿಷ್ಕ್ರಿಯಗೊಳಿಸಲಾಗಿದೆ. Firebase Admin ಅನ್ನು ಸಂಪರ್ಕಿಸಿ.','auth/account-exists-with-different-credential':'ಈ Email ಬೇರೆ sign-in ವಿಧಾನಕ್ಕೆ ಲಿಂಕ್ ಆಗಿದೆ. Support ಸಂಪರ್ಕಿಸಿ.','auth/weak-password':'ಕನಿಷ್ಠ 6 ಅಕ್ಷರಗಳ Password ಬಳಸಿ.','permission-denied':'Firebase Email/Password Login ಯಶಸ್ವಿಯಾದರೂ Firestore Profile ಓದಲು ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ. Firebase Console → Firestore Database → Rules ನಲ್ಲಿ Repositoryಯ firestore.rules ಸಂಪೂರ್ಣವಾಗಿ paste ಮಾಡಿ Publish ಮಾಡಿ. ನಂತರ ಮತ್ತೆ Login ಮಾಡಿ.','firestore/permission-denied':'Firebase Email/Password Login ಯಶಸ್ವಿಯಾದರೂ Firestore Profile ಓದಲು ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ. Firebase Console → Firestore Database → Rules ನಲ್ಲಿ Repositoryಯ firestore.rules ಸಂಪೂರ್ಣವಾಗಿ paste ಮಾಡಿ Publish ಮಾಡಿ. ನಂತರ ಮತ್ತೆ Login ಮಾಡಿ.','auth/unauthorized-domain':'Firebase Authentication → Settings → Authorized domains ನಲ್ಲಿ ashok16-cell.github.io ಸೇರಿಸಿ.','auth/invalid-api-key':'Firebase API key ತಪ್ಪಾಗಿದೆ. worker-app/firebase-config.js ಪರಿಶೀಲಿಸಿ.','auth/app-not-authorized':'ಈ website domain Firebase project ನಲ್ಲಿ ಅನುಮತಿಸಲ್ಪಟ್ಟಿಲ್ಲ. Authorized domains ಪರಿಶೀಲಿಸಿ.','auth/configuration-not-found':'Firebase Authentication ನಲ್ಲಿ Email/Password sign-in Enable ಮಾಡಿ.','auth/internal-error':'Firebase Authentication ತಾತ್ಕಾಲಿಕ ದೋಷ. ಪುಟ Refresh ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','unavailable':'Firebase ಸಂಪರ್ಕ ಸಿಗುತ್ತಿಲ್ಲ. Internet ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','failed-precondition':'Firestore Database ಸಿದ್ಧವಾಗಿಲ್ಲ ಅಥವಾ ಅಗತ್ಯ Index/Setup ಬಾಕಿ ಇದೆ. Firebase Console ಪರಿಶೀಲಿಸಿ.','deadline-exceeded':'Firebase ಪ್ರತಿಕ್ರಿಯೆ ತಡವಾಗಿದೆ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.','resource-exhausted':'Firebase ಮಿತಿ ತಲುಪಿದೆ. ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪ್ರಯತ್ನಿಸಿ.','storage/unauthorized':'Profile photo upload ಅನುಮತಿ ಇಲ್ಲ. Storage Rules ಪ್ರಕಟಿಸಿ.'};const friendly=map[code]||err?.message||'Login ಆಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.';return code?(friendly+' (Error: '+code+')'):friendly}
 function decodeFirestoreValue(v){
@@ -330,10 +330,15 @@ async function readUserProfileViaRest(userRef,lastSdkError){
  return {exists:true,data:()=>data};
 }
 async function readUserProfileWithRetry(userRef){
- // Bound each SDK attempt. A stalled Android WebView request must not consume
- // the entire login timeout before the authenticated REST fallback can run.
- const delays=[0,900,1800];
+ const isAndroid=window.Capacitor?.getPlatform?.()==='android';
  let lastError=null;
+ // Android WebView: try the authenticated Firestore REST endpoint first.
+ // This avoids waiting on a stalled native WebChannel/long-poll SDK request.
+ if(isAndroid){
+  try{return await readUserProfileViaRest(userRef,null);}
+  catch(err){lastError=err;console.warn('Android Firestore REST-first read failed; falling back to SDK:',err);}
+ }
+ const delays=isAndroid?[0,1000]:[0,900,1800];
  for(let attempt=0;attempt<delays.length;attempt++){
   if(delays[attempt]) await new Promise(resolve=>setTimeout(resolve,delays[attempt]));
   try{return await withAuthTimeout(userRef.get(),'Firestore SDK Profile ಓದು',4500);}
@@ -348,7 +353,7 @@ async function readUserProfileWithRetry(userRef){
  }
  console.warn('Firestore SDK read failed or stalled; trying authenticated REST fallback:',lastError);
  try{return await readUserProfileViaRest(userRef,lastError);}
- catch(restError){console.error('Firestore REST fallback failed:',restError);throw restError;}
+ catch(restError){console.error('Firestore profile read failed:',restError);throw restError;}
 }
 function withAuthTimeout(promise,stage,ms=20000){let timer;return Promise.race([Promise.resolve(promise),new Promise((_,reject)=>{timer=setTimeout(()=>reject(new Error(stage+' ಸಮಯ ಮೀರಿದೆ. Internet/Firebase ಸಂಪರ್ಕ ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.')),ms)})]).finally(()=>clearTimeout(timer))}
 function setAuthStage(stage){authStage=stage;const msg=document.getElementById('authMsg');if(msg)msg.textContent='ಪ್ರಗತಿ: '+stage+'…';}
@@ -402,12 +407,12 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    return;
   }else{
    const name=document.getElementById('name').value.trim(),city=document.getElementById('city').value.trim();
-   if(!name||!city)throw new Error('Name ಮತ್ತು City ಕಡ್ಡಾಯವಾಗಿ ತುಂಬಿ.');
+   if(!name)throw new Error('ದಯವಿಟ್ಟು ನಿಮ್ಮ ಹೆಸರು ನಮೂದಿಸಿ.');
    if(action==='repair'&&snap.exists){
     profile=snap.data();
     if(profile.role!==selectedRole)throw new Error('ಈ Email ಬೇರೆ account type ಗೆ ಸೇರಿದೆ. ಸರಿಯಾದ Worker / Company ಆಯ್ಕೆಮಾಡಿ.');
    }else{
-    profile={uid:user.uid,name,mobile:document.getElementById('mobile').value.trim(),city,email,role:selectedRole,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    profile={uid:user.uid,name,mobile:document.getElementById('mobile').value.trim(),city:city||'',email,role:selectedRole,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
     setAuthStage('Firestore profile save');
     // A resolved Firestore set() is the server acknowledgement. Avoid an
     // unnecessary second read round-trip on slower Android WebViews.
@@ -433,18 +438,864 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
    return;
   }else{
    profile.displayId=String(profile.displayId||profile.workerId||profile.companyId||profile.customerId||'');
-   // Resume incomplete registrations when Auth/Profile saved but ID assignment did not.
-   if(!profile.displayId){
-    setAuthStage('Completing pending public User ID');
-    const idResult=await withAuthTimeout(callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}),'Numeric User ID ಮರುಪಡೆಯುವಿಕೆ');
-    const assigned=String(idResult?.displayId||'');
-    const prefix=profile.role==='worker'?'1':profile.role==='company'?'2':profile.role==='customer'?'3':'';
-    if(!prefix||!new RegExp('^'+prefix+'[0-9]{5,}$').test(assigned))throw new Error('Numeric User ID ಇನ್ನೂ ಸೃಷ್ಟಿಯಾಗಿಲ್ಲ. ಮತ್ತೆ Complete profile ಒತ್ತಿ.');
-    profile.displayId=assigned;
-    if(profile.role==='worker')profile.workerId=assigned;
-    if(profile.role==='company')profile.companyId=assigned;
-    if(profile.role==='customer')profile.customerId=assigned;
-    await withAuthTimeout(userRef.set({displayId:assigned,...(profile.workerId?{workerId:assigned}:{}),...(profile.companyId?{companyId:assigned}:{}),...(profile.customerId?{customerId:assigned}:{})},{merge:true}),'Numeric ID Profile ಉಳಿಸುವಿಕೆ');
+   // Public numeric ID is supplementary: never block a valid login on its
+   // callable deployment. Retry it quietly in the background.
+   if(!profile.displayId&&['worker','company','customer'].includes(profile.role)){
+    const pendingRole=profile.role;
+    callHireHubApi('getOrCreateHireHubDisplayId',{newAccount:true}).then(async idResult=>{
+     const assigned=String(idResult?.displayId||'');
+     const prefix=pendingRole==='worker'?'1':pendingRole==='company'?'2':'3';
+     if(!new RegExp('^'+prefix+'[0-9]{5,}localStorage.setItem(SK,user.uid);enter();
+ }catch(err){
+  console.error('HireHub auth error at ['+authStage+']:',err.code||err.message,err);
+  const nativePlatform=window.Capacitor?.getPlatform?.()||((window.Capacitor?.isNativePlatform?.())?'native':'web');
+  const upstreamAuthMessage=err?.customData?._tokenResponse?.error?.message||err?.customData?.serverResponse?.error?.message||'';
+  const authDiagnostic='\nDiagnostics: platform='+nativePlatform+'; origin='+location.origin+'; project='+String(window.NEXVADORAQ_FIREBASE?.projectId||'unknown')+'; sdk='+String(firebase.SDK_VERSION||'unknown')+'; code='+String(err?.code||'unknown')+(upstreamAuthMessage?'; server='+String(upstreamAuthMessage).slice(0,180):'');
+  msg.textContent='ಹಂತ: '+authStage+' — '+authError(err)+authDiagnostic;
+  // Keep a newly-created Firebase account signed in so the user can repair its missing profile.
+  if(['register','repair'].includes(action)&&fbAuth.currentUser){
+   mode='repair';authSync();document.getElementById('email').value=email;
+   msg.textContent='Firebase account ಸೃಷ್ಟಿಯಾಗಿದೆ; Profile ಪೂರ್ಣಗೊಳ್ಳಲಿಲ್ಲ. ಹಂತ: '+authStage+' — '+authError(err)+' Name/City ಪರಿಶೀಲಿಸಿ Complete profile ಒತ್ತಿ.';
+  }
+ }finally{btn.disabled=false;authSubmitting=false}
+};
+let presenceHeartbeatTimer=null;async function updateAppPresence(online=true){if(!fbAuth.currentUser||!me||me.role==='admin')return;const uid=String(fbAuth.currentUser.uid);if(uid!==String(me.id))return;const stamp=firebase.firestore.FieldValue.serverTimestamp();try{await fbDb.collection('users').doc(uid).set({presenceOnline:!!online,presenceLastSeen:stamp},{merge:true});if(me.role==='worker'&&me.availability==='available'){await fbDb.collection('workerPublicProfiles').doc(uid).set({lastSeen:stamp,updatedAt:stamp},{merge:true})}}catch(e){console.warn('App presence update failed:',e.code||e.message)}}function startAppPresence(){if(presenceHeartbeatTimer)clearInterval(presenceHeartbeatTimer);updateAppPresence(true);presenceHeartbeatTimer=setInterval(()=>{if(document.visibilityState==='visible')updateAppPresence(true)},45000);if(!window.hireHubPresenceVisibilityBound){document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&me)updateAppPresence(true)});window.hireHubPresenceVisibilityBound=true}}function enter(){document.body.classList.add('workspace-mode');document.body.classList.toggle('admin-mode',me.role==='admin');if(me.role==='admin'){document.getElementById('auth').classList.add('hidden');document.getElementById('landing').classList.add('hidden');document.getElementById('dash').classList.remove('hidden');document.getElementById('welcome').textContent='Welcome, '+me.name;document.getElementById('roleText').textContent=(me.adminLevel==='super'?'SUPER ADMIN':'STAFF ADMIN')+' • Restricted Control Panel';page='adminHome';render();startNotificationSync();return;}startAppPresence();startCloudSync();startNotificationSync();document.getElementById('auth').classList.add('hidden');document.getElementById('landing').classList.add('hidden');document.getElementById('dash').classList.remove('hidden');document.getElementById('welcome').textContent='Welcome, '+me.name;document.getElementById('roleText').textContent=me.role.toUpperCase()+' • ONLINE • '+me.city;page=me.role==='company'?'myjobs':'jobs';render();/* Worker native permissions and GPS must be user-initiated; never start plugins during login. */}
+async function logout(){try{if(presenceHeartbeatTimer){clearInterval(presenceHeartbeatTimer);presenceHeartbeatTimer=null}if(me&&fbAuth.currentUser)await fbDb.collection('users').doc(me.id).set({presenceOnline:false,presenceLastSeen:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}).catch(console.warn);if(me?.role==='worker'&&fbAuth.currentUser)await fbDb.collection('users').doc(me.id).update({availability:'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(console.warn);if(locationWatchId!==null)await stopWorkerLocation();if(companyWatchId!==null)stopCompanyLocation();if(nearbyCompanyUnsub){nearbyCompanyUnsub();nearbyCompanyUnsub=null}if(companyLocationUnsub){companyLocationUnsub();companyLocationUnsub=null}if(notificationUnsub){notificationUnsub();notificationUnsub=null}cloudUnsubs.forEach(fn=>fn());cloudUnsubs=[];await fbAuth.signOut();me=null;document.body.classList.remove('admin-mode','workspace-mode');localStorage.removeItem(SK);document.getElementById('dash').classList.add('hidden');document.getElementById('auth').classList.add('hidden');document.getElementById('landing').classList.remove('hidden');publicRender()}catch(err){console.error('Logout failed:',err);alert('Logout ಪೂರ್ಣವಾಗಲಿಲ್ಲ: '+authError(err))}}function go(p){page=p;const panel=document.getElementById('panel');if(panel)panel.innerHTML='';render()}
+
+function adminDetailFields(x){return Object.entries(x||{}).filter(([k,v])=>!['password','passwordHash','token','accessToken','refreshToken'].includes(k)&&v!==null&&v!==undefined&&typeof v!=='object').map(([k,v])=>'<div><small class="muted">'+esc(k)+'</small><div>'+esc(String(v))+'</div></div>').join('')||'<p>No additional profile details saved.</p>'}
+function adminAllowed(permission){return me&&me.role==='admin'&&(me.adminLevel==='super'||(Array.isArray(me.permissions)&&me.permissions.includes(permission)));}
+async function adminResolveCancellation(id){const note=prompt('Admin review note ನಮೂದಿಸಿ');if(!note||!note.trim())return;try{await fbDb.collection('workerBookings').doc(id).update({cancellationRisk:'REVIEWED',adminCancellationNote:note.trim().slice(0,500),cancellationReviewedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});alert('Cancellation review ದಾಖಲಿಸಲಾಗಿದೆ.');go('adminAssignments')}catch(e){alert('Review save ಆಗಲಿಲ್ಲ: '+(e.code||e.message))}}
+function renderAdminPanel(){
+ const superUser=me.adminLevel==='super';
+ const nav=[['adminHome','Overview','dashboard'],['adminUsers','Workers & Companies','users'],['adminAssignments','Work Assignments','users'],['adminNotifications','Notifications','users'],['adminApps','Applications','applications'],['adminPayments','Payments','payments'],['adminReports','Reports & Export','reports'],['adminStaff','Staff Access','staff']];
+ const visible=nav.filter(x=>superUser||adminAllowed(x[2]));
+ document.getElementById('nav').innerHTML=visible.map(([k,v])=>'<button class="'+(page===k?'tab active':'')+'" onclick="go(\''+k+'\')">'+v+'</button>').join('');
+ const el=document.getElementById('panel');
+ if(page==='adminHome'){
+  el.innerHTML='<div class="hero"><span class="pill">'+(superUser?'SUPER ADMIN':'STAFF ADMIN')+'</span><h2>Advanced Control Center</h2><p>ನೈಜ Firebase ಅಂಕಿಅಂಶಗಳು, ನಿರ್ವಹಣೆ ಮತ್ತು ವರದಿಗಳು.</p><button class="primary" onclick="loadAdminAnalytics()">↻ Refresh Analytics</button></div><div id="adminAnalytics"><p class="muted">Firebase Data ಲೋಡ್ ಆಗುತ್ತಿದೆ…</p></div>';
+  loadAdminAnalytics();
+ }else if(page==='adminUsers'&&adminAllowed('users')){
+  el.innerHTML='<div class="admin-page-head"><div><h3>Workers & Companies</h3><p>Account directory · Active / blocked status · Role-based staff permissions</p></div><span class="pill">USER MANAGEMENT</span></div><div id="adminUserRows" class="admin-account-list"><div class="admin-list-empty">Loading account directory…</div></div>';
+  fbDb.collection('users').get().then(q=>{const rows=q.docs.map(x=>({id:x.id,...x.data()})).filter(x=>['worker','company','customer'].includes(x.role)).sort((a,b)=>String(a.name||'').localeCompare(String(b.name||'')));const box=document.getElementById('adminUserRows');if(!box)return;box.innerHTML=rows.map(x=>{const active=x.active!==false;const seen=x.presenceLastSeen?.toDate?x.presenceLastSeen.toDate().getTime():0;const online=x.presenceOnline===true&&Date.now()-seen<120000;const initials=String(x.name||'U').trim().split(/\s+/).slice(0,2).map(z=>z[0]||'').join('').toUpperCase();return '<article class="admin-account"><div class="admin-account-head"><div class="admin-account-title"><div class="admin-avatar">'+esc(initials)+'</div><div><h4>'+esc(x.name||'User')+'</h4><small>'+esc(x.role||'account')+' • '+(online?'🟢 ONLINE':'⚪ OFFLINE')+'</small></div></div><span class="admin-status '+(active?'is-active':'is-blocked')+'">'+(active?'ACTIVE':'BLOCKED')+'</span></div><div class="admin-account-meta"><span>✉ '+esc(x.email||'Email not provided')+'</span><span>⌖ '+esc([x.city,x.state].filter(Boolean).join(', ')||'Location not provided')+'</span></div><details><summary>View full company / account details</summary><div class="detail-grid">'+adminDetailFields(x)+'</div></details>'+(superUser?'<div class="admin-actions"><button class="'+(active?'danger':'primary')+'" onclick="adminSetUserActive(&quot;'+x.id+'&quot;,'+(!active)+')">'+(active?'Block account':'Activate account')+'</button></div>':'')+'</article>'}).join('')||'<div class="admin-list-empty">No worker, company or customer accounts found.</div>'}).catch(e=>{const box=document.getElementById('adminUserRows');if(box)box.innerHTML='<div class="admin-list-empty">Could not load accounts: '+esc(e.message)+'</div>'});
+ }else if(page==='adminAssignments'&&adminAllowed('users')){
+  el.innerHTML='<h3>Work Assignments & Manpower Bookings</h3><p class="muted">ಕಂಪನಿಗಳು ನೀಡಿದ ಕೆಲಸದ / manpower ಬೇಡಿಕೆ ಮತ್ತು Worker assignment ವಿವರಗಳು.</p><div id="adminAssignmentRows">Loading…</div>';
+  Promise.all([fbDb.collection('workerBookings').get(),fbDb.collection('users').get()]).then(([bq,uq])=>{const box=document.getElementById('adminAssignmentRows');if(!box)return;const users={};uq.docs.forEach(d=>users[d.id]=d.data());const rows=bq.docs.map(d=>({id:d.id,...d.data()}));box.innerHTML=rows.map(x=>{const c=users[x.companyId]||{},w=users[x.workerId]||{};return '<div class="item"><h3>'+esc(x.companyName||c.name||x.requesterName||'Customer / Company name not provided')+'</h3><b>Work: '+esc(x.category||x.title||'Work request')+'</b><p>Contact: '+esc(c.name||x.companyName||'—')+' · Worker: '+esc(x.workerName||w.name||'Not assigned')+'</p><p>Workers needed: '+esc(x.count??'—')+' · Location: '+esc(x.location||x.city||c.city||'—')+'</p><span class="pill">'+esc(x.status||'Pending')+'</span>'+(x.workerCompletionStatus==='submitted'?'<div class="notice"><b>✓ Worker Work Complete Submitted</b><p>Worker: '+esc(x.workerName||w.name||'Assigned Worker')+'</p><p>Completion submitted — Admin verification pending.</p>'+(superUser?'<button class="primary" onclick="adminSetBookingStatus(&quot;'+x.id+'&quot;,&quot;Completed&quot;)">Approve Completion</button>':'<p>Super Admin approval pending.</p>')+'</div>':'')+(x.cancellationRisk==='REVIEW_REQUIRED'?'<div class="notice"><b>⚠ Cancellation Risk Review</b><p>Arrival ನಂತರ cancellation ದಾಖಲಾಗಿದೆ.</p><p>ಕಾರಣ: '+esc(x.cancellationReason||'ಕಾರಣ ನೀಡಿಲ್ಲ')+'</p><button class="primary" onclick="adminResolveCancellation(&quot;'+x.id+'&quot;)">Mark Reviewed</button></div>':'')+(x.isRepeatBooking?'<span class="pill">REPEAT BOOKING</span>':'')+'<details><summary>ಕಂಪನಿ ಮತ್ತು ಕೆಲಸದ ಸಂಪೂರ್ಣ ವಿವರಗಳು ನೋಡಿ</summary><h4>Booking By (Company / Local Customer) Details</h4><div class="detail-grid">'+adminDetailFields(c)+'</div><h4>Work Request Details</h4><div class="detail-grid">'+adminDetailFields(x)+'</div></details>'+(superUser&&['Pending','Partially Filled'].includes(x.status||'Pending')?'<button class="primary" onclick="adminSetBookingStatus(&quot;'+x.id+'&quot;,&quot;Confirmed&quot;)">Approve Booking</button><button class="danger" onclick="adminSetBookingStatus(&quot;'+x.id+'&quot;,&quot;Rejected&quot;)">Reject Booking</button>':'')+(superUser&&!['Cancelled','Canceled','Rejected','Completed'].includes(String(x.status||'Pending'))?'<button class="danger" onclick="adminCancelBooking(&quot;'+x.id+'&quot;)">Cancel Booking</button>':'')+'</div>'}).join('')||'ಇನ್ನೂ ಯಾವುದೇ Work Assignment / Booking ದಾಖಲೆಗಳಿಲ್ಲ.'}).catch(e=>{const box=document.getElementById('adminAssignmentRows');if(box)box.textContent='Load failed: '+e.message});
+ }else if(page==='adminJobs'&&adminAllowed('jobs')){
+   el.innerHTML='<h3>All Job Posts</h3><div id="adminJobRows">Loading…</div>';fbDb.collection('jobs').get().then(q=>{const rows=q.docs.map(x=>({id:x.id,...x.data()}));const box=document.getElementById('adminJobRows');if(!box)return;box.innerHTML=rows.map(x=>`<div class="item"><b>${esc(x.title)}</b><p>${esc(x.company||'Company name missing')} • ${esc(x.city)} • ${esc(x.status||'pending')}</p>${superUser?`<button class="danger" onclick="adminDeleteJob('${String(x.id).replace(/'/g,"\\'")}')">Delete Job Post</button>`:''}</div>`).join('')||'No jobs.'}).catch(e=>{document.getElementById('adminJobRows').textContent='Load failed: '+e.message});
+ }else if(page==='adminNotifications'&&adminAllowed('users')){
+  const notes=(db().notifications||[]).filter(n=>n.audience==='admins').slice().reverse();
+  el.innerHTML='<h3>Work Completion Notifications</h3><p class="muted">Worker ಕಳುಹಿಸಿದ Work Complete ಮಾಹಿತಿ ಎಲ್ಲಾ Admin ಮತ್ತು Super Adminಗಳಿಗೆ ಇಲ್ಲಿ ಕಾಣುತ್ತದೆ.</p>'+(notes.length?notes.map(n=>{const isRead=(n.readBy||[]).includes(me.id);return '<div class="item"><div class="row"><b>'+esc(n.title||'Work Complete')+'</b><span class="pill">'+(isRead?'Read':'New')+'</span></div><p>'+esc(n.message||'')+'</p><small class="muted">'+esc(n.createdAt?new Date(n.createdAt).toLocaleString():'Just now')+'</small>'+(isRead?'':' <button onclick="markNotificationRead(&quot;'+String(n.id).replace(/"/g,'')+'&quot;)">Mark read</button>')+'</div>'}).join(''):'<p class="muted">ಇನ್ನೂ Completion Notifications ಇಲ್ಲ.</p>');
+ }else if(page==='adminApps'&&adminAllowed('applications')){
+  el.innerHTML='<h3>All Applications</h3><div id="adminAppRows">Loading…</div>';fbDb.collection('applications').get().then(q=>{const rows=q.docs.map(x=>({id:x.id,...x.data()}));const box=document.getElementById('adminAppRows');if(box)box.innerHTML=rows.map(x=>'<div class="item"><b>'+esc(x.title)+'</b><p>Worker: '+esc(x.workerName||x.workerId||'')+' • Company: '+esc(x.company||x.employerId||'')+'</p><span class="pill">'+esc(x.status)+'</span></div>').join('')||'No applications.'}).catch(e=>{document.getElementById('adminAppRows').textContent='Load failed: '+e.message});
+ }else if(page==='adminReports'&&superUser){
+  el.innerHTML='<h3>Reports & Data Export</h3><p class="muted">Firebase ದಾಖಲೆಗಳನ್ನು Excel ಮತ್ತು CSV ರೂಪದಲ್ಲಿ Export ಮಾಡಿ.</p><div class="grid"><div class="card"><b>Full Platform Report</b><p>Workers, Companies, Jobs, Applications ಮತ್ತು Bookings.</p><button class="primary" onclick="exportAdminData(\'xlsx\')">Download Excel (.xlsx)</button><button onclick="exportAdminCSVs()">Download CSV files</button></div><div class="card"><b>Individual CSV Reports</b><p>ಪ್ರತಿ ವಿಭಾಗದ CSV ಫೈಲ್ ಪ್ರತ್ಯೇಕವಾಗಿ.</p><button onclick="exportAdminCSVs()">Download CSV files</button></div></div><div id="exportStatus" class="notice">Export ಮಾಡುವಾಗ ಹೊಸ Firebase ದಾಖಲೆಗಳನ್ನು ಪಡೆಯಲಾಗುತ್ತದೆ.</div>';
+ }else if(page==='adminPayments'&&adminAllowed('payments')){
+  el.innerHTML='<h3>Payment Oversight</h3><div class="notice">Payment gateway ಮತ್ತು payout integration ಇನ್ನೂ ಸಕ್ರಿಯವಾಗಿಲ್ಲ. ಈ ವಿಭಾಗವು ಈಗ preview ಮಾತ್ರ; ಯಾವುದೇ ಹಣ ವರ್ಗಾವಣೆ ಅಥವಾ collection ಇಲ್ಲ.</div><p>Razorpay onboarding, server-side order verification ಮತ್ತು payout integration ಪೂರ್ಣವಾದ ನಂತರ ಇಲ್ಲಿ ನಿಜವಾದ transaction records ತೋರಿಸಲಾಗುತ್ತದೆ.</p>';
+ }else if(page==='adminStaff'&&superUser){
+  el.innerHTML='<h3>Staff Admin Access</h3><p>Staff account ಗೆ Firebase Authentication ನಲ್ಲಿ ಪ್ರತ್ಯೇಕ login ರಚಿಸಿ. ನಂತರ users/{UID} document ನಲ್ಲಿ role=admin, adminLevel=staff, active=true ಮತ್ತು permissions array ಸೆಟ್ ಮಾಡಿ.</p><div class="card"><b>Permissions values</b><p>users, jobs, applications, payments</p><p class="muted">ಉದಾಹರಣೆ: permissions: ["users","jobs"] — Staff ಗೆ Users ಮತ್ತು Jobs ಮಾತ್ರ ಕಾಣುತ್ತವೆ. Super Admin ಮಾತ್ರ Staff permissions ನಿರ್ಧರಿಸಬೇಕು.</p></div><div class="notice">ಈ ವೆಬ್ ಪ್ಯಾನೆಲ್ Firebase Auth account ಅನ್ನು ಸ್ವತಃ ಸೃಷ್ಟಿಸುವುದಿಲ್ಲ. Admin SDK / ಸುರಕ್ಷಿತ backend ಇಲ್ಲದೆ browser ನಿಂದ Staff credentials ಸೃಷ್ಟಿಸುವುದು ಸುರಕ್ಷಿತವಲ್ಲ.</div>';
+ }else{el.innerHTML='<div class="notice">ಈ ವಿಭಾಗಕ್ಕೆ ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ.</div>';}
+}
+
+let adminReportCache=null;
+async function getAdminReportData(force=false){
+ if(adminReportCache&&!force)return adminReportCache;
+ const names=['users','jobs','applications','workerBookings'];
+ const results=await Promise.all(names.map(n=>fbDb.collection(n).get()));
+ const d={users:results[0].docs.map(x=>({id:x.id,...x.data()})),jobs:results[1].docs.map(x=>({id:x.id,...x.data()})),applications:results[2].docs.map(x=>({id:x.id,...x.data()})),workerBookings:results[3].docs.map(x=>({id:x.id,...x.data()}))};
+ d.workers=d.users.filter(x=>x.role==='worker');d.companies=d.users.filter(x=>x.role==='company');adminReportCache=d;return d;
+}
+function adminMetric(label,value,sub){return '<div class="card"><p class="muted">'+esc(label)+'</p><h2>'+value+'</h2><small class="muted">'+esc(sub)+'</small></div>'}
+async function loadAdminAnalytics(){
+ const box=document.getElementById('adminAnalytics');if(!box)return;box.innerHTML='<p class="muted">Firebase data ಲೋಡ್ ಆಗುತ್ತಿದೆ…</p>';
+ try{
+  const d=await getAdminReportData(true),active=d.users.filter(x=>x.active===true).length,blocked=d.users.length-active;
+  const customers=d.users.filter(x=>x.role==='customer'),pendingBookings=d.workerBookings.filter(x=>String(x.status||'Pending').toLowerCase()==='pending').length;
+  const appStatus={},jobStatus={},bookingStatus={};
+  d.applications.forEach(x=>{const k=String(x.status||'Unknown');appStatus[k]=(appStatus[k]||0)+1});
+  d.jobs.forEach(x=>{const k=String(x.status||'Unknown');jobStatus[k]=(jobStatus[k]||0)+1});
+  d.workerBookings.forEach(x=>{const k=String(x.status||'Pending');bookingStatus[k]=(bookingStatus[k]||0)+1});
+  const stats=[['Workers',d.workers.length,'Registered worker accounts'],['Companies',d.companies.length,'HR / Company accounts'],['Customers',customers.length,'Local booking accounts'],['Jobs',d.jobs.length,'All job records'],['Applications',d.applications.length,'Total applications'],['Worker Bookings',d.workerBookings.length,pendingBookings+' pending requests'],['Active Accounts',active,'Blocked / inactive: '+blocked]];
+  const bars=o=>Object.entries(o).map(([k,v])=>'<div class="item"><div class="row"><b>'+esc(k)+'</b><b>'+v+'</b></div><div style="height:9px;background:#e4eef0;border-radius:8px;overflow:hidden"><div style="height:9px;width:'+Math.round(v/Math.max(1,...Object.values(o))*100)+'%;background:#087d79;border-radius:8px"></div></div></div>').join('')||'<p class="muted">No records yet.</p>';
+  const recent=[...d.workerBookings.map(x=>({...x,_kind:'Booking',_date:x.createdAt||x.updatedAt})),...d.jobs.map(x=>({...x,_kind:'Job',_date:x.createdAt||x.updatedAt})),...d.applications.map(x=>({...x,_kind:'Application',_date:x.createdAt||x.updatedAt}))].sort((a,b)=>{const time=x=>x&&typeof x.toMillis==='function'?x.toMillis():typeof x==='number'?x:Date.parse(x)||0;return time(b._date)-time(a._date)}).slice(0,8);
+  const recentHtml=recent.map(x=>'<div class="item"><div class="row"><b>'+esc(x._kind)+'</b><span class="pill">'+esc(x.status||'New')+'</span></div><div>'+esc(x.title||x.category||x.companyName||x.workerName||x.requesterName||'Record')+'</div><small class="muted">'+esc(x.city||x.location||'')+'</small></div>').join('')||'<p class="muted">No recent records.</p>';
+  box.innerHTML='<div class="grid">'+stats.map(x=>adminMetric(...x)).join('')+'</div><div class="grid"><div class="card"><h3>Application Status</h3>'+bars(appStatus)+'</div><div class="card"><h3>Job Status</h3>'+bars(jobStatus)+'</div><div class="card"><h3>Booking Status</h3>'+bars(bookingStatus)+'</div></div><div class="grid"><div class="card"><h3>Admin Quick Actions</h3><p>ಬಳಕೆದಾರರು, ಕೆಲಸದ ಬೇಡಿಕೆಗಳು ಮತ್ತು ಉದ್ಯೋಗಗಳನ್ನು ತ್ವರಿತವಾಗಿ ನಿರ್ವಹಿಸಿ.</p><button class="primary" onclick="go(\'adminUsers\')">Manage Accounts</button><button onclick="go(\'adminAssignments\')">Manage Bookings</button><button onclick="go(\'adminApps\')">Applications</button><button onclick="go(\'adminReports\')">Reports & Export</button></div><div class="card"><h3>Recent Platform Activity</h3>'+recentHtml+'</div></div><div class="card"><h3>Account Health</h3><p>All accounts: <b>'+d.users.length+'</b> · Active: <b>'+active+'</b> · Inactive / blocked: <b>'+blocked+'</b></p><p>Workers: <b>'+d.workers.length+'</b> · Companies: <b>'+d.companies.length+'</b> · Customers: <b>'+customers.length+'</b></p><button class="primary" onclick="loadAdminAnalytics()">↻ Refresh Dashboard</button></div>';
+ }catch(e){box.innerHTML='<div class="notice">Firebase Data ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+esc(e.message)+'</div>'}
+}
+function adminExportRows(d){const clean=a=>a.map(x=>{const o={...x};delete o.password;delete o.passwordHash;Object.keys(o).forEach(k=>{if(o[k]&&typeof o[k].toDate==='function')o[k]=o[k].toDate().toISOString()});return o});return {'Workers':clean(d.workers),'Companies':clean(d.companies),'Customers':clean(d.users.filter(x=>x.role==='customer')),'Jobs':clean(d.jobs),'Applications':clean(d.applications),'Bookings':clean(d.workerBookings)}}
+function csvCell(v){if(v&&typeof v==='object'){if(v.toDate&&typeof v.toDate==='function')v=v.toDate().toISOString();else v=JSON.stringify(v)}return '"'+String(v??'').replace(/"/g,'""')+'"'}
+function rowsToCSV(rows){const cols=[...new Set(rows.flatMap(x=>Object.keys(x)))];return '\ufeff'+[cols.map(csvCell).join(','),...rows.map(r=>cols.map(k=>csvCell(r[k])).join(','))].join('\r\n')}
+function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)}
+async function exportAdminData(format){
+ if(!me||me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ Export ಮಾಡಬಹುದು.');
+ const status=document.getElementById('exportStatus');if(status)status.textContent='Firebase ದಾಖಲೆಗಳನ್ನು ಪಡೆಯಲಾಗುತ್ತಿದೆ…';
+ try{const d=await getAdminReportData(true),sheets=adminExportRows(d),date=new Date().toISOString().slice(0,10);
+ if(format==='xlsx'){if(!window.XLSX)throw new Error('Excel library ಲೋಡ್ ಆಗಿಲ್ಲ. Internet ಪರಿಶೀಲಿಸಿ.');const wb=XLSX.utils.book_new();Object.entries(sheets).forEach(([n,rows])=>XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(rows.length?rows:[{Info:'No records'}]),n));XLSX.writeFile(wb,'NEXVADORAQ_Report_'+date+'.xlsx')}
+ else{const files=Object.entries(sheets).map(([n,rows])=>({name:n+'.csv',data:rowsToCSV(rows)}));const boundary='----NEXVADORAQ'+Date.now();let body='';files.forEach(f=>body+='--'+boundary+'\r\nContent-Disposition: attachment; filename="'+f.name+'"\r\nContent-Type: text/csv; charset=utf-8\r\n\r\n'+f.data+'\r\n');body+='--'+boundary+'--';downloadBlob(new Blob([body],{type:'application/zip'}),'NEXVADORAQ_CSV_bundle_'+date+'.zip')}
+ if(status)status.textContent='Download ಆರಂಭಿಸಲಾಗಿದೆ.';
+ }catch(e){if(status)status.textContent='Export ವಿಫಲ: '+e.message;alert('Export ವಿಫಲ: '+e.message)}
+}
+async function exportAdminCSVs(){if(!me||me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ Export ಮಾಡಬಹುದು.');try{const d=await getAdminReportData(true),s=adminExportRows(d),date=new Date().toISOString().slice(0,10);Object.entries(s).forEach(([n,rows],i)=>setTimeout(()=>downloadBlob(new Blob([rowsToCSV(rows)],{type:'text/csv;charset=utf-8'}),'NEXVADORAQ_'+n+'_'+date+'.csv'),i*400));const st=document.getElementById('exportStatus');if(st)st.textContent='CSV Download ಆರಂಭಿಸಲಾಗಿದೆ.'}catch(e){alert('Export ವಿಫಲ: '+e.message)}}
+async function adminSetUserActive(uid,active){if(me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ ಈ ಬದಲಾವಣೆ ಮಾಡಬಹುದು.');try{await fbDb.collection('users').doc(uid).update({active,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});render()}catch(e){alert('ಬದಲಾವಣೆ ವಿಫಲ: '+e.message)}}
+async function adminCancelBooking(id){if(!me||me.role!=='admin'||me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ Booking Cancel ಮಾಡಬಹುದು.');if(!confirm('ಈ Booking ಅನ್ನು Cancel ಮಾಡಬೇಕೇ? ಸಂಬಂಧಿಸಿದ Worker Active Lock ತೆರವುಗೊಳ್ಳುತ್ತದೆ.'))return;try{const ref=fbDb.collection('workerBookings').doc(String(id));const snap=await ref.get();if(!snap.exists)throw new Error('Booking ದಾಖಲೆ ಸಿಗಲಿಲ್ಲ.');const b=snap.data();if(['Cancelled','Canceled','Rejected','Completed'].includes(String(b.status||'')))throw new Error('ಈ Booking ಈಗಾಗಲೇ '+b.status+' ಸ್ಥಿತಿಯಲ್ಲಿದೆ.');const ids=[...new Set([...(Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:[]),...(b.workerId&&Number(b.acceptedCount||0)>0?[b.workerId]:[])].filter(Boolean).map(String))];await ref.update({status:'Cancelled',cancelledBy:me.id,cancelledByRole:'super_admin',cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),adminDecisionBy:me.id,adminDecisionAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});await Promise.all(ids.map(workerId=>fbDb.collection('workerActiveBookings').doc(workerId).get().then(lock=>lock.exists&&String(lock.data().bookingId)===String(id)?fbDb.collection('workerActiveBookings').doc(workerId).delete():null).catch(e=>console.warn('Could not release worker lock',workerId,e))));const recipients=[...new Set([b.requesterId,b.customerId,b.companyId,...ids].filter(Boolean).map(String))];await Promise.all(recipients.map(recipientId=>fbDb.collection('notifications').add({actorId:me.id,recipientId,title:'Booking Cancelled by Admin',message:'Booking '+String(id)+' ಅನ್ನು Super Admin Cancel ಮಾಡಿದ್ದಾರೆ.',eventType:'booking_cancelled',bookingId:String(id),createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false}).catch(e=>console.warn('Cancel notification failed',e))));alert('Booking Cancel ಆಗಿದೆ. ಸಂಬಂಧಿಸಿದ Worker Active Lock ತೆರವುಗೊಳಿಸಲಾಗಿದೆ.');render()}catch(e){alert('Booking Cancel ಆಗಲಿಲ್ಲ: '+(e.code||e.message))}}
+async function adminSetBookingStatus(id,status){if(!me||me.role!=='admin'||me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ Booking approve/reject ಮಾಡಬಹುದು.');if(!['Confirmed','Rejected','Completed'].includes(status))return;try{const ref=fbDb.collection('workerBookings').doc(String(id));await ref.update({status,adminDecisionBy:me.id,adminDecisionAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const snap=await ref.get(),b=snap.data();const recipients=new Set([b.requesterId,b.companyId,...(Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]))].filter(Boolean));for(const recipientId of recipients)await fbDb.collection('notifications').add({actorId:me.id,recipientId,title:status==='Completed'?'Work Completion Approved':status==='Confirmed'?'Booking approved by Admin':'Booking rejected by Admin',message:status==='Completed'?'Admin ಪರಿಶೀಲಿಸಿ '+(b.category||'ಕೆಲಸ')+' ಪೂರ್ಣಗೊಂಡಿದೆ ಎಂದು ದೃಢೀಕರಿಸಿದ್ದಾರೆ.':(b.category||'Booking')+' request ಅನ್ನು Admin '+status+' ಮಾಡಿದ್ದಾರೆ.',createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false}).catch(e=>console.warn(e));alert(status==='Completed'?'Work Completion Approved':'Booking '+status);render()}catch(e){alert('Booking update ವಿಫಲ: '+e.message)}}
+async function adminDeleteJob(id){if(!me||me.role!=='admin'||me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ Job Post delete ಮಾಡಬಹುದು.');if(!confirm('ಈ ಹಳೆಯ Job Post ಅನ್ನು ಶಾಶ್ವತವಾಗಿ delete ಮಾಡಬೇಕೇ? ಸಂಬಂಧಿಸಿದ Applications ದಾಖಲೆಗಳು ಪ್ರತ್ಯೇಕವಾಗಿ ಉಳಿಯುತ್ತವೆ.'))return;try{const ref=fbDb.collection('jobs').doc(String(id));const snap=await ref.get();if(!snap.exists)throw new Error('Job Post ಸಿಗಲಿಲ್ಲ.');await ref.delete();const d=db();d.jobs=(d.jobs||[]).filter(x=>String(x.id)!==String(id));saveLocal(d);alert('Job Post delete ಆಗಿದೆ.');render()}catch(e){alert('Job Post delete ಆಗಲಿಲ್ಲ: '+(e.code||e.message))}}
+async function adminSetJobStatus(id,status){if(me.adminLevel!=='super')return alert('Super Admin ಮಾತ್ರ Job status ಬದಲಾಯಿಸಬಹುದು.');try{await fbDb.collection('jobs').doc(id).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});render()}catch(e){alert('ಬದಲಾವಣೆ ವಿಫಲ: '+e.message)}}
+function renderDashboardOverview(){
+ const box=document.getElementById('dashboardOverview');if(!box||!me)return;
+ const d=db(),r=me.role;let stats=[];
+ if(r==='company'){
+  const jobs=(d.jobs||[]).filter(x=>(x.ownerId||x.owner)===me.id),apps=(d.apps||[]).filter(x=>x.employerId===me.id||x.ownerId===me.id),requests=(d.workerBookings||[]).filter(x=>x.companyId===me.id||x.company===me.id);
+  stats=[['ನನ್ನ Job Posts',jobs.length,'ಎಲ್ಲಾ ಉದ್ಯೋಗಗಳು'],['Applications',apps.length,'ಬಂದ ಅರ್ಜಿಗಳು'],['Worker Requests',requests.length,'ಕೆಲಸಗಾರರ ಬೇಡಿಕೆ'],['Published Jobs',jobs.filter(x=>x.status==='published').length,'ಪ್ರಕಟಿತ ಉದ್ಯೋಗಗಳು']];
+ }else if(r==='customer'){
+  const bookings=(d.workerBookings||[]).filter(x=>x.customerId===me.id||x.requesterId===me.id||x.user===me.id);
+  stats=[['My Bookings',bookings.length,'ನಿಮ್ಮ ಬುಕ್ಕಿಂಗ್‌ಗಳು'],['Confirmed',bookings.filter(x=>x.status==='Confirmed').length,'ಖಚಿತಗೊಂಡವು'],['Pending',bookings.filter(x=>['Pending','Partially Filled'].includes(x.status)).length,'ಬಾಕಿ ಇರುವವು'],['Notifications',(d.notifications||[]).filter(x=>(x.recipientId===me.id&&!x.read)||(me.role==='admin'&&x.audience==='admins'&&!(x.readBy||[]).includes(me.id))).length,'ಹೊಸ ಸಂದೇಶಗಳು']];
+ }else if(r==='admin'){
+  stats=[['Users',(d.users||[]).length,'ನೋಂದಾಯಿತ ಖಾತೆಗಳು'],['Jobs',(d.jobs||[]).length,'ಉದ್ಯೋಗ ಪೋಸ್ಟ್‌ಗಳು'],['Applications',(d.apps||[]).length,'ಒಟ್ಟು ಅರ್ಜಿಗಳು'],['Bookings',(d.workerBookings||[]).length,'Worker ಬುಕ್ಕಿಂಗ್‌ಗಳು']];
+ }else{
+  const apps=(d.apps||[]).filter(x=>x.worker===me.id||x.workerId===me.id),requests=(d.workerBookings||[]).filter(x=>x.workerId===me.id||(Array.isArray(x.acceptedWorkerIds)&&x.acceptedWorkerIds.includes(me.id)));
+  stats=[['Job Applications',apps.length,'ನೀವು ಸಲ್ಲಿಸಿದ ಅರ್ಜಿಗಳು'],['Accepted Work',requests.length,'ಸ್ವೀಕರಿಸಿದ ಕೆಲಸಗಳು'],['Open Jobs',(d.jobs||[]).filter(x=>x.status==='published').length,'ಲಭ್ಯವಿರುವ ಕೆಲಸಗಳು'],['Notifications',(d.notifications||[]).filter(x=>(x.recipientId===me.id&&!x.read)||(me.role==='admin'&&x.audience==='admins'&&!(x.readBy||[]).includes(me.id))).length,'ಹೊಸ ಸಂದೇಶಗಳು']];
+ }
+ box.innerHTML='<div class="dash-welcome">Welcome back, '+esc(me.name||'User')+' — ನಿಮ್ಮ NEXVADORAQ Dashboard</div>'+stats.map(x=>'<div class="dash-stat"><span>'+esc(x[0])+'</span><strong>'+esc(x[1])+'</strong><small>'+esc(x[2])+'</small></div>').join('');
+}
+function watchCompanyBookingTracking(rows){
+ if(window.companyBookingTrackUnsubs){window.companyBookingTrackUnsubs.forEach(fn=>{try{fn()}catch(_){}})}
+ window.companyBookingTrackUnsubs=[];
+ (rows||[]).filter(b=>b.companyId===me.id).forEach(b=>{
+  const ids=b.acceptedWorkerIds||(b.workerId?[b.workerId]:[]);
+  ids.forEach(wid=>{
+   const targetId='companyTrack_'+String(b.id)+'_'+String(wid);
+   const unsub=fbDb.collection('workerBookings').doc(String(b.id)).collection('tracking').doc(String(wid)).onSnapshot(snap=>{
+    const node=document.getElementById(targetId);if(!node)return;
+    if(!snap.exists||!snap.data().sharing){node.textContent='GPS ಇನ್ನೂ ON ಆಗಿಲ್ಲ';return}
+    const t=snap.data();node.innerHTML='<b>'+esc(t.workerName||'Worker')+'</b> • '+(Number.isFinite(Number(t.accuracy))?'±'+Math.round(Number(t.accuracy))+' m':'Accuracy unavailable')+'<br><a class="maplink" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+Number(t.lat)+','+Number(t.lng)+'">Open Live GPS</a> <small class="muted">'+(t.updatedAt?.toDate?t.updatedAt.toDate().toLocaleTimeString():'Updating')+'</small>';
+   },err=>{const node=document.getElementById(targetId);if(node)node.textContent='GPS access error: '+(err.code||err.message)});
+   window.companyBookingTrackUnsubs.push(unsub);
+  });
+ });
+}
+const HIREHUB_STATE_CITIES={"Andhra Pradesh":["Amaravati","Visakhapatnam","Vijayawada","Guntur","Tirupati","Nellore","Kurnool","Rajahmundry","Kakinada","Anantapur"],"Karnataka":["Bengaluru","Bengaluru Rural","Mysuru","Tumakuru","Mangaluru","Hubballi","Dharwad","Belagavi","Kalaburagi","Davangere","Ballari","Vijayapura","Shivamogga","Hassan","Udupi","Chikkaballapur","Kolar","Mandya","Chitradurga","Gadag","Haveri","Raichur","Bidar","Yadgir","Kodagu","Chamarajanagar","Ramanagara","Bagalkote","Koppal","Uttara Kannada"],"Tamil Nadu":["Chennai","Coimbatore","Madurai","Tiruchirappalli","Salem","Tiruppur","Erode","Vellore","Thoothukudi","Tirunelveli","Hosur"],"Telangana":["Hyderabad","Warangal","Karimnagar","Nizamabad","Khammam","Nalgonda","Siddipet"]};
+const HIREHUB_CITY_AREAS={
+'Bengaluru':['Adugodi','Arekere','Attiguppe','Banashankari','Bannerghatta Road','Basavanagudi','Basaveshwaranagar','Begur','Bellandur','Bommanahalli','BTM Layout','CV Raman Nagar','Chamarajpet','Chandapura','Cooke Town','Dasarahalli','Devanahalli','Domlur','Electronic City','Frazer Town',' hebbal','Hennur','Hoodi','HSR Layout','Indiranagar','Jakkur','Jalahalli','Jayanagar','JP Nagar','Kaggadasapura','Kammanahalli','Kanakapura Road','Kengeri','Koramangala','KR Puram','Kumaraswamy Layout','Mahadevapura','Malleshwaram','Marathahalli','Mathikere','MG Road',' Nagarbhavi','Peenya','Rajajinagar','Rajarajeshwari Nagar','RT Nagar','Sarjapur Road','Seshadripuram','Shivajinagar','Thanisandra','Vijayanagar','Whitefield','Yelahanka','Yeshwanthpur'],
+'Mysuru':['Vijayanagar','Kuvempunagar','Saraswathipuram','Gokulam','Jayalakshmipuram','Hebbal','Hootagalli','Nazarbad','Mandi Mohalla','Bannimantap','N.R. Mohalla','Udayagiri'],
+'Tumakuru':['S.S. Puram','S.I.T.','Gubbi Gate','Ashoka Road','Tumakuru City','Kyathsandra','Heggere','Antharasanahalli','Batawadi','M.G. Road','B.H. Road','J.C. Road','Maralur','Siddaganga Extension','Shivakumar Swamy Circle','ITI Layout','Gokula Extension','R.S. Naidu Nagar','Ramanagara','Kunigal Road','Tumkur University Road'],
+'Mangaluru':['Bejai','Kadri','Kankanady','Lalbagh','Bendoorwell','Surathkal','Ullal','Kuloor','Derebail','Pandeshwar','Hampankatta'],
+'Hubballi':['Vidyanagar','Gokul Road','Deshpande Nagar','Keshwapur','Unkal','Navanagar','Old Hubballi'],
+'Chennai':['Adyar','Anna Nagar','T. Nagar','Velachery','Tambaram','Porur','Guindy','OMR','Sholinganallur','Mylapore','Perambur'],
+'Hyderabad':['Madhapur','Gachibowli','Kukatpally','Miyapur','Kondapur','Hitech City','Banjara Hills','Jubilee Hills','Secunderabad','Ameerpet','LB Nagar'],
+'Mumbai':['Andheri','Bandra','Borivali','Dadar','Powai','Kurla','Goregaon','Malad','Thane','Colaba'],
+'Pune':['Hinjewadi','Wakad','Kothrud','Baner','Hadapsar','Viman Nagar','Kharadi','Pimpri','Chinchwad','Shivajinagar'],
+'Delhi':['Dwarka','Rohini','Saket','Karol Bagh','Lajpat Nagar','Janakpuri','Pitampura','Vasant Kunj'],
+'Kochi':['Edappally','Kakkanad','Fort Kochi','Vyttila','Aluva','Palarivattom','Kaloor'],
+'Coimbatore':['Gandhipuram','RS Puram','Peelamedu','Singanallur','Saibaba Colony','Ukkadam'],
+'Ahmedabad':['Navrangpura','Satellite','Maninagar','Bopal','Thaltej','Vastrapur'],
+'Jaipur':['Malviya Nagar','Vaishali Nagar','Mansarovar','Jagatpura','C-Scheme','Bani Park'],
+'Kolkata':['Salt Lake','New Town','Park Street','Howrah','Behala','Dum Dum']
+};
+function populateCustomerAreas(selected=''){const city=document.getElementById('workerCitySearch')?.value||'',area=document.getElementById('workerAreaSearch');if(!area)return;const options=HIREHUB_CITY_AREAS[city]||[];area.innerHTML='<option value="">All Areas</option>'+options.map(a=>'<option value="'+esc(a)+'" '+(a.toLowerCase()===String(selected).toLowerCase()?'selected':'')+'>'+esc(a)+'</option>').join('');if(selected&&!options.some(a=>a.toLowerCase()===String(selected).toLowerCase()))area.insertAdjacentHTML('beforeend','<option selected value="'+esc(selected)+'">'+esc(selected)+'</option>');}
+function populateCustomerCities(selected=''){const state=document.getElementById('workerStateSearch')?.value||'',city=document.getElementById('workerCitySearch');if(!city)return;const options=HIREHUB_STATE_CITIES[state]||[];city.innerHTML='<option value="">All Cities</option>'+options.map(c=>'<option value="'+esc(c)+'" '+(c.toLowerCase()===String(selected).toLowerCase()?'selected':'')+'>'+esc(c)+'</option>').join('');if(selected&&!options.some(c=>c.toLowerCase()===String(selected).toLowerCase()))city.insertAdjacentHTML('beforeend','<option selected value="'+esc(selected)+'">'+esc(selected)+'</option>');populateCustomerAreas();}
+window.customerWorkerCache=[];window.customerFavouriteIds=JSON.parse(localStorage.getItem('nex_customer_favourites')||'[]');async function loadCustomerWorkers(){const box=document.getElementById('customerWorkerResults');if(!box)return;box.textContent='Workers ಹುಡುಕಲಾಗುತ್ತಿದೆ…';try{const q=await fbDb.collection('workerPublicProfiles').limit(100).get();const point=await currentDevicePosition();window.customerSearchPoint=point;window.customerWorkerCache=q.docs.map(x=>{const w={id:x.id,...x.data()};w._distance=point&&Number.isFinite(Number(w.lat))&&Number.isFinite(Number(w.lng))?hireHubDistanceKm(point,{lat:Number(w.lat),lng:Number(w.lng)}):null;return w});filterCustomerWorkers()}catch(e){box.innerHTML='<p class="muted">Worker Directory ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. Worker Public Profile Sync ಮತ್ತು Firebase Rules Deployment ಪೂರ್ಣಗೊಂಡ ನಂತರ ಇಲ್ಲಿ Worker ಪಟ್ಟಿ ಕಾಣುತ್ತದೆ.</p><p class="muted">ತಾಂತ್ರಿಕ ಮಾಹಿತಿ: '+esc(e.code||e.message)+'</p>'}}function filterCustomerWorkers(){const box=document.getElementById('customerWorkerResults');if(!box)return;const skill=(document.getElementById('workerSkillSearch')?.value||'').toLowerCase(),state=(document.getElementById('workerStateSearch')?.value||'').toLowerCase(),city=(document.getElementById('workerCitySearch')?.value||'').toLowerCase(),area=(document.getElementById('workerAreaSearch')?.value||'').toLowerCase(),rating=Number(document.getElementById('workerRatingFilter')?.value||0),online=document.getElementById('workerAvailabilityFilter')?.value||'',radius=Number(document.getElementById('workerRadiusFilter')?.value||10);const rows=window.customerWorkerCache.filter(w=>{const skills=[w.mainSkill,w.secondSkill,...(Array.isArray(w.skills)?w.skills:[])].join(' ').toLowerCase(),fresh=w.lastSeen?.toDate&&Date.now()-w.lastSeen.toDate().getTime()<180000,isOnline=w.availability==='available'&&fresh;return(!skill||skills.includes(skill))&&(!state||String(w.state||'').toLowerCase()===state)&&(!city||String(w.city||'').toLowerCase().includes(city))&&(!area||String(w.area||'').toLowerCase().includes(area))&&Number(w.rating||0)>=rating&&(!online||isOnline)&&(!window.customerSearchPoint||(w._distance!==null&&w._distance<=radius))});box.innerHTML=rows.length?'<div class="grid">'+rows.map(w=>'<div class="item"><b>'+esc(w.name||'Captain')+' <span class="pill">'+(w.availability==='available'&&w.lastSeen?.toDate&&Date.now()-w.lastSeen.toDate().getTime()<180000?'ONLINE':'OFFLINE')+'</span></b><p>'+esc(w.mainSkill||w.skills||'Skill not listed')+' • '+esc(w.city||w.area||'')+'</p><p>📍 '+(w._distance===null?'Distance unavailable':w._distance.toFixed(1)+' km away')+' • ⭐ '+esc(w.rating||'New')+' • '+esc(w.experience||'Experience not added')+'</p><p>'+esc(w.dailyWage||w.hourlyRate||'Rate on request')+'</p><button onclick="toggleCustomerFavourite(\''+esc(w.id)+'\')">'+(window.customerFavouriteIds.includes(w.id)?'★ Saved':'☆ Save Favourite')+'</button><button class="primary" onclick="selectCustomerWorker(\''+esc(w.id)+'\')">Book this Worker</button></div>').join('')+'</div>':'<p class="muted">ಈ Filter ಗೆ ಹೊಂದುವ Worker ಸಿಗಲಿಲ್ಲ.</p>'}function toggleCustomerFavourite(id){window.customerFavouriteIds=window.customerFavouriteIds.includes(id)?window.customerFavouriteIds.filter(x=>x!==id):[...window.customerFavouriteIds,id];localStorage.setItem('nex_customer_favourites',JSON.stringify(window.customerFavouriteIds));filterCustomerWorkers()}function selectCustomerWorker(id){localStorage.setItem('nex_selected_worker',id);go('booking')}
+async function payCustomerWorker(id){
+ if(!me||me.role!=='customer')return alert('Customer account ಮಾತ್ರ ಪಾವತಿ ಸಲ್ಲಿಸಬಹುದು.');
+ try{
+  const snap=await fbDb.collection('workerBookings').doc(String(id)).get();if(!snap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
+  const b=snap.data();if(b.requesterId!==me.id)throw new Error('ಈ Booking ನಿಮ್ಮದಲ್ಲ.');
+  const ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:((b.workerId&&Number(b.acceptedCount||0)>0)?[b.workerId]:[]);if(ids.length!==1)throw new Error('ಒಬ್ಬ Worker ಮಾತ್ರ Accept ಮಾಡಿದ Confirmed Bookingಗೆ ಈ UPI ಪಾವತಿ ಲಭ್ಯ.');
+  const workerId=ids[0],ws=await fbDb.collection('workerPublicProfiles').doc(workerId).get();if(!ws.exists||!ws.data().upiId)throw new Error('Worker UPI ID Profileನಲ್ಲಿ ಸೇರಿಸಿಲ್ಲ.');
+  const w=ws.data(),raw=prompt('ಪಾವತಿ ಮೊತ್ತ (₹) ನಮೂದಿಸಿ. Booking Pay: '+(b.pay||'ನಿಗದಿಪಡಿಸಿಲ್ಲ'));if(raw===null)return;const amount=Number(raw);if(!Number.isFinite(amount)||amount<=0||amount>10000000)throw new Error('ಸರಿಯಾದ ಮೊತ್ತ ನಮೂದಿಸಿ.');
+  const link='upi://pay?pa='+encodeURIComponent(w.upiId)+'&pn='+encodeURIComponent(w.name||'HireHub Worker')+'&am='+encodeURIComponent(amount.toFixed(2))+'&cu=INR&tn='+encodeURIComponent('HireHub booking '+id);window.location.href=link;
+  const utr=prompt('ಪಾವತಿ ಮಾಡಿದ ನಂತರ Transaction ID / UTR ನಮೂದಿಸಿ. ಪಾವತಿ ಮಾಡದಿದ್ದರೆ Cancel ಒತ್ತಿ.');if(!utr||utr.trim().length<6)return;
+  const ref=await fbDb.collection('workerPaymentSubmissions').add({bookingId:String(id),customerId:me.id,workerId:workerId,workerName:w.name||'',upiId:w.upiId,amount:amount,utr:utr.trim().slice(0,80),status:'submitted',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const msg='Booking '+id+' • ₹'+amount.toFixed(2)+' • UTR '+utr.trim().slice(0,30)+' — Admin ಪರಿಶೀಲನೆ ಬಾಕಿ.';
+  await fbDb.collection('notifications').add({actorId:me.id,recipientId:workerId,title:'Customer UPI Payment Submitted',message:msg,bookingId:String(id),paymentSubmissionId:ref.id,eventType:'worker_upi_payment_submitted',createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});
+  await fbDb.collection('notifications').add({actorId:me.id,recipientId:'__admins__',audience:'admins',title:'Worker UPI Payment Verification',message:msg,bookingId:String(id),paymentSubmissionId:ref.id,eventType:'customer_upi_payment_submitted',createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});
+  alert('UTR ಸಲ್ಲಿಸಲಾಗಿದೆ. Admin ಪರಿಶೀಲನೆ ಆಗುವವರೆಗೆ Paid ಎಂದು ಪರಿಗಣಿಸಬೇಡಿ.');
+ }catch(e){alert('UPI ಪ್ರಕ್ರಿಯೆ ವಿಫಲ: '+(e.code||e.message))}
+}
+async function cancelCustomerBooking(id){const row=(db().bookings||[]).find(x=>String(x.id)===String(id));if(!row)return;const reason=prompt('Booking ರದ್ದು ಮಾಡುವ ಕಾರಣವನ್ನು ನಮೂದಿಸಿ');if(!reason||!reason.trim())return;const accepted=!!((row.acceptedWorkerIds||(row.workerId?[row.workerId]:[])).length);const arrived=!!(row.workerArrivedAt||row.checkInAt||row.attendanceStatus==='Arrived');const risk=accepted&&arrived;try{await fbDb.collection('workerBookings').doc(id).update({status:'Cancelled',cancellationReason:reason.trim().slice(0,300),cancelledAt:firebase.firestore.FieldValue.serverTimestamp(),cancellationRisk:risk?'REVIEW_REQUIRED':'NONE',cancellationRiskReason:risk?'Cancelled after recorded worker arrival':'',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});alert(risk?'Booking ರದ್ದುಪಡಿಸಲಾಗಿದೆ. Arrival ನಂತರದ cancellation Admin ಪರಿಶೀಲನೆಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.':'Booking ರದ್ದುಪಡಿಸಲಾಗಿದೆ.');go('mybookings')}catch(e){alert('Cancel ಆಗಲಿಲ್ಲ: '+(e.code||e.message))}}async function repeatCustomerBooking(id){const row=(db().bookings||[]).find(x=>String(x.id)===String(id));if(!row)return;try{const nextId=uid();const copy={...row,id:nextId,status:'Pending',workerId:null,workerName:null,acceptedWorkerIds:[],acceptedWorkers:[],acceptedCount:0,workerArrivedAt:null,checkInAt:null,attendanceStatus:'',cancellationRisk:'NONE',cancellationRiskReason:'',cancellationReason:'',cancelledAt:null,repeatOfBookingId:String(id),isRepeatBooking:true,requesterId:me.id,requesterRole:'customer',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};delete copy.requesterMobile;await fbDb.collection('workerBookings').doc(nextId).set(copy);alert('ಹಿಂದಿನ Booking ವಿವರಗಳಿಂದ ಹೊಸ Request ಸೃಷ್ಟಿಸಲಾಗಿದೆ. Worker ಮತ್ತೆ Accept ಮಾಡಬೇಕು.');go('mybookings')}catch(e){alert('Repeat Booking ಆಗಲಿಲ್ಲ: '+(e.code||e.message))}}
+async function rescheduleCustomerBooking(id){const date=prompt('ಹೊಸ ದಿನಾಂಕ (YYYY-MM-DD) ನಮೂದಿಸಿ');if(!date)return;if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){alert('ದಿನಾಂಕ YYYY-MM-DD ರೂಪದಲ್ಲಿರಲಿ.');return}const time=prompt('ಹೊಸ ಸಮಯ ನಮೂದಿಸಿ');if(!time)return;try{await fbDb.collection('workerBookings').doc(id).update({date,shift:time,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});alert('Booking ಸಮಯ ಬದಲಿಸಲಾಗಿದೆ.');go('mybookings')}catch(e){alert('Reschedule ಆಗಲಿಲ್ಲ: '+(e.code||e.message))}}
+function render(){renderDashboardOverview();if(me.role==='admin'){renderAdminPanel();return;}let links=me.role==='company'?[['myjobs','My Jobs'],['post','Post a Job'],['applications','Applications'],['booking','Request Workers'],['liveworkers','Nearby Workers'],['companylocation','Share Company GPS'],['chat','Chat'],['notifications','Notifications'],['payments','Payments'],['profile','Profile']]:me.role==='customer'?[['findworkers','Search Workers'],['booking','Book a Worker'],['mybookings','My Bookings'],['chat','Chat'],['notifications','Notifications'],['payments','Payments'],['support','Help & SOS'],['settings','Settings'],['profile','Profile']]:[['requests','Captain Home'],['mybookings','My Bookings'],['jobs','Find Jobs'],['applications','My Applications'],['nearbycompanies','Nearby Companies'],['ratings','My Ratings'],['support','Help & SOS'],['settings','Settings'],['chat','Chat'],['notifications','Notifications'],['payments','Earnings / Payments'],['profile','Profile']];document.getElementById('nav').innerHTML=links.map(([k,v])=>'<button class="'+(page===k?'tab active':'')+'" onclick="go(\''+k+'\')">'+v+'</button>').join('');let d=db(),el=document.getElementById('panel');if(page==='chat'){renderHireHubChat(el);return;}
+if(page==='findworkers'&&me.role==='customer'){el.innerHTML='<h3>Search Workers</h3><div class="card"><div class="field"><label>Skill</label><input id="workerSkillSearch" placeholder="Plumber, Electrician, Painter..." oninput="filterCustomerWorkers()"></div><div class="field"><label>State / UT</label><select id="workerStateSearch" onchange="populateCustomerCities();filterCustomerWorkers()"><option value="">All States / UT</option>'+['Karnataka','Andhra Pradesh','Tamil Nadu','Telangana'].map(s=>'<option value="'+esc(s)+'" '+(me.state===s?'selected':'')+'>'+esc(s)+'</option>').join('')+'</select></div><div class="grid"><div class="field"><label>City</label><select id="workerCitySearch" onchange="populateCustomerAreas();filterCustomerWorkers()"><option value="">All Cities</option></select></div><div class="field"><label>City Area / Locality</label><select id="workerAreaSearch" onchange="filterCustomerWorkers()"><option value="">All Areas</option></select></div></div><div class="grid"><div class="field"><label>Minimum Rating</label><select id="workerRatingFilter" onchange="filterCustomerWorkers()"><option value="0">Any rating</option><option value="3">3+ stars</option><option value="4">4+ stars</option><option value="4.5">4.5+ stars</option></select></div><div class="field"><label>Availability</label><select id="workerAvailabilityFilter" onchange="filterCustomerWorkers()"><option value="available">Online now</option><option value="">All profiles</option></select></div><div class="field"><label>Nearby Radius</label><select id="workerRadiusFilter" onchange="filterCustomerWorkers()"><option value="5">5 km</option><option value="10" selected>10 km</option><option value="15">15 km</option><option value="25">25 km</option><option value="50">50 km</option></select></div></div><button class="primary" onclick="loadCustomerWorkers()">Search Nearby Captains</button></div><div id="customerWorkerResults" class="muted">Worker profiles loading…</div>';populateCustomerCities(me.city||'');loadCustomerWorkers();}
+if(page==='payments'&&me.role==='company'){el.innerHTML='<h3>Company Payment Center</h3><div class="card"><h3>1. Company → NEXVADORAQ</h3><p>Job posting / platform service fee ಸಂಗ್ರಹಿಸುವ Payment Gateway ಇನ್ನೂ ಸಂಪರ್ಕಗೊಂಡಿಲ್ಲ.</p><span class="pill">Gateway not active</span></div><div class="card"><h3>2. Company → Worker</h3><p>Workerಗೆ ಪಾವತಿ ಮಾಡುವ ಮೊದಲು Bookingನಲ್ಲಿ Worker, ಕೆಲಸದ ದಿನಗಳು ಮತ್ತು ಒಪ್ಪಂದದ ಮೊತ್ತವನ್ನು ದೃಢಪಡಿಸಿ.</p><p>ಈ ಆವೃತ್ತಿಯಲ್ಲಿ Companyಯಿಂದ Workerಗೆ UPI ಪಾವತಿ ಸಲ್ಲಿಕೆ ಮತ್ತು Admin UTR verification ಇನ್ನೂ ಲಭ್ಯವಿಲ್ಲ. ಹೊರಗಿನ UPI ಪಾವತಿಯನ್ನು App Verified ಎಂದು ಪರಿಗಣಿಸುವುದಿಲ್ಲ.</p><span class="pill">In-app company payout pending</span></div><div class="notice"><b>ಸುರಕ್ಷತಾ ಸೂಚನೆ:</b> Razorpay/Payment Gateway merchant approval, server-side order creation, signature verification ಮತ್ತು webhook ಜೋಡಣೆ ಆಗುವವರೆಗೆ Company → Platform online payment ಸಕ್ರಿಯವಾಗುವುದಿಲ್ಲ. API Secret ಅನ್ನು Website ಅಥವಾ GitHubನಲ್ಲಿ ಇಡಬೇಡಿ; ಸುರಕ್ಷಿತ server-side ವ್ಯವಸ್ಥೆಯಲ್ಲೇ ಇರಬೇಕು.</div>'}else if(page==='payments'&&me.role==='customer'){el.innerHTML='<h3>Customer → Worker Direct UPI Payment</h3><div class="card"><h3>Workerಗೆ ನೇರ ಪಾವತಿ</h3><p>ನಿಮ್ಮ Confirmed Booking ತೆರೆಯಿರಿ → <b>My Bookings</b> → <b>Pay Worker Directly via UPI</b> ಒತ್ತಿರಿ. Worker Profileನಲ್ಲಿ UPI ID ಇರಬೇಕು.</p><p>GPay / PhonePe / Paytm / BHIM ಮೂಲಕ Workerಗೆ ನೇರವಾಗಿ ಪಾವತಿಸಬಹುದು.</p><span class="pill">Direct UPI • Customer pays Worker</span></div><div class="notice"><b>ಗಮನಿಸಿ:</b> ಪಾವತಿ ಮಾಡಿದ ನಂತರ UTR ಸಲ್ಲಿಸಿ. Admin ಪರಿಶೀಲಿಸುವವರೆಗೆ Payment Verified ಎಂದು ಪರಿಗಣಿಸಬೇಡಿ. HireHub ಹಣವನ್ನು ಸ್ವೀಕರಿಸುವುದಿಲ್ಲ ಅಥವಾ ಹಿಡಿದಿಡುವುದಿಲ್ಲ.</div><button class="primary" onclick="go(\'mybookings\')">My Bookings ತೆರೆಯಿರಿ</button>'}else if(page==='payments'&&me.role==='worker'){el.innerHTML='<h3>ನಿಮ್ಮ UPI Payment Details</h3><div class="card"><p>Customer ನಿಮಗೆ ನೇರವಾಗಿ ಪಾವತಿಸಲು ಮೊದಲು Profile → Edit Profile ತೆರೆಯಿರಿ.</p><p><b>UPI ID</b> ನಮೂದಿಸಿ (ಉದಾ: name@okaxis) ಮತ್ತು Save Profile Changes ಒತ್ತಿರಿ.</p><p>Customer Confirmed Bookingನಲ್ಲಿ ನಿಮ್ಮ UPI ಮೂಲಕ ಪಾವತಿಸಬಹುದು.</p><span class="pill">Direct-to-Worker UPI</span></div><button class="primary" onclick="go(\'profile\')">UPI ID ಸೇರಿಸಲು Profile ತೆರೆಯಿರಿ</button>'}else if(page==='payments'){el.innerHTML='<h3>Payments • NEXVADORAQ</h3><div class="card"><p>Customer → Worker Direct UPI Payment ಸಿದ್ಧಪಡಿಸಲಾಗಿದೆ. Company platform fee gateway ಇನ್ನೂ ಸಕ್ರಿಯವಾಗಿಲ್ಲ.</p><span class="pill">Platform gateway setup pending</span></div><div class="notice">UPI ಮೂಲಕ Workerಗೆ ನೇರ ಪಾವತಿ ಮಾತ್ರ. Payment verification Admin ಪರಿಶೀಲನೆಯ ನಂತರ.</div>'}
+if(page==='jobs'){let a=[...samples,...d.jobs.filter(j=>j.status==='published')];window.hirehubJobRows=a;el.innerHTML='<div class="row"><div><h3>Find Opportunities</h3><span class="pill">HireHub 2.2</span></div><span class="muted">'+a.length+' opportunities</span></div><div class="card"><div class="field"><label>Search job / skill / company</label><input id="jobSearch" placeholder="e.g. Helper, Security, Driver" oninput="filterHireHubJobs()"></div><div class="grid"><div class="field"><label>City</label><input id="jobCity" placeholder="Any city" oninput="filterHireHubJobs()"></div><div class="field"><label>Work type</label><select id="jobTypeFilter" onchange="filterHireHubJobs()"><option value="">All types</option><option>Daily</option><option>Hourly</option><option>Monthly</option><option>Contract</option></select></div></div></div><div id="jobResults" class="grid">'+a.map(j=>job(j,true)).join('')+'</div><p id="jobEmpty" class="muted hidden">ಹುಡುಕಾಟಕ್ಕೆ ಹೊಂದುವ ಕೆಲಸ ಸಿಗಲಿಲ್ಲ. Filter ಬದಲಿಸಿ ಪ್ರಯತ್ನಿಸಿ.</p>'}
+if(page==='post'){el.innerHTML='<div class="card"><h3>Post a Job</h3><p class="muted">ನಿಮ್ಮ ಕಂಪನಿಯ ಉದ್ಯೋಗ ವಿವರಗಳನ್ನು ತುಂಬಿ ಪ್ರಕಟಿಸಿ.</p><form id="jf"><div class="field"><label>Job title</label><input id="jt" required maxlength="120" placeholder="ಉದಾ: Warehouse Helper"></div><div class="field"><label>Location</label><input id="jl" value="'+esc(me.city)+'" required></div><div class="field"><label>Salary / Payment</label><input id="jp" placeholder="ಉದಾ: ₹700 per day" required></div><div class="field"><label>Type</label><select id="jtype"><option>Daily</option><option>Hourly</option><option>Monthly</option><option>Contract</option></select></div><div class="field"><label>Details</label><textarea id="jd" placeholder="ಕೆಲಸದ ಜವಾಬ್ದಾರಿ, ಸಮಯ, ಅರ್ಹತೆ..."></textarea></div><button class="primary" id="publishJobBtn" type="submit">Publish Job</button><p id="jobPostMsg" class="muted" role="status" aria-live="polite"></p></form></div>';document.getElementById('jf').onsubmit=async e=>{e.preventDefault();const btn=document.getElementById('publishJobBtn'),msg=document.getElementById('jobPostMsg');if(btn.disabled)return;const title=document.getElementById('jt').value.trim(),city=document.getElementById('jl').value.trim(),pay=document.getElementById('jp').value.trim(),type=document.getElementById('jtype').value,details=document.getElementById('jd').value.trim();if(!title||!city||!pay){msg.textContent='Job title, Location ಮತ್ತು Salary ಕಡ್ಡಾಯವಾಗಿ ತುಂಬಿ.';return}btn.disabled=true;msg.textContent='Job ಪ್ರಕಟಿಸಲಾಗುತ್ತಿದೆ…';try{if(!fbAuth.currentUser||fbAuth.currentUser.uid!==me.id||me.role!=='company')throw new Error('HR / Company ಖಾತೆಯಲ್ಲಿ ಮತ್ತೆ Login ಮಾಡಿ.');const id=uid(),jobData={title,city,pay,type,details,company:me.name,ownerId:me.id,status:'published',approvalRequired:false,publishedAt:firebase.firestore.FieldValue.serverTimestamp(),createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await fbDb.collection('jobs').doc(id).set(jobData);await notifyActiveWorkersAboutJob(id,jobData);const local=db();local.jobs=local.jobs||[];local.jobs.unshift({id,...jobData,owner:me.id,createdAt:Date.now()});saveLocal(local);msg.textContent='Job ಯಶಸ್ವಿಯಾಗಿ ಪ್ರಕಟಿಸಲಾಗಿದೆ.';alert('Job Auto Published! Worker ಖಾತೆಯ Find Jobs ವಿಭಾಗದಲ್ಲಿ ಈಗಲೇ ಕಾಣುತ್ತದೆ.');go('myjobs')}catch(err){console.error('Job publish failed:',err);msg.textContent='Job ಪ್ರಕಟಿಸಲು ಆಗಲಿಲ್ಲ: '+(err.code||err.message||'Unknown error')+'. Firebase Firestore Rules ಮತ್ತು HR account role ಪರಿಶೀಲಿಸಿ.';btn.disabled=false}}}
+if(page==='myjobs'){let a=d.jobs.filter(j=>(j.ownerId||j.owner)===me.id);el.innerHTML='<h3>My Job Posts</h3>'+(a.length?a.map(j=>job(j,false,true)).join(''):'<p class="muted">No jobs posted yet.</p>')}
+if(page==='applications'&&me.role==='company'){let a=d.apps.filter(x=>x.employerId===me.id||x.ownerId===me.id);el.innerHTML='<h3>Applications Received</h3>'+(a.length?a.map(x=>'<div class="item"><b>'+esc(x.title)+'</b><p>'+esc(x.workerName||'Worker')+' • '+esc(x.city||'')+'</p><span class="pill">'+esc(x.status)+'</span><p><button onclick="setApplicationStatus(\''+x.id+'\',\'Shortlisted\')">Shortlist</button><button class="danger" onclick="setApplicationStatus(\''+x.id+'\',\'Rejected\')">Reject</button><button class="primary" onclick="setApplicationStatus(\''+x.id+'\',\'Accepted\')">Accept</button></p></div>').join(''):'<p class="muted">No applications yet.</p>')}
+if(page==='applications'&&me.role==='worker'){let a=d.apps.filter(x=>x.worker===me.id||x.workerId===me.id);el.innerHTML='<h3>My Applications</h3>'+(a.length?a.map(x=>'<div class="item"><b>'+esc(x.title)+'</b><p>'+esc(x.company)+' • '+esc(x.city)+'</p><span class="pill">'+esc(x.status)+'</span></div>').join(''):'<p class="muted">No applications yet.</p>')}
+if(page==='booking'&&me.role==='customer'){el.innerHTML='<div class="card"><h3>ಸ್ಥಳೀಯ Worker ಬುಕ್ ಮಾಡಿ</h3><p class="muted">ಮನೆ, ಅಂಗಡಿ, ಕಚೇರಿ, ಶಿಫ್ಟಿಂಗ್ ಅಥವಾ ಕಾರ್ಯಕ್ರಮಗಳಿಗೆ Hourly / Daily booking.</p><form id="bf"><div class="field"><label>ಯಾವ ಕೆಲಸಕ್ಕೆ Worker ಬೇಕು?</label><select id="bc"><option>House Cleaning</option><option>Loading / Unloading</option><option>Shifting Helper</option><option>Shop Helper</option><option>Office Helper</option><option>Event Staff</option><option>Kitchen Helper</option><option>Driver</option><option>Gardening</option><option>Other</option></select></div><div class="field"><label>Booking Type</label><select id="btype"><option>Hourly</option><option>Daily</option></select></div><div class="field"><label>ಎಷ್ಟು Workers ಬೇಕು?</label><input id="bn" type="number" min="1" max="50" value="1" required></div><div class="field"><label>ಕೆಲಸದ ಸ್ಥಳ / Area</label><input id="bl" placeholder="ಉದಾ: Peenya 2nd Stage, Bengaluru" required></div><div class="field"><label>ದಿನಾಂಕ</label><input id="bd" type="date" required></div><div class="field"><label>ಸಮಯ / ಗಂಟೆಗಳು</label><input id="bt" required placeholder="ಉದಾ: 10 AM–2 PM ಅಥವಾ 8 hours"></div><div class="field"><label>ಕೆಲಸದ ಫೋಟೋ (ಐಚ್ಛಿಕ)</label><input id="bookingWorkPhoto" type="file" accept="image/*"></div><div class="field"><label>ನಿಮ್ಮ Budget / Payment</label><input id="bp" placeholder="ಉದಾ: ₹150 per hour ಅಥವಾ ₹700 per day" required></div><div class="field"><label>Contact Mobile</label><input id="bmobile" value="'+esc(me.mobile||'')+'" maxlength="10" required></div><div class="field"><label>ಹೆಚ್ಚುವರಿ ವಿವರ</label><textarea id="bnote" placeholder="ಕೆಲಸದ ವಿವರ, ಬೇಕಾದ ಅನುಭವ ಇತ್ಯಾದಿ"></textarea></div><button class="primary">Worker Booking Request ಕಳುಹಿಸಿ</button></form><p class="muted">Post ಮಾಡಿದ ತಕ್ಷಣ ಕೆಲಸ Nearby Captain / Workers ಗೆ ಕಾಣುತ್ತದೆ. Admin Approval ಬೇಡ. ಮೊದಲು Accept ಮಾಡುವ Worker ಗೆ ಕೆಲಸ ಸ್ವಯಂಚಾಲಿತವಾಗಿ Confirm ಆಗುತ್ತದೆ.</p></div>';const bookingForm=document.getElementById('bf');if(bookingForm)bookingForm.onsubmit=async e=>{e.preventDefault();const bookingUser=me;if(!bookingUser||!bookingUser.id||!fbAuth.currentUser||fbAuth.currentUser.uid!==String(bookingUser.id)){alert('ನಿಮ್ಮ Login Session ಮುಗಿದಿದೆ. ಮತ್ತೆ Login ಮಾಡಿ Booking ಸಲ್ಲಿಸಿ.');return}const id=uid(),geo=await captureRequestLocation();let workPhotoURL='';const workFile=document.getElementById('bookingWorkPhoto').files[0];if(workFile){if(!workFile.type.startsWith('image/')||workFile.size>4*1024*1024){alert('ಕೆಲಸದ ಫೋಟೋ 4 MB ಒಳಗಿನ Image ಆಗಿರಲಿ.');return}const photoRef=fbStorage.ref('customerBookings/'+bookingUser.id+'/'+id+'.jpg');await photoRef.put(workFile,{contentType:workFile.type});workPhotoURL=await photoRef.getDownloadURL()}const selectedWorkerId=localStorage.getItem('nex_selected_worker')||'';const x={...geo,id,selectedWorkerId,workPhotoURL,requesterId:bookingUser.id,requesterName:bookingUser.name,requesterMobilePrefix:String(document.getElementById('bmobile').value||bookingUser.mobile||'').replace(/\D/g,'').slice(0,4),requesterContactHidden:true, /* only first 4 digits are shared with workers; full number stays private */ requesterRole:'customer',state:'Karnataka',stateName:'Karnataka',country:'India',category:document.getElementById('bc').value,bookingType:document.getElementById('btype').value,count:Number(document.getElementById('bn').value),location:document.getElementById('bl').value.trim(),date:document.getElementById('bd').value,shift:document.getElementById('bt').value.trim(),pay:document.getElementById('bp').value.trim(),details:document.getElementById('bnote').value.trim(),status:'Pending',visibility:'public',autoPublished:true,publishedAt:firebase.firestore.FieldValue.serverTimestamp(),acceptanceMode:'first-worker-wins',createdAt:firebase.firestore.FieldValue.serverTimestamp(),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{await fbDb.collection('workerBookings').doc(id).set(x);const notified=await notifyNearbyWorkersForBooking(x);alert('ನಿಮ್ಮ ಕೆಲಸ Publish ಆಗಿದೆ. '+notified+' ಹತ್ತಿರದ Online Worker/Captain ಗಳಿಗೆ Notification ಕಳುಹಿಸಲಾಗಿದೆ.'+(notified===0?' GPS ON ಇದೆಯೇ ಮತ್ತು ಹತ್ತಿರದ Workers Online ಇದ್ದಾರೆಯೇ ಪರಿಶೀಲಿಸಿ.':' My Bookings ನಲ್ಲಿ ಸ್ಥಿತಿ ನೋಡಿ.'));go('mybookings')}catch(err){alert('Booking ಕಳುಹಿಸಲು ಆಗಲಿಲ್ಲ: '+authError(err))}}}
+if(page==='mybookings'&&me.role==='worker'){
+ const rows=(d.bookings||[]).filter(b=>(Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))||b.workerId===me.id);
+ el.innerHTML='<h3>ನನ್ನ ಸ್ವೀಕರಿಸಿದ Bookings</h3>'+ (rows.length?rows.map(b=>{
+  const bookedAt=b.createdAt?.toDate?b.createdAt.toDate():b.createdAt?new Date(b.createdAt):null;
+  const completedAt=b.completedAt?.toDate?b.completedAt.toDate():b.completedAt?new Date(b.completedAt):null;
+  const completionLabel=b.status==='Completed'?'ಕೆಲಸ ಪೂರ್ಣಗೊಂಡಿದೆ':b.workerCompletionStatus==='submitted'?'ಕೆಲಸ ಪೂರ್ಣಗೊಳಿಸಲಾಗಿದೆ — Company ದೃಢೀಕರಣ ಬಾಕಿ':'ಕೆಲಸ ನಡೆಯುತ್ತಿದೆ / ಪೂರ್ಣಗೊಳಿಸಿಲ್ಲ';
+   return '<div class="item"><h3>'+esc(b.category||'ಕೆಲಸ')+'</h3><p><b>Booking ಮಾಡಿದವರು:</b> '+esc(b.requesterName||b.companyName||'ಹೆಸರು ಲಭ್ಯವಿಲ್ಲ')+'</p><p><b>Booking ದಿನಾಂಕ:</b> '+(bookedAt&&!isNaN(bookedAt.getTime())?esc(bookedAt.toLocaleString()):esc(b.date||'ದಿನಾಂಕ ಲಭ್ಯವಿಲ್ಲ'))+'</p><p><b>ಕೆಲಸದ ದಿನಾಂಕ:</b> '+esc(b.date||'ನಿಗದಿಯಾಗಿಲ್ಲ')+' • '+esc(b.shift||'ಸಮಯ ನೀಡಿಲ್ಲ')+'</p><p><b>ಸ್ಥಳ:</b> '+esc(b.location||'—')+' • <b>Pay:</b> '+esc(b.pay||'—')+'</p><p><b>ಸ್ಥಿತಿ:</b> <span class="pill">'+esc(b.status||'Pending')+'</span></p><p><b>ಕೆಲಸದ ಪೂರ್ಣತೆ:</b> '+esc(completionLabel)+'</p>'+(completedAt?'<p><b>ಪೂರ್ಣಗೊಂಡ ಸಮಯ:</b> '+esc(completedAt.toLocaleString())+'</p>':'')+'<div class="row" style="gap:8px;flex-wrap:wrap"><button class="primary" type="button" disabled>Booking ಆಗಿದೆ ✓</button>'+(['Confirmed','Partially Filled'].includes(b.status)&&b.workerCompletionStatus!=='submitted'?'<button class="primary" type="button" onclick="workerSubmitCompletion(\''+esc(b.id)+'\')">Work Complete</button>':b.workerCompletionStatus==='submitted'?'<button type="button" disabled>Work Complete — Confirmation Pending</button>':b.status==='Completed'?'<button type="button" disabled>Work Complete ✓</button>':'')+'</div></div>'
+ }).join(''):'<p class="muted">ನೀವು ಇನ್ನೂ ಯಾವುದೇ Booking ಸ್ವೀಕರಿಸಿಲ್ಲ.</p>');
+}
+if(page==='mybookings'&&me.role==='customer'){
+ window.customerCurrentCoords=null;currentDevicePosition().then(p=>{window.customerCurrentCoords=p;document.querySelectorAll('[id^="bookingTrackInfo_"]').forEach(n=>{if(n.dataset.lastLat&&n.dataset.lastLng&&p){const km=distanceKm(p,{lat:Number(n.dataset.lastLat),lng:Number(n.dataset.lastLng)});n.insertAdjacentHTML('beforeend','<br><b>ನಿಮ್ಮಿಂದ Worker ದೂರ: '+km.toFixed(1)+' km</b>')}})});
+ const rows=d.bookings||[];el.innerHTML='<h3>ನನ್ನ Worker Bookings</h3>'+(rows.length?rows.map(x=>'<div class="item"><b>'+esc(x.category)+'</b> • '+esc(x.bookingType||'Daily')+' • '+esc(x.count)+' Worker(s)<p>'+esc(x.location)+' • '+esc(x.date)+' • '+esc(x.pay)+'</p><p>Worker: '+esc(x.workerName||'ಇನ್ನೂ ಒಪ್ಪಿಕೊಂಡಿಲ್ಲ')+' • <span class="pill">'+esc(x.status||'Pending')+'</span></p>'+((x.acceptedWorkerIds|| (x.workerId?[x.workerId]:[])).length?'<div class="locbox"><b>Captain Live Tracking</b><p class="muted">Captain GPS ON ಮಾಡಿದಾಗ ನಕ್ಷೆಯಲ್ಲಿ live location ಕಾಣುತ್ತದೆ.</p><div id="bookingTrack_'+esc(x.id)+'" class="mapcanvas"></div><div id="bookingTrackInfo_'+esc(x.id)+'" class="muted">Captain location ಪಡೆಯಲಾಗುತ್ತಿದೆ…</div></div>':'<p class="muted">Worker Accept ಮಾಡಿದ ನಂತರ Live Tracking ಆರಂಭವಾಗುತ್ತದೆ.</p>')+(x.status==='Confirmed'&&(x.acceptedWorkerIds||(x.workerId?[x.workerId]:[])).length===1?'<p><button class="primary" onclick="payCustomerWorker(&quot;'+esc(x.id)+'&quot;)">Pay Worker Directly via UPI</button></p>':'')+(x.status==='Pending'||x.status==='Confirmed'?'<p><button class="danger" onclick="cancelCustomerBooking(&quot;'+esc(x.id)+'&quot;)">Cancel Booking</button><button onclick="rescheduleCustomerBooking(&quot;'+esc(x.id)+'&quot;)">Reschedule</button></p>':'')+'<p><button class="primary" onclick="repeatCustomerBooking(&quot;'+esc(x.id)+'&quot;)">↻ Repeat Booking</button> '+(x.isRepeatBooking?'<span class="pill">LOYALTY • REPEAT</span>':'')+'</p>'+(x.cancellationRisk==='REVIEW_REQUIRED'?'<p class="notice">Admin ಪರಿಶೀಲನೆಗೆ ಕಳುಹಿಸಲಾಗಿದೆ.</p>':'')+'</div>').join(''):'<p class="muted">ಇನ್ನೂ Booking ಇಲ್ಲ.</p>');
+ rows.forEach(b=>{const ids=b.acceptedWorkerIds||(b.workerId?[b.workerId]:[]);ids.forEach(wid=>{fbDb.collection('workerBookings').doc(String(b.id)).collection('tracking').doc(String(wid)).onSnapshot(snap=>{const info=document.getElementById('bookingTrackInfo_'+b.id),mapEl=document.getElementById('bookingTrack_'+b.id);if(!info||!mapEl)return;if(!snap.exists||!snap.data().sharing){info.textContent='Captain GPS ಇನ್ನೂ ON ಆಗಿಲ್ಲ.';return}const t=snap.data();info.dataset.lastLat=String(t.lat);info.dataset.lastLng=String(t.lng);const customerKm=window.customerCurrentCoords&&hasValidCoordinates(t.lat,t.lng)?distanceKm(window.customerCurrentCoords,{lat:Number(t.lat),lng:Number(t.lng)}):null;info.innerHTML='<b>'+esc(t.workerName||'Captain')+'</b> • Accuracy '+esc(t.accuracy||'—')+' m • '+(t.updatedAt?.toDate?t.updatedAt.toDate().toLocaleTimeString():'Updating')+(customerKm===null?'':'<br><b>ನಿಮ್ಮಿಂದ Worker ದೂರ: '+customerKm.toFixed(1)+' km</b>')+'<br><a class="maplink" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+t.lat+','+t.lng+'">Open Live Location</a>';if(window.L){let map=window.bookingTrackMaps?.[b.id];if(!map){window.bookingTrackMaps=window.bookingTrackMaps||{};map=L.map(mapEl).setView([t.lat,t.lng],16);window.bookingTrackMaps[b.id]=map;const tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap',errorTileUrl:''}).addTo(map);let tileErrors=0;tiles.on('tileerror',()=>{tileErrors++;if(tileErrors>=3&&mapEl&&!mapEl.dataset.tileError){mapEl.dataset.tileError='1';const msg=document.createElement('div');msg.className='locbox';msg.textContent='Map tiles load ಆಗುತ್ತಿಲ್ಲ. Internet connection ಪರಿಶೀಲಿಸಿ; ಕೆಳಗಿನ Distance ಮಾಹಿತಿ ಪ್ರತ್ಯೇಕವಾಗಿ ಲಭ್ಯವಿರಬಹುದು.';mapEl.appendChild(msg)}});window.bookingTrackMarkers=window.bookingTrackMarkers||{};window.bookingTrackMarkers[b.id]=L.marker([t.lat,t.lng]).addTo(map)}else{map.setView([t.lat,t.lng],16);window.bookingTrackMarkers[b.id]?.setLatLng([t.lat,t.lng])}}})})})
+}
+if(page==='booking'&&me.role==='company'){el.innerHTML='<div class="card"><h3>Request Workers</h3><p class="muted">Create a manpower request for your company. Your request is saved to your account.</p><form id="bf"><div class="field"><label>Worker category</label><select id="bc"><option>General Helper</option><option>Housekeeping</option><option>Security Staff</option><option>Loading & Unloading</option><option>Factory Worker</option><option>Warehouse Staff</option><option>Event Staff</option><option>Driver</option></select></div><div class="field"><label>Booking / Work Period</label><select id="btype"><option value="Daily">Daily</option><option value="Hourly">Hourly</option><option value="Monthly">Monthly</option></select></div><div class="field"><label>Number of workers</label><input id="bn" type="number" min="1" max="500" value="1" required></div><div class="field"><label>Duration (months, for Monthly)</label><input id="bmonths" type="number" min="1" max="24" value="1"></div><div class="field"><label>Work location</label><input id="bl" value="'+esc(me.city)+'" required></div><div class="field"><label>Required date</label><input id="bd" type="date" required></div><div class="field"><label>Shift / timing</label><input id="bt" placeholder="e.g. 9 AM – 6 PM"></div><div class="field"><label>Payment offered</label><input id="bp" placeholder="e.g. ₹700 per day"></div><div class="field"><label>Additional details</label><textarea id="bnote" placeholder="Skills, uniform, experience, etc."></textarea></div><button class="primary">Submit Worker Request</button></form></div><h3>My Worker Requests</h3>'+(d.bookings.filter(b=>b.companyId===me.id).map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.count)+' workers • '+esc(b.location)+'<p>'+esc(b.bookingType||'Daily')+(b.bookingType==='Monthly'?' • '+esc(b.durationMonths||1)+' month(s)':'')+' • '+esc(b.date)+' • '+esc(b.status||'Pending')+'</p>'+'<p>Workers Accepted: '+esc(b.acceptedCount|| (b.workerId?1:0))+' / '+esc(b.count||1)+'</p>'+(Array.isArray(b.acceptedWorkers)&&b.acceptedWorkers.length?'<p><b>Accepted Workers:</b> '+b.acceptedWorkers.map(w=>esc(w.workerName||w.workerId||'Worker')).join(', ')+'</p>':'')+'<p class="muted">Status: '+esc(b.status||'Pending')+'</p>'+(b.status==='Confirmed'?'<p>Worker ಸ್ವೀಕರಿಸಿದ ತಕ್ಷಣ ಕೆಲಸ Confirm ಆಗಿದೆ.</p>':'')+((b.acceptedWorkerIds||(b.workerId?[b.workerId]:[])).length?'<div class="locbox"><b>Accepted Workers • Live GPS</b>'+((b.acceptedWorkerIds||(b.workerId?[b.workerId]:[])).map(wid=>'<p id="companyTrack_'+esc(b.id)+'_'+esc(wid)+'">'+esc((b.acceptedWorkers||[]).find(w=>w.workerId===wid)?.workerName||wid)+' • GPS waiting…</p>').join(''))+'</div>':'')+'</div>').join('')||'<p class="muted">No requests yet.</p>');watchCompanyBookingTracking(d.bookings);const bookingForm=document.getElementById('bf');if(bookingForm)bookingForm.onsubmit=async e=>{e.preventDefault();const type=document.getElementById('btype').value;const months=type==='Monthly'?Number(document.getElementById('bmonths').value):0;const geo=await captureRequestLocation();const x={...geo,companyId:me.id,companyName:me.name,state:'Karnataka',stateName:'Karnataka',country:'India',category:document.getElementById('bc').value,count:Number(document.getElementById('bn').value),bookingType:type,durationMonths:months,location:document.getElementById('bl').value.trim(),date:document.getElementById('bd').value,shift:document.getElementById('bt').value.trim(),pay:document.getElementById('bp').value.trim(),details:document.getElementById('bnote').value.trim(),status:'Pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await fbDb.collection('workerBookings').add(x);alert('Worker request submitted successfully.');}catch(err){alert('Request submit ಆಗಲಿಲ್ಲ: '+authError(err))}}}
+if(page==='requests'&&me.role==='worker'){
+ const mine=d.bookings||[];const pendingMine=mine.filter(b=>['Pending','Partially Filled'].includes(String(b.status||''))&&(String(b.workerId||'')===String(me.id)||Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id)));const mergedRows=[...(d.openBookings||[]),...pendingMine];const seenBookingIds=new Set();const baseRows=mergedRows.filter(b=>{const id=String(b.id||'');if(!id||seenBookingIds.has(id))return false;seenBookingIds.add(id);return true}).map(b=>({...b,_distance:null}));
+ const online=me.availability==='available';
+ el.innerHTML='<div class="row"><div><h3>Captain Home • Nearby Work</h3><span id="captainAvailabilityBadge" class="pill">'+(online?'ONLINE':'OFFLINE')+'</span></div><div class="row" style="gap:8px;flex-wrap:wrap"><button id="captainOnlineButton" class="primary" type="button" onclick="setCaptainAvailability(true)" '+(online?'disabled':'')+'>ONLINE</button><button id="captainOfflineButton" class="danger" type="button" onclick="setCaptainAvailability(false)" '+(!online?'disabled':'')+'>OFFLINE</button></div></div><p class="muted">HireHub ನಲ್ಲಿ: Online ಮಾಡಿದಾಗ ಮಾತ್ರ ನಿಮ್ಮ GPS ಹಂಚಿಕೆ ಆರಂಭವಾಗುತ್ತದೆ. Request ನೋಡಿ, Accept ಮಾಡಿ, ಕೆಲಸದ ಸ್ಥಳಕ್ಕೆ ತೆರಳಿ. Privacy ಗಾಗಿ Offline ಮಾಡಿದಾಗ GPS ನಿಲ್ಲುತ್ತದೆ.</p><p class="muted">ಕರ್ನಾಟಕದ ಎಲ್ಲಾ ಜಿಲ್ಲೆ, ತಾಲ್ಲೂಕು, ನಗರ, ಪಟ್ಟಣ ಮತ್ತು ಗ್ರಾಮಗಳಿಂದ ಬಂದ Pending Bookings ಇಲ್ಲಿ ಲಭ್ಯ. ನಿಮ್ಮ GPS ON ಇದ್ದರೆ ಕೆಲಸದ ಸ್ಥಳದಿಂದ KM ದೂರವೂ ಕಾಣುತ್ತದೆ.</p><div class="field"><label>Search radius</label><select id="requestRadius" onchange="drawNearbyWorkRequests()"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="1000" selected>All available</option></select></div><div id="requestMap" class="mapcanvas"></div><div id="nearbyRequestList"></div><h3>My Accepted Work</h3><div id="acceptedWorkList">'+(mine.length?mine.map(b=>'<div class="item"><b>'+esc(b.category)+'</b> • '+esc(b.location)+'<p><b>Booking ಮಾಡಿದವರು:</b> '+esc(b.requesterName||b.companyName||'ಹೆಸರು ಲಭ್ಯವಿಲ್ಲ')+' ('+esc(b.requesterRole==='company'?'Company / HR':b.requesterRole==='customer'?'Customer':'Booking requester')+')</p><p>Booking ID: '+esc(b.id)+' • '+esc(b.date||'ದಿನಾಂಕ ನೀಡಿಲ್ಲ')+' • '+esc(Number(b.acceptedCount??(Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds.length:0)))+' / '+esc(b.count||1)+' Workers • <span class="pill">'+esc(b.status||'Pending')+'</span></p><p>Shift: '+esc(b.shift||'—')+' • Pay: '+esc(b.pay||'—')+'</p>'+'<p>'+(hasValidCoordinates(b.requestLat,b.requestLng)&&getMyWorkerCoords()?workerDistanceKm(getMyWorkerCoords(),{lat:Number(b.requestLat),lng:Number(b.requestLng)}).toFixed(1)+' km ದೂರ':'KM ದೂರ ಪಡೆಯಲು GPS Refresh ಮಾಡಿ')+'</p>'+((['Pending','Partially Filled'].includes(String(b.status||''))&&!(Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))&&String(b.workerId||'')!==String(me.id))?'<button class="primary" onclick="acceptWorkerRequest(&quot;'+String(b.id).replace(/"/g,'')+'&quot;)">Accept Work</button>':'')+'</div>').join(''):'<p class="muted">ಇನ್ನೂ ಕೆಲಸ ಸ್ವೀಕರಿಸಿಲ್ಲ.</p>')+'</div>';
+ window.nearbyWorkRows=baseRows;
+ drawNearbyWorkRequests();
+ // Resolve the device GPS and each booking address independently. Address pins remain
+ // visible even when the worker has not granted GPS; KM distance needs both points.
+ (async()=>{
+  let workerPoint=null;
+  try{
+   const coords=await captureRequestLocation();
+   if(hasValidCoordinates(coords.requestLat,coords.requestLng))workerPoint={lat:Number(coords.requestLat),lng:Number(coords.requestLng)};
+  }catch(err){console.warn('Fresh worker GPS unavailable; checking saved live GPS',err)}
+  if(!workerPoint)workerPoint=getMyWorkerCoords();
+  if(workerPoint)window.workerCurrentCoords=workerPoint;
+  const hasWorkerGPS=!!workerPoint&&hasValidCoordinates(workerPoint.lat,workerPoint.lng);
+  const rows=window.nearbyWorkRows||[];
+  for(let i=0;i<rows.length;i++){
+   const b=rows[i];
+   try{
+    if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){
+     const point=await geocodeBookingLocation(b.location);
+     if(point){b.requestLat=point.lat;b.requestLng=point.lng;b._distancePrecision=point.precision||'approximate';b._matchedLocation=point.matchedName||''}
+    }
+    b._distance=hasWorkerGPS&&hasValidCoordinates(b.requestLat,b.requestLng)
+     ?workerDistanceKm(workerPoint,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null;
+   }catch(rowError){console.warn('Distance calculation failed for booking',b.id,rowError);b._distance=null}
+  }
+  window.nearbyWorkRows=rows.sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);
+  await drawNearbyWorkRequests();
+  if(!hasWorkerGPS){
+   const note=document.getElementById('nearbyRequestList');
+   if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">ದೂರ (KM) ಲೆಕ್ಕಿಸಲು GPS ON ಮಾಡಿ ಮತ್ತು Location Permission Allow ಮಾಡಿ. ಈಗಾಗಲೇ ಹಂಚಿಕೊಂಡಿರುವ Worker GPS ಇದ್ದರೆ ಅದನ್ನೂ ಬಳಸಲಾಗುತ್ತದೆ.</p>');
+  }
+ })().catch(err=>{console.error('Worker GPS/address resolution failed',err);const note=document.getElementById('nearbyRequestList');if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">Distance ಲೆಕ್ಕಾಚಾರದಲ್ಲಿ ತಾತ್ಕಾಲಿಕ ದೋಷ. ಪುಟ Refresh ಮಾಡಿ.</p>')});
+}
+if(page==='liveworkers'){renderCompanyLocations(el)}
+if(page==='companylocation'){renderCompanyLocationSelf(el)}
+if(page==='nearbycompanies'){renderNearbyCompanies(el)}
+if(page==='notifications'){const notes=(db().notifications||[]).slice().reverse();el.innerHTML='<h3>Notifications</h3><div class="card"><b>In-App Notifications</b><p class="muted">Booking ಮತ್ತು Work Complete updates ಈ ವಿಭಾಗದಲ್ಲಿ ತಕ್ಷಣ ಕಾಣಿಸುತ್ತವೆ. App ಒಳಗೆ live update ಆಗುತ್ತದೆ.</p></div>'+(notes.length?notes.map(n=>{const isRead=n.audience==='admins'?(n.readBy||[]).includes(me.id):!!n.read;return '<div class="item"><div class="row"><b>'+esc(n.title||'Update')+'</b><span class="pill">'+(isRead?'Read':'New')+'</span></div><p>'+esc(n.message||'')+'</p><small class="muted">'+esc(n.createdAt?new Date(n.createdAt).toLocaleString():'Just now')+'</small>'+(isRead?'':' <button onclick="markNotificationRead(&quot;'+String(n.id).replace(/"/g,'')+'&quot;)">Mark read</button>')+'</div>'}).join(''):'<p class="muted">ಇನ್ನೂ Notifications ಇಲ್ಲ.</p>')}
+
+if(page==='ratings'){
+ el.innerHTML='<div class="card"><h3>My Ratings</h3><p class="muted">Completed booking ನಂತರ ಗ್ರಾಹಕರು ನೀಡಿದ rating ಮಾತ್ರ ಇಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</p><div id="workerRatingSummary">Loading ratings…</div><div id="workerReviewList"></div></div>';
+ fbDb.collection('workerReviews').where('workerId','==',me.id).limit(100).get().then(q=>{const rows=q.docs.map(d=>d.data());const avg=rows.length?rows.reduce((a,x)=>a+Math.max(0,Math.min(5,Number(x.rating)||0)),0)/rows.length:0;const box=document.getElementById('workerRatingSummary');if(box)box.innerHTML='<h2>'+avg.toFixed(1)+' ★</h2><b>'+rows.length+' Reviews</b><p>'+[5,4,3,2,1].map(n=>n+'★ : '+rows.filter(x=>Math.round(Number(x.rating))===n).length).join(' · ')+'</p>';const list=document.getElementById('workerReviewList');if(list)list.innerHTML=rows.length?rows.map(x=>'<div class="item"><b>'+esc(x.customerName||'Customer')+'</b> • '+Number(x.rating||0)+' ★<p>'+esc(x.comment||'')+'</p><small class="muted">Verified booking review</small></div>').join(''):'ಇನ್ನೂ Reviews ಇಲ್ಲ.'}).catch(e=>{const box=document.getElementById('workerRatingSummary');if(box)box.textContent='Ratings ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message});
+}
+if(page==='support'){
+ el.innerHTML='<div class="card"><h3>Worker Help & Customer Care</h3><p>ತುರ್ತು ಪರಿಸ್ಥಿತಿಯಲ್ಲಿ ಸ್ಥಳೀಯ ತುರ್ತು ಸೇವೆ ಸಂಪರ್ಕಿಸಿ.</p><a class="primary" href="tel:112">Emergency Call 112</a><form id="workerSupportForm"><div class="field"><label>Problem Type</label><select id="supportType" required><option value="">Select problem</option><option>Booking issue</option><option>Payment issue</option><option>App / Login issue</option><option>Profile / Verification</option><option>Safety concern</option><option>Other</option></select></div><div class="field"><label>Complaint Details</label><textarea id="supportMessage" required maxlength="1500"></textarea></div><div class="field"><label>Photo (optional)</label><input id="supportPhoto" type="file" accept="image/*"></div><button class="primary" type="submit" id="supportSubmit">Submit Complaint</button><p id="supportStatus" class="muted"></p></form><h3>My Complaints</h3><div id="mySupportTickets">Loading…</div></div>';
+ const workerSupportForm=document.getElementById('workerSupportForm');if(workerSupportForm)workerSupportForm.onsubmit=async ev=>{ev.preventDefault();const btn=document.getElementById('supportSubmit'),status=document.getElementById('supportStatus');btn.disabled=true;status.textContent='Submitting…';try{let photoURL='';const file=document.getElementById('supportPhoto').files[0];if(file){if(file.size>3*1024*1024||!file.type.startsWith('image/'))throw new Error('Image 3 MB ಗಿಂತ ಕಡಿಮೆ ಇರಲಿ.');const ref=fbStorage.ref('workerAssets/'+me.id+'/complaints/'+Date.now());await ref.put(file,{contentType:file.type});photoURL=await ref.getDownloadURL()}const data={workerId:me.id,workerName:me.name||'Worker',type:document.getElementById('supportType').value,message:document.getElementById('supportMessage').value.trim(),photoURL,status:'Open',createdAt:firebase.firestore.FieldValue.serverTimestamp()};const doc=await fbDb.collection('workerSupportTickets').add(data);status.textContent='Complaint ಸಲ್ಲಿಸಲಾಗಿದೆ. Ticket ID: '+doc.id;document.getElementById('workerSupportForm').reset();loadMyWorkerTickets()}catch(e){status.textContent='ಸಲ್ಲಿಸಲು ಆಗಲಿಲ್ಲ: '+(e.code||e.message)}finally{btn.disabled=false}};
+ loadMyWorkerTickets();
+}
+if(page==='settings'){
+ el.innerHTML='<div class="card"><h3>Worker Settings</h3><label><input type="checkbox" id="settingNotifications" '+(me.notificationsEnabled===false?'':'checked')+'> Notifications ON</label><label><input type="checkbox" id="settingSound" '+(me.soundEnabled===false?'':'checked')+'> Sound ON</label><label><input type="checkbox" id="settingHidePhone" '+(me.hidePhone===true?'checked':'')+'> Hide my mobile number</label><label><input type="checkbox" id="settingAutoOnline" '+(me.autoOnline===false||me.availability==='unavailable'?'':'checked')+'> Automatically Online when app opens</label><p id="autoOnlineStatus" class="muted">App ತೆರೆಯುವಾಗ GPS ಅನುಮತಿಯೊಂದಿಗೆ Online ಆಗುತ್ತದೆ.</p><div class="field"><label>Language</label><select id="settingLanguage"><option>English</option><option>ಕನ್ನಡ</option><option>हिन्दी</option><option>తెలుగు</option><option>தமிழ்</option></select></div><button class="primary" id="saveWorkerSettings">Save Settings</button><p id="settingsStatus" class="muted"></p><p>App Version: NEXVADORAQ HireHub</p><p><a href="https://ashok16-cell.github.io/Nexvador/terms.html" target="_blank" rel="noopener">Terms & Conditions</a></p><button class="danger" onclick="logout()">Logout</button><p class="muted">Mobile number change with OTP, PIN reset ಮತ್ತು account deletion ಗೆ secure authentication workflow ಇನ್ನೂ ಬೇಕು.</p></div>';
+ document.getElementById('settingLanguage').value=me.language||'English';
+ document.getElementById('saveWorkerSettings').onclick=async()=>{const b=document.getElementById('saveWorkerSettings'),st=document.getElementById('settingsStatus');b.disabled=true;try{const patch={notificationsEnabled:document.getElementById('settingNotifications').checked,soundEnabled:document.getElementById('settingSound').checked,hidePhone:document.getElementById('settingHidePhone').checked,autoOnline:document.getElementById('settingAutoOnline').checked,availability:document.getElementById('settingAutoOnline').checked?'available':'unavailable',language:document.getElementById('settingLanguage').value,updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await fbDb.collection('users').doc(me.id).update(patch);Object.assign(me,patch);if(!patch.autoOnline&&locationWatchId!==null)await stopWorkerLocation();else if(patch.autoOnline&&locationWatchId===null)await activateWorkerAutoOnline();st.textContent='Settings ಉಳಿಸಲಾಗಿದೆ.'}catch(e){st.textContent='ಉಳಿಸಲಾಗಲಿಲ್ಲ: '+(e.code||e.message)}finally{b.disabled=false}};
+}
+
+if(page==='profile'){const p=me;el.innerHTML='<div class="card"><div class="row"><h3>My Profile</h3><button type="button" class="primary" id="enableProfileEdit">Edit Profile</button></div><div class="row"><img class="profile-photo" id="profilePhoto" src="'+esc(p.photoURL||'https://placehold.co/120x120?text=Photo')+'"><div style="flex:1"><b>'+esc(p.name||'')+'</b><p class="muted">'+esc(p.role||'')+'</p><small class="muted">Your User ID Number: <b id="myHireHubUserId">'+esc((p.role==='worker'?(p.workerId||p.displayId):p.displayId)||p.id||'')+'</b></small><button type="button" onclick="copyHireHubUserId()">Copy User ID</button></div></div><div class="field"><label>Profile Photo (Camera / Gallery)</label><input id="photoInput" type="file" accept="image/*" capture="user"></div><form id="profileEditForm"><div class="field"><label>Full Name / Company Name</label><input id="editName" required maxlength="100" value="'+esc(p.name||'')+'" disabled></div><div class="field"><label>Email (login email)</label><input value="'+esc(p.email||'')+'" disabled></div><div class="field"><label>Mobile</label><input id="editMobile" inputmode="numeric" maxlength="15" value="'+esc(p.mobile||p.phone||'')+'" disabled></div><div class="field"><label>City</label><input id="editCity" required maxlength="80" value="'+esc(p.city||'')+'" disabled></div><div class="field"><label>State</label><input id="editState" maxlength="80" value="'+esc(p.state||'')+'" disabled></div>'+(p.role==='worker'?'<h3>Personal Details</h3><div class="grid"><div class="field"><label>Age (18+)</label><input id="editAge" type="number" min="18" max="80" value="'+esc(p.age||'')+'" disabled></div><div class="field"><label>Gender</label><select id="editGender" disabled><option value="">Select</option><option '+(p.gender==='Male'?'selected':'')+'>Male</option><option '+(p.gender==='Female'?'selected':'')+'>Female</option><option '+(p.gender==='Other'?'selected':'')+'>Other</option></select></div></div><div class="field"><label>Town / Area</label><input id="editArea" maxlength="100" value="'+esc(p.area||'')+'" disabled></div><div class="field"><label>Pincode</label><input id="editPincode" inputmode="numeric" maxlength="6" value="'+esc(p.pincode||'')+'" disabled></div><div class="field"><label>Full Address</label><textarea id="editAddress" maxlength="300" disabled>'+esc(p.address||'')+'</textarea></div><div class="field"><label>Emergency Contact Number</label><input id="editEmergency" inputmode="numeric" maxlength="15" value="'+esc(p.emergencyContact||'')+'" disabled></div><div class="field"><label>Aadhaar Last 4 Digits (optional)</label><input id="editAadhaarLast4" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" value="'+esc(p.aadhaarLast4||'')+'" disabled><small class="muted">ಪೂರ್ಣ Aadhaar ಸಂಖ್ಯೆ ಅಥವಾ Aadhaar ಫೋಟೋ ಇಲ್ಲಿ ಹಾಕಬೇಡಿ.</small></div>':'<h3>Customer Details</h3><div class="grid"><div class="field"><label>Age</label><input id="editAge" type="number" min="18" max="100" value="'+esc(p.age||'')+'" disabled></div><div class="field"><label>Gender</label><select id="editGender" disabled><option value="">Select</option><option '+(p.gender==='Male'?'selected':'')+'>Male</option><option '+(p.gender==='Female'?'selected':'')+'>Female</option><option '+(p.gender==='Other'?'selected':'')+'>Other</option></select></div></div><div class="field"><label>Town / Area</label><input id="editArea" maxlength="100" value="'+esc(p.area||'')+'" disabled></div><div class="field"><label>Pincode</label><input id="editPincode" inputmode="numeric" maxlength="6" value="'+esc(p.pincode||'')+'" disabled></div><div class="field"><label>Full Address</label><textarea id="editAddress" maxlength="300" disabled>'+esc(p.address||'')+'</textarea></div><div class="field"><label>Emergency Contact Number</label><input id="editEmergency" inputmode="numeric" maxlength="15" value="'+esc(p.emergencyContact||'')+'" disabled></div>')+'<div class="field"><label>About / Company Description</label><textarea id="editAbout" maxlength="500" disabled>'+esc(p.about||'')+'</textarea></div><div class="field"><label>Skills / Services</label><input id="editSkills" maxlength="250" value="'+esc(Array.isArray(p.skills)?p.skills.join(', '):(p.skills||''))+'" placeholder="e.g. Security, Housekeeping, Driver" disabled></div><div class="field"><label>Experience</label><input id="editExperience" maxlength="80" value="'+esc(p.experience||'')+'" placeholder="e.g. 3 years" disabled></div><div class="field"><label>Work Preference</label><input id="editPreference" maxlength="120" value="'+esc(p.preference||'')+'" disabled></div>'+(p.role==='worker'?'<h3>Worker Skill Card</h3><div class="field"><label>Main Skill</label><select id="editMainSkill" disabled><option value="">Select main skill</option>'+['Plumber','Electrician','Mason','Painter','Carpenter','Driver','Cook','Cleaning','Helper','Welder','AC Technician'].map(x=>'<option '+(p.mainSkill===x?'selected':'')+' value="'+x+'">'+x+'</option>').join('')+'</select></div><div class="field"><label>Second Skill</label><input id="editSecondSkill" maxlength="80" value="'+esc(p.secondSkill||'')+'" placeholder="Optional" disabled></div><div class="field"><label>Daily Wage (₹)</label><input id="editDailyWage" type="number" min="0" max="100000" value="'+esc(p.dailyWage||'')+'" disabled></div><div class="field"><label>Hourly Rate (₹)</label><input id="editHourlyRate" type="number" min="0" max="10000" value="'+esc(p.hourlyRate||'')+'" disabled></div><div class="field"><label>ನಿಮ್ಮ UPI ID (Customer ನೇರವಾಗಿ ನಿಮಗೆ ಪಾವತಿಸಲು)</label><input id="editUpiId" type="text" maxlength="100" value="'+esc(p.upiId||'')+'" placeholder="ಉದಾ: name@okaxis" disabled><small class="muted">ನಿಮ್ಮದೇ UPI ID ಮಾತ್ರ ನಮೂದಿಸಿ. PIN / OTP ಎಂದಿಗೂ ಹಂಚಬೇಡಿ.</small></div><div class="field"><label>Working Days</label><input id="editWorkingDays" maxlength="80" value="'+esc(p.workingDays||'')+'" placeholder="e.g. Mon-Sat" disabled></div><div class="field"><label>Working Time</label><input id="editWorkingTime" maxlength="80" value="'+esc(p.workingTime||'')+'" placeholder="e.g. 9 AM - 6 PM" disabled></div><div class="field"><label>Work Range (km)</label><input id="editWorkRange" type="number" min="1" max="200" value="'+esc(p.workRange||'')+'" disabled></div><div class="field"><label>Availability</label><select id="editAvailability" disabled><option value="available" '+(p.availability==='available'?'selected':'')+'>Available for work</option><option value="busy" '+(p.availability==='busy'?'selected':'')+'>Busy</option><option value="unavailable" '+(p.availability==='unavailable'?'selected':'')+'>Not available</option></select></div>':'')+'<button class="primary" id="saveProfileChanges" type="submit" disabled>Save Profile Changes</button><p id="profileEditStatus" class="muted" role="status" aria-live="polite">ವಿವರ ಬದಲಾಯಿಸಲು Edit Profile ಒತ್ತಿ.</p></form></div>';document.getElementById('enableProfileEdit').onclick=()=>{['editName','editMobile','editCity','editState','editAge','editGender','editArea','editPincode','editAddress','editEmergency','editAadhaarLast4','editAbout','editSkills','editExperience','editPreference','editMainSkill','editSecondSkill','editDailyWage','editHourlyRate','editUpiId','editWorkingDays','editWorkingTime','editWorkRange','editAvailability'].forEach(id=>{const field=document.getElementById(id);if(field)field.disabled=false});document.getElementById('saveProfileChanges').disabled=false;document.getElementById('enableProfileEdit').disabled=true;document.getElementById('profileEditStatus').textContent='ಈಗ ವಿವರಗಳನ್ನು ಬದಲಾಯಿಸಿ Save Profile Changes ಒತ್ತಿ.'};const profileEditForm=document.getElementById('profileEditForm');if(profileEditForm)profileEditForm.onsubmit=async ev=>{ev.preventDefault();const status=document.getElementById('profileEditStatus');const saveButton=document.getElementById('saveProfileChanges');saveButton.disabled=true;status.textContent='Firebase ಗೆ ಉಳಿಸಲಾಗುತ್ತಿದೆ…';const patch={name:document.getElementById('editName').value.trim(),mobile:document.getElementById('editMobile').value.trim(),phone:document.getElementById('editMobile').value.trim(),city:document.getElementById('editCity').value.trim(),state:document.getElementById('editState').value.trim(),...(me.role==='worker'||me.role==='customer'?{age:Number(document.getElementById('editAge').value||0),gender:document.getElementById('editGender').value,area:document.getElementById('editArea').value.trim(),pincode:document.getElementById('editPincode').value.trim(),address:document.getElementById('editAddress').value.trim(),emergencyContact:document.getElementById('editEmergency').value.trim()}:{}),...(me.role==='worker'?{aadhaarLast4:document.getElementById('editAadhaarLast4').value.trim()}:{}),about:document.getElementById('editAbout').value.trim(),skills:document.getElementById('editSkills').value.split(',').map(x=>x.trim()).filter(Boolean),experience:document.getElementById('editExperience').value.trim(),preference:document.getElementById('editPreference').value.trim(),...(me.role==='worker'?{mainSkill:document.getElementById('editMainSkill').value,secondSkill:document.getElementById('editSecondSkill').value.trim(),dailyWage:Number(document.getElementById('editDailyWage').value||0),hourlyRate:Number(document.getElementById('editHourlyRate').value||0),workingDays:document.getElementById('editWorkingDays').value.trim(),workingTime:document.getElementById('editWorkingTime').value.trim(),workRange:Number(document.getElementById('editWorkRange').value||0),availability:document.getElementById('editAvailability').value,upiId:document.getElementById('editUpiId').value.trim()}:{}),updatedAt:firebase.firestore.FieldValue.serverTimestamp()};try{await fbDb.collection('users').doc(me.id).update(patch);Object.assign(me,patch);if(me.role==='worker'){const pub={userId:me.id,name:me.name,photoURL:me.photoURL||'',state:me.state||'',city:me.city||'',state:me.state||'',area:me.area||'',pincode:me.pincode||'',mainSkill:me.mainSkill||'',secondSkill:me.secondSkill||'',skills:me.skills||[],experience:me.experience||'',dailyWage:me.dailyWage||0,hourlyRate:me.hourlyRate||0,upiId:me.upiId||'',workingDays:me.workingDays||'',workingTime:me.workingTime||'',workRange:me.workRange||0,availability:me.availability||'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()};await fbDb.collection('workerPublicProfiles').doc(me.id).set(pub,{merge:true})}status.textContent='ಯಶಸ್ವಿ! ನಿಮ್ಮ Profile ವಿವರಗಳು Firebase ನಲ್ಲಿ ಉಳಿದಿವೆ.';document.getElementById('welcome').textContent='Welcome, '+me.name;document.getElementById('roleText').textContent=me.role.toUpperCase()+' • '+me.city;document.getElementById('enableProfileEdit').disabled=false;document.getElementById('enableProfileEdit').textContent='Edit Again';['editName','editMobile','editCity','editState','editAge','editGender','editArea','editPincode','editAddress','editEmergency','editAadhaarLast4','editAbout','editSkills','editExperience','editPreference','editMainSkill','editSecondSkill','editDailyWage','editHourlyRate','editUpiId','editWorkingDays','editWorkingTime','editWorkRange','editAvailability'].forEach(id=>{const field=document.getElementById(id);if(field)field.disabled=true})}catch(err){console.error('Profile save failed',err);status.textContent='ಉಳಿಸಲು ಆಗಲಿಲ್ಲ: '+(err.code||err.message)+' — Internet/Firebase Rules ಪರಿಶೀಲಿಸಿ.';saveButton.disabled=false}};document.getElementById('photoInput').onchange=ev=>{const file=ev.target.files[0];if(!file)return;const img=new Image(),url=URL.createObjectURL(file);img.onload=async()=>{const c=document.createElement('canvas'),scale=Math.min(1,360/Math.max(img.width,img.height));c.width=Math.round(img.width*scale);c.height=Math.round(img.height*scale);c.getContext('2d').drawImage(img,0,0,c.width,c.height);const data=c.toDataURL('image/jpeg',.72);try{const blob=await(await fetch(data)).blob();const ref=fbStorage.ref('profilePhotos/'+me.id+'/profile.jpg');await ref.put(blob,{contentType:'image/jpeg'});const photoURL=await ref.getDownloadURL();await fbDb.collection('users').doc(me.id).update({photoURL,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});me.photoURL=photoURL;document.getElementById('profilePhoto').src=photoURL;document.getElementById('photoStatus')&&(document.getElementById('photoStatus').textContent='Photo updated')}catch(err){document.getElementById('profileEditStatus').textContent='Photo upload failed: '+err.message}URL.revokeObjectURL(url)};img.src=url}}}
+
+
+
+async function loadMyWorkerTickets(){const box=document.getElementById('mySupportTickets');if(!box)return;try{const q=await fbDb.collection('workerSupportTickets').where('workerId','==',me.id).limit(30).get();box.innerHTML=q.empty?'ಇನ್ನೂ ಯಾವುದೇ Complaint ಇಲ್ಲ.':q.docs.map(d=>{const x=d.data();return '<div class="item"><b>'+esc(x.type||'Support')+'</b><p>'+esc(x.message||'')+'</p><span class="pill">'+esc(x.status||'Open')+'</span><small class="muted">Ticket: '+esc(d.id)+'</small></div>'}).join('')}catch(e){box.textContent='Complaints ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message}}
+
+window.copyHireHubUserId=async function(){const value=String(me?.id||'');if(!value)return;try{if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value)}else{const input=document.createElement('textarea');input.value=value;input.style.position='fixed';input.style.opacity='0';document.body.appendChild(input);input.select();document.execCommand('copy');input.remove()}alert('ನಿಮ್ಮ User ID copy ಆಯಿತು. ಅದನ್ನು ಇನ್ನೊಬ್ಬರಿಗೆ ಕಳುಹಿಸಿ.')}catch(e){alert('Copy ಆಗಲಿಲ್ಲ. User ID ಅನ್ನು ಒತ್ತಿ ಹಿಡಿದು Copy ಮಾಡಿ.')}};
+async function getConfirmedBookingContact(bookingId,otherId){
+ const snap=await fbDb.collection('workerBookings').doc(String(bookingId)).get();
+ if(!snap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
+ const b=snap.data(),ids=[...new Set([...(Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:[]),...(Array.isArray(b.acceptedWorkers)?b.acceptedWorkers.map(x=>x?.workerId):[]),...(b.workerId?[b.workerId]:[])].filter(Boolean).map(String))];
+ const requester=b.requesterId||b.companyId;
+ if(b.status!=='Confirmed'||!requester)throw new Error('Booking Confirm ಆದ ನಂತರ ಮಾತ್ರ Chat / Voice Call ಲಭ್ಯ.');
+ if(me.id!==requester&&!ids.includes(me.id))throw new Error('ಈ Bookingಗೆ ನಿಮಗೆ ಅನುಮತಿ ಇಲ್ಲ.');
+ if(me.id===requester&&!ids.includes(String(otherId)))throw new Error('ಈ Worker ಈ Bookingಗೆ ಸ್ವೀಕರಿಸಿಲ್ಲ.');
+ if(me.id!==requester&&String(otherId)!==String(requester))throw new Error('ಈ Booking requester ಮಾತ್ರ ಸಂಪರ್ಕಕ್ಕೆ ಲಭ್ಯ.');
+ if(me.id===String(otherId))throw new Error('ನಿಮ್ಮನ್ನೇ ಆಯ್ಕೆ ಮಾಡಲಾಗುವುದಿಲ್ಲ.');
+ if(String(otherId)!==String(requester)&&!ids.includes(String(otherId)))throw new Error('ಈ User ಈ Bookingಗೆ ಸಂಬಂಧಪಟ್ಟವರಲ್ಲ.');
+ return {booking:b,requester,workerIds:ids};
+}
+async function renderHireHubChat(el){
+ el.innerHTML='<div class="card"><h3>HireHub ಸಂಪರ್ಕ</h3><p class="muted">Booking Confirm ಆದ ನಂತರ ಮಾತ್ರ ಸಂಬಂಧಪಟ್ಟ Customer / Company ಮತ್ತು ಸ್ವೀಕರಿಸಿದ Worker ನಡುವೆ Chat ಹಾಗೂ Voice Call ತೆರೆಯುತ್ತದೆ.</p><div id="bookingChatContacts">Confirmed Bookings ಲೋಡ್ ಆಗುತ್ತಿವೆ…</div></div><div class="card"><h3>ನಿಮ್ಮ Conversations</h3><div id="chatThreads">Loading…</div></div>';
+ const contacts=document.getElementById('bookingChatContacts'),list=document.getElementById('chatThreads');
+ try{
+  let q;
+  if(me.role==='worker')q=await fbDb.collection('workerBookings').where('acceptedWorkerIds','array-contains',me.id).get();
+  else if(me.role==='company')q=await fbDb.collection('workerBookings').where('companyId','==',me.id).get();
+  else q=await fbDb.collection('workerBookings').where('requesterId','==',me.id).get();
+  const bookings=q.docs.map(d=>({id:d.id,...d.data()})).filter(b=>b.status==='Confirmed');
+  const rows=[];
+  for(const b of bookings){
+   const requester=b.requesterId||b.companyId,workers=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
+   const others=me.id===requester?workers:[requester];
+   for(const other of others.filter(Boolean)){
+    const u=await fbDb.collection('users').doc(other).get().catch(()=>null);
+    const name=u?.exists?(u.data().name||u.data().companyName||'User'):(b.acceptedWorkers||[]).find(x=>x.workerId===other)?.workerName||'Booking Contact';
+    rows.push({bookingId:b.id,otherId:other,name,category:b.category||'Work',date:b.date||''});
+   }
+  }
+  contacts.innerHTML=rows.length?rows.map(x=>'<div class="item"><b>'+esc(x.name)+'</b><p>'+esc(x.category)+' • '+esc(x.date)+' • Booking '+esc(x.bookingId)+'</p><button class="primary" onclick="startBookingChat(\''+esc(x.bookingId)+'\',\''+esc(x.otherId)+'\')">Chat ತೆರೆಯಿರಿ</button></div>').join(''):'<p class="muted">Confirm ಆದ Booking ಇಲ್ಲ. Booking Confirm ಆದ ಮೇಲೆ ಸಂಪರ್ಕ ಆಯ್ಕೆ ಇಲ್ಲಿ ಕಾಣುತ್ತದೆ.</p>';
+ }catch(e){contacts.textContent='Booking ಸಂಪರ್ಕ ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message}
+ try{
+  const snap=await fbDb.collection('conversations').where('participants','array-contains',me.id).get();
+  const convs=snap.docs.map(d=>({id:d.id,...d.data()})).filter(c=>!!c.bookingId);
+  list.innerHTML=convs.length?convs.map(c=>{const other=(c.participants||[]).find(x=>x!==me.id)||'';return '<div class="item"><b>'+esc(c.names?.[other]||'Booking Contact')+'</b><p class="muted">Booking '+esc(c.bookingId)+' • '+esc(c.lastMessage||'No messages yet')+'</p><button class="primary" onclick="openHireHubChat(\''+esc(c.id)+'\',\''+esc(other)+'\',\''+esc(c.bookingId)+'\')">Open Chat / Call</button></div>'}).join(''):'<p class="muted">ಇನ್ನೂ Conversation ಇಲ್ಲ.</p>';
+ }catch(e){list.textContent='Conversations ಲೋಡ್ ಆಗಲಿಲ್ಲ: '+e.message}
+}
+async function startBookingChat(bookingId,otherId){
+ try{
+  const access=await getConfirmedBookingContact(bookingId,otherId),ids=[me.id,String(otherId)].sort(),id=String(bookingId)+'_'+ids.join('_');
+  const recipient=await fbDb.collection('users').doc(String(otherId)).get(),names={};names[me.id]=me.name||'User';names[otherId]=recipient.exists?(recipient.data().name||recipient.data().companyName||'User'):'Booking Contact';
+  await fbDb.collection('conversations').doc(id).set({bookingId:String(bookingId),participants:ids,names,createdBy:me.id,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+  await openHireHubChat(id,String(otherId),String(bookingId));
+ }catch(e){alert('Chat ತೆರೆಯಲಾಗಲಿಲ್ಲ: '+e.message)}
+}
+async function openHireHubChat(conversationId,otherId,bookingId){
+ await getConfirmedBookingContact(bookingId,otherId);
+ page='chat';const el=document.getElementById('panel');
+ el.innerHTML='<div class="card"><div class="row"><h3>HireHub Chat</h3><button onclick="go(\'chat\')">Back</button></div><p class="muted">Confirmed Booking • '+esc(bookingId)+'</p><div class="row"><button class="primary" id="startVoiceCall">Voice Call</button><button id="endVoiceCall" disabled>Call ಮುಗಿಸಿ</button></div><p id="voiceCallStatus" class="muted">Voice Call ಆರಂಭಿಸಲು ಅನುಮತಿ ನೀಡಿ.</p><audio id="remoteVoiceAudio" autoplay playsinline></audio><div id="chatMessages" style="max-height:45vh;overflow:auto"></div><form id="sendChatForm"><div class="field"><label>Message</label><textarea id="chatMessageText" required maxlength="2000" placeholder="ನಿಮ್ಮ ಸಂದೇಶ ಬರೆಯಿರಿ…"></textarea></div><button class="primary" type="submit">Send Message</button><p id="sendChatStatus" class="muted"></p></form></div>';
+ const box=document.getElementById('chatMessages'),conv=fbDb.collection('conversations').doc(conversationId);
+ const renderMessages=snap=>{if(!box)return;box.innerHTML=snap.docs.map(d=>{const m=d.data(),own=m.senderId===me.id;return '<div class="item" style="text-align:'+(own?'right':'left')+'"><div style="display:inline-block;max-width:88%;text-align:left;background:'+(own?'#e6f5f3':'#f0f3f7')+';padding:10px 13px;border-radius:13px"><b>'+esc(own?'You':(m.senderName||'User'))+'</b><div>'+esc(m.text||'')+'</div><small class="muted">'+esc(m.createdAt?.toDate?m.createdAt.toDate().toLocaleString():'Sending…')+'</small></div></div>'}).join('')||'<p class="muted">Start the conversation.</p>';box.scrollTop=box.scrollHeight};
+ if(window.hireHubMessageUnsub)window.hireHubMessageUnsub();
+ window.hireHubMessageUnsub=conv.collection('messages').orderBy('createdAt').limit(100).onSnapshot(renderMessages,e=>{if(box)box.textContent='Messages load ಆಗಲಿಲ್ಲ: '+e.message});
+ const sendChatForm=document.getElementById('sendChatForm');if(sendChatForm)sendChatForm.onsubmit=async ev=>{ev.preventDefault();const input=document.getElementById('chatMessageText'),status=document.getElementById('sendChatStatus'),value=input.value.trim();if(!value)return;input.disabled=true;try{await getConfirmedBookingContact(bookingId,otherId);await conv.collection('messages').add({senderId:me.id,senderName:me.name||'User',text:value,createdAt:firebase.firestore.FieldValue.serverTimestamp()});await conv.set({lastMessage:value.slice(0,180),updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});input.value='';status.textContent='Sent'}catch(e){status.textContent='Message ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+e.message}finally{input.disabled=false;input.focus()}};
+ document.getElementById('startVoiceCall').onclick=()=>startHireHubVoiceCall(conversationId,otherId,bookingId);
+ document.getElementById('endVoiceCall').onclick=()=>endHireHubVoiceCall();
+ const incoming=conv.collection('calls').where('calleeId','==',me.id).where('status','==','ringing').onSnapshot(snap=>{
+  const active=snap.docs.find(d=>d.data().bookingId===String(bookingId));
+  let box=document.getElementById('voiceCallStatus');if(!box)return;
+  if(active){box.innerHTML='Incoming Voice Call <button class="primary" onclick="answerHireHubVoiceCall(\''+esc(conversationId)+'\',\''+esc(active.id)+'\',\''+esc(otherId)+'\',\''+esc(bookingId)+'\')">Answer</button>';}
+ });window.hireHubIncomingCallUnsub=incoming;
+}
+async function answerHireHubVoiceCall(conversationId,callId,otherId,bookingId){
+ const status=document.getElementById('voiceCallStatus'),end=document.getElementById('endVoiceCall');
+ try{
+  await getConfirmedBookingContact(bookingId,otherId);
+  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection)throw new Error('ಈ ಸಾಧನದ WebView Voice Call ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.');
+  const callRef=fbDb.collection('conversations').doc(conversationId).collection('calls').doc(callId),snap=await callRef.get(),d=snap.data();
+  if(!snap.exists||d.status!=='ringing'||d.calleeId!==me.id)throw new Error('ಈ Call ಈಗ ಲಭ್ಯವಿಲ್ಲ.');
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}),pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  window.hireHubVoice={pc,stream,conversationId,otherId,bookingId,callRef,unsubs:[]};stream.getTracks().forEach(t=>pc.addTrack(t,stream));
+  pc.ontrack=e=>{const a=document.getElementById('remoteVoiceAudio');if(a)a.srcObject=e.streams[0]};
+  pc.onicecandidate=e=>{if(e.candidate)callRef.collection('calleeCandidates').add(e.candidate.toJSON()).catch(console.warn)};
+  await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
+  const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+  await callRef.update({answer:{type:answer.type,sdp:answer.sdp},status:'answered',answeredAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const unsub=callRef.collection('callerCandidates').onSnapshot(s=>s.docChanges().forEach(c=>{if(c.type==='added')pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(console.warn)}));
+  window.hireHubVoice.unsubs.push(unsub);status.textContent='Voice Call ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…';end.disabled=false;
+ }catch(e){status.textContent='Call Answer ಆಗಲಿಲ್ಲ: '+e.message}
+}
+async function startHireHubVoiceCall(conversationId,otherId,bookingId){
+ const status=document.getElementById('voiceCallStatus'),start=document.getElementById('startVoiceCall'),end=document.getElementById('endVoiceCall');
+ try{
+  await getConfirmedBookingContact(bookingId,otherId);
+  if(!navigator.mediaDevices?.getUserMedia||!window.RTCPeerConnection)throw new Error('ಈ ಸಾಧನದ WebView Voice Call ಬೆಂಬಲಿಸುವುದಿಲ್ಲ.');
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false}),pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
+  window.hireHubVoice={pc,stream,conversationId,otherId,bookingId,unsubs:[]};stream.getTracks().forEach(t=>pc.addTrack(t,stream));
+  pc.ontrack=e=>{const a=document.getElementById('remoteVoiceAudio');if(a)a.srcObject=e.streams[0]};
+  const callRef=fbDb.collection('conversations').doc(conversationId).collection('calls').doc();
+  window.hireHubVoice.callRef=callRef;
+  pc.onicecandidate=e=>{if(e.candidate)callRef.collection('callerCandidates').add(e.candidate.toJSON()).catch(console.warn)};
+  const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+  await callRef.set({bookingId:String(bookingId),callerId:me.id,calleeId:String(otherId),status:'ringing',offer:{type:offer.type,sdp:offer.sdp},createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  const unsub=callRef.onSnapshot(async snap=>{const d=snap.data();if(!d||!d.answer||pc.currentRemoteDescription)return;try{await pc.setRemoteDescription(new RTCSessionDescription(d.answer));status.textContent='Voice Call ಸಂಪರ್ಕಿಸಲಾಗುತ್ತಿದೆ…'}catch(e){status.textContent='Call ಸಂಪರ್ಕ ವಿಫಲ: '+e.message}});
+  window.hireHubVoice.unsubs.push(unsub);
+  const cand=callRef.collection('calleeCandidates').onSnapshot(s=>s.docChanges().forEach(c=>{if(c.type==='added')pc.addIceCandidate(new RTCIceCandidate(c.doc.data())).catch(console.warn)}));window.hireHubVoice.unsubs.push(cand);
+  status.textContent='Calling… ಎದುರಿನವರು Answer ಮಾಡುವವರೆಗೆ ಕಾಯಿರಿ.';start.disabled=true;end.disabled=false;
+ }catch(e){status.textContent='Voice Call ಆರಂಭಿಸಲಾಗಲಿಲ್ಲ: '+e.message;end.disabled=true}
+}
+async function endHireHubVoiceCall(){
+ const v=window.hireHubVoice;if(!v)return;
+ try{await v.callRef?.update({status:'ended',endedAt:firebase.firestore.FieldValue.serverTimestamp()}).catch(()=>{});v.unsubs?.forEach(f=>f());v.pc?.close();v.stream?.getTracks().forEach(t=>t.stop())}finally{window.hireHubVoice=null;const s=document.getElementById('voiceCallStatus'),a=document.getElementById('startVoiceCall'),b=document.getElementById('endVoiceCall');if(s)s.textContent='Voice Call ಮುಗಿಸಲಾಗಿದೆ.';if(a)a.disabled=false;if(b)b.disabled=true}
+}
+function hasValidCoordinates(lat,lng){if(lat===null||lat===undefined||lng===null||lng===undefined||String(lat).trim()===''||String(lng).trim()==='')return false;const a=Number(lat),b=Number(lng);return Number.isFinite(a)&&Number.isFinite(b)&&Math.abs(a)<=90&&Math.abs(b)<=180&&(a!==0||b!==0)}
+function getMyWorkerCoords(){if(hasValidCoordinates(window.workerCurrentCoords?.lat,window.workerCurrentCoords?.lng))return{lat:Number(window.workerCurrentCoords.lat),lng:Number(window.workerCurrentCoords.lng)};const d=db(),p=(d.liveLocations||[]).find(x=>x.worker===me.id&&x.sharing!==false&&hasValidCoordinates(x.lat,x.lng));return p?{lat:Number(p.lat),lng:Number(p.lng)}:null}
+async function geocodeBookingLocation(place){
+ const raw=String(place||'').trim();if(!raw)return null;
+ const normalized=raw.toLowerCase();
+ const knownPlaces=[{match:/vaddarahatti.*madhugiri|madhugiri.*vaddarahatti/,lat:13.6667,lng:77.2000,name:'Madhugiri town (approx. for Vaddarahatti)'},{match:/vaddarahatti/,lat:13.6667,lng:77.2000,name:'Madhugiri town (approximate fallback)'}];
+ const known=knownPlaces.find(x=>x.match.test(normalized));if(known)return{lat:known.lat,lng:known.lng,precision:'nearest-town',matchedName:known.name};
+ const key='nex_geo_v4_'+normalized;
+ try{const cached=localStorage.getItem(key);if(cached){const v=JSON.parse(cached);if(hasValidCoordinates(v.lat,v.lng))return{lat:Number(v.lat),lng:Number(v.lng),precision:v.precision||'approximate',matchedName:v.matchedName||''}}}catch(e){}
+ // Keep the complete village/post/taluk context together. Searching individual words
+ // can incorrectly geocode a person's name or a generic word as a different place.
+ const clean=raw.replace(/\b(village|vill|post|p\.?o\.?|taluk|taluka|hobli|district|dist)\b/gi,' ').replace(/[,-]+/g,' ').replace(/\s+/g,' ').trim();
+ const queries=[...new Set([
+  raw+', Karnataka, India',
+  clean+', Karnataka, India',
+  raw+', India',
+  clean+', India'
+ ].filter(q=>q&&q.length>8))];
+ for(const query of queries){
+  try{
+   const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&addressdetails=1&countrycodes=in&q='+encodeURIComponent(query);
+   const response=await fetch(url,{headers:{Accept:'application/json'}});
+   if(response.ok){
+    const data=await response.json();
+    const candidates=(Array.isArray(data)?data:[]).filter(v=>hasValidCoordinates(v.lat,v.lon));
+    const v=candidates.find(x=>/Karnataka/i.test(x.display_name||'')&&(/Madhugiri|Tumakuru|Tumkur/i.test(x.display_name||'')||/village|hamlet|town|municipality/i.test(x.type||'')))||candidates[0];
+    if(v){
+     const address=v.address||{};
+     const precision=(address.village||address.hamlet||address.suburb||address.neighbourhood)?'locality':(address.town||address.city||address.county)?'nearest-town':'approximate';
+     const point={lat:Number(v.lat),lng:Number(v.lon),precision,matchedName:v.display_name||query};
+     try{localStorage.setItem(key,JSON.stringify(point))}catch(e){}
+     return point;
+    }
+   }
+  }catch(err){console.warn('Location lookup failed',query,err)}
+  await new Promise(resolve=>setTimeout(resolve,1100));
+ }
+ return null;
+}
+function currentDevicePosition(){return captureRequestLocation().then(p=>hasValidCoordinates(p.requestLat,p.requestLng)?{lat:Number(p.requestLat),lng:Number(p.requestLng)}:null).catch(()=>null)}
+function distanceKm(a,b){const rad=x=>x*Math.PI/180,R=6371,dLat=rad(b.lat-a.lat),dLng=rad(b.lng-a.lng),v=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLng/2)**2;return 2*R*Math.asin(Math.sqrt(v))}
+function workerDistanceKm(a,b){return distanceKm(a,b)}
+async function captureRequestLocation(){const nativeGeo=(window.NexGeolocation||window.Capacitor?.Plugins?.Geolocation);const valid=p=>{const lat=Number(p?.coords?.latitude??p?.latitude),lng=Number(p?.coords?.longitude??p?.longitude);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180?{requestLat:lat,requestLng:lng}:null};if(nativeGeo?.getCurrentPosition){try{if(nativeGeo.requestPermissions){const permission=await nativeGeo.requestPermissions();if(permission.location!=='granted'&&permission.coarseLocation!=='granted')throw new Error('Location permission not granted')}const p=await nativeGeo.getCurrentPosition({enableHighAccuracy:true,timeout:12000});const coords=valid(p);if(coords)return coords}catch(err){console.warn('Native booking GPS unavailable; trying browser GPS',err)}}if(navigator.geolocation){try{const p=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:12000,maximumAge:60000}));return valid(p)||{}}catch(err){console.warn('Browser booking GPS unavailable',err)}}return {}}
+async function drawNearbyWorkRequests(){
+ const rows=window.nearbyWorkRows||[],pos=getMyWorkerCoords(),radius=Number(document.getElementById('requestRadius')?.value||25);
+ const filtered=rows.filter(x=>!pos||x._distance===null||x._distance<=radius);
+ const list=document.getElementById('nearbyRequestList');if(!list)return;
+ list.innerHTML=filtered.length?'<div class="row"><p class="muted">'+filtered.length+' ಕೆಲಸಗಳು ಲಭ್ಯ • GPS Radius: '+(radius>=1000?'All available':radius+' km')+'</p><button type="button" onclick="refreshWorkerNearbyGps()">Refresh GPS / KM</button></div>'+filtered.map(b=>'<div class="card"><div class="row"><span class="pill">'+esc(b.status||'Pending')+'</span><b>'+(b._distance!==null?b._distance.toFixed(1)+' km '+(b._distancePrecision==='locality'?'from locality':b._distancePrecision==='nearest-town'?'from nearest town':'approx.'):(hasValidCoordinates(b.requestLat,b.requestLng)?'GPS ON ಮಾಡಿದರೆ KM Distance ಕಾಣುತ್ತದೆ':'Location not found — address ಪರಿಶೀಲಿಸಿ'))+'</b></div><h3>'+esc(b.category)+'</h3><p><b>'+esc(b.count)+' workers ಬೇಕು</b> • '+esc(b.location)+'</p>'+(b._matchedLocation?'<p class="muted">Map match: '+esc(b._matchedLocation)+'</p>':'')+'<p>'+esc(b.bookingType||'Daily')+' • '+esc(b.date)+' • '+esc(b.shift||'Time not specified')+' • '+esc(b.pay||'Payment negotiable')+'</p><p><b>Booking ಮಾಡಿದವರು:</b> '+esc(b.requesterName||b.companyName||'Customer / Company ಹೆಸರು ಲಭ್ಯವಿಲ್ಲ')+' • '+esc(b.requesterRole==='company'?'Company / HR':b.requesterRole==='customer'?'Customer':'Booking requester')+'</p><p class="muted">Booking ID: '+esc(b.id)+'</p>'+(b.requesterMobilePrefix?'<p class="muted">Customer Mobile: '+esc(String(b.requesterMobilePrefix).slice(0,4))+'****** (ಮೊದಲ 4 ಅಂಕೆಗಳು ಮಾತ್ರ)</p>':'')+'<p>'+esc(b.details||'')+'</p><button class="primary" onclick="acceptWorkerRequest(\''+b.id+'\')">Accept Work</button></div>').join(''):'<div class="locbox"><b>'+(window.cloudSyncErrors?.openBookings?'Booking Sync Error':'ಈಗ ಕೆಲಸಗಳಿಲ್ಲ')+'</b><p>'+(window.cloudSyncErrors?.openBookings?'Firebase Rules / Worker account access ಸಮಸ್ಯೆ: '+esc(window.cloudSyncErrors.openBookings):'ಈಗ Pending Booking ಕಾಣುತ್ತಿಲ್ಲ. All available ಆಯ್ಕೆ ಮಾಡಿ, ಪುಟ Refresh ಮಾಡಿ.')+'</p></div>';
+ const mapEl=document.getElementById('requestMap');if(!mapEl)return;
+ const drawToken=String(Date.now())+'_'+Math.random().toString(36).slice(2);window.workerRequestMapDrawToken=drawToken;
+ if(!window.L){mapEl.textContent='Map library loading… Internet connection ಪರಿಶೀಲಿಸಿ.';return}
+ if(window.workerRequestMap){try{window.workerRequestMap.stop()}catch(e){}try{window.workerRequestMap.remove()}catch(e){}window.workerRequestMap=null}
+ mapEl.replaceChildren();if(!mapEl.isConnected)return;
+ try{
+  const center=pos?[pos.lat,pos.lng]:[12.9716,77.5946];
+  const map=L.map(mapEl,{preferCanvas:true,zoomAnimation:false,fadeAnimation:false,markerZoomAnimation:false}).setView(center,pos?12:5,{animate:false});window.workerRequestMap=map;
+  const tiles=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap contributors'}).addTo(map);
+  let tileErrors=0;tiles.on('tileerror',()=>{if(window.workerRequestMapDrawToken!==drawToken||!mapEl.isConnected)return;tileErrors++;if(tileErrors>=3&&!mapEl.dataset.tileWarning){mapEl.dataset.tileWarning='1';const note=document.createElement('div');note.className='locbox';note.style.cssText='position:absolute;z-index:500;left:8px;right:8px;bottom:8px;margin:0;background:#fff';note.textContent='Map tiles load ಆಗುತ್ತಿಲ್ಲ. Internet ಪರಿಶೀಲಿಸಿ; KM distance ಮಾಹಿತಿ ಪ್ರತ್ಯೇಕವಾಗಿ ಲಭ್ಯ.';mapEl.appendChild(note)}});
+  const points=[];if(pos){L.marker([pos.lat,pos.lng]).addTo(map).bindPopup('ನಿಮ್ಮ ಪ್ರಸ್ತುತ ಸ್ಥಳ (You)');points.push([pos.lat,pos.lng])}
+  filtered.filter(x=>hasValidCoordinates(x.requestLat,x.requestLng)).forEach(x=>{const point=[Number(x.requestLat),Number(x.requestLng)];L.marker(point).addTo(map).bindPopup(esc(x.category)+' • '+esc(x.location));points.push(point)});
+  if(points.length>1)map.fitBounds(points,{padding:[24,24],maxZoom:14,animate:false});else if(points.length===1)map.setView(points[0],12,{animate:false});
+  setTimeout(()=>{if(window.workerRequestMapDrawToken===drawToken&&window.workerRequestMap===map&&mapEl.isConnected&&map.getContainer()===mapEl){try{map.invalidateSize({pan:false,animate:false})}catch(e){console.warn('Map resize skipped',e)}}},300);
+ }catch(mapError){console.error('Nearby request map render failed',mapError);if(mapEl.isConnected)mapEl.textContent='Map ತಾತ್ಕಾಲಿಕವಾಗಿ ಲಭ್ಯವಿಲ್ಲ. KM distance ಪ್ರತ್ಯೇಕವಾಗಿ ಕಾಣಿಸುತ್ತದೆ.'}
+}
+window.refreshWorkerNearbyGps=async function(){const note=document.getElementById('nearbyRequestList');try{const p=await captureRequestLocation();if(!hasValidCoordinates(p.requestLat,p.requestLng))throw new Error('GPS location ಸಿಗಲಿಲ್ಲ. Android Location ON ಮಾಡಿ Permission Allow ಮಾಡಿ.');const workerPoint={lat:Number(p.requestLat),lng:Number(p.requestLng)};window.workerCurrentCoords=workerPoint;const rows=window.nearbyWorkRows||[];for(const b of rows){if(!hasValidCoordinates(b.requestLat,b.requestLng)&&b.location){const place=await geocodeBookingLocation(b.location);if(place){b.requestLat=place.lat;b.requestLng=place.lng;b._distancePrecision=place.precision||'approximate';b._matchedLocation=place.matchedName||''}}b._distance=hasValidCoordinates(b.requestLat,b.requestLng)?workerDistanceKm(workerPoint,{lat:Number(b.requestLat),lng:Number(b.requestLng)}):null}window.nearbyWorkRows=rows.sort((a,b)=>a._distance===null?1:b._distance===null?-1:a._distance-b._distance);await drawNearbyWorkRequests();if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">GPS update ಆಯಿತು. Distance ಲಭ್ಯವಿರುವ Bookingಗಳಿಗೆ KM ತೋರಿಸಲಾಗಿದೆ.</p>')}catch(e){console.warn('Manual worker GPS refresh failed',e);if(note)note.insertAdjacentHTML('afterbegin','<p class="notice">GPS / KM update ಆಗಲಿಲ್ಲ: '+esc(e.message)+'</p>')}};
+window.setCaptainAvailability=async function(shouldBeOnline){
+ const onlineButton=document.getElementById('captainOnlineButton');
+ const offlineButton=document.getElementById('captainOfflineButton');
+ const badge=document.getElementById('captainAvailabilityBadge');
+ [onlineButton,offlineButton].forEach(button=>{if(button)button.disabled=true});
+ try{
+  if(!me||me.role!=='worker'||!fbAuth.currentUser||String(fbAuth.currentUser.uid)!==String(me.id))throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
+  const userRef=fbDb.collection('users').doc(me.id);
+  const profileRef=fbDb.collection('workerPublicProfiles').doc(me.id);
+  if(shouldBeOnline){
+   // Publish ONLINE only after a GPS watcher has successfully started and obtained a fix.
+   if(locationWatchId===null){
+    const started=await startWorkerLocation();
+    if(!started||locationWatchId===null)throw new Error('GPS ಆರಂಭವಾಗಲಿಲ್ಲ. Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ.');
+   }
+   await Promise.all([
+    userRef.set({availability:'available',autoOnline:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}),
+    profileRef.set({availability:'available',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+   ]);
+   me.availability='available';
+   if(badge)badge.textContent='ONLINE';
+   alert('ನೀವು ONLINE ಆಗಿದ್ದೀರಿ. Live GPS Tracking ಆರಂಭವಾಗಿದೆ.');
+  }else{
+   // Stop GPS first; only then publish OFFLINE.
+   await stopWorkerLocation();
+   await Promise.all([
+    userRef.set({availability:'unavailable',autoOnline:false,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true}),
+    profileRef.set({availability:'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})
+   ]);
+   me.availability='unavailable';
+   if(badge)badge.textContent='OFFLINE';
+   alert('ನೀವು OFFLINE ಆಗಿದ್ದೀರಿ. Live GPS Tracking ನಿಲ್ಲಿಸಲಾಗಿದೆ.');
+  }
+  render();
+ }catch(e){
+  console.error('Availability change failed',e);
+  if(shouldBeOnline){
+   me.availability='unavailable';
+   if(locationWatchId!==null)await stopWorkerLocation().catch(console.warn);
+   if(badge)badge.textContent='OFFLINE';
+  }
+  alert('Availability ಬದಲಾಯಿಸಲು ಆಗಲಿಲ್ಲ: '+(e.code||e.message));
+  render();
+ }finally{
+  [onlineButton,offlineButton].forEach(button=>{if(button)button.disabled=false});
+ }
+};
+window.toggleCaptainAvailability=async function(){return window.setCaptainAvailability(me?.availability!=='available')};
+async function acceptWorkerRequest(id){
+ let accepted=false;
+ try{
+  const bookingId=String(id||'').trim(),uid=String(me?.id||'');
+  if(!bookingId)throw new Error('Booking ID ಸರಿಯಾಗಿಲ್ಲ.');
+  if(!uid||!fbAuth.currentUser||fbAuth.currentUser.uid!==uid)throw new Error('Worker login ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ.');
+  // Cloud Run API performs the authoritative authenticated Firestore transaction.
+  const result=await callHireHubApi('acceptWorkerBooking',{bookingId});
+  if(result.bookingId!==bookingId)throw new Error('Server acceptance confirmation ಸಿಗಲಿಲ್ಲ.');
+  accepted=true;window.activeWorkerBookingId=bookingId;
+  const slotsLeft=Math.max(0,Number(result.remaining)||0),local=db();local.bookings=local.bookings||[];
+  const cached=local.bookings.findIndex(x=>String(x.id)===bookingId);
+  const previous=cached>=0?local.bookings[cached]:{};
+  const updated={...previous,id:bookingId,count:Number(result.count)||previous.count||1,acceptedWorkerIds:Array.isArray(result.acceptedWorkerIds)?result.acceptedWorkerIds:[],acceptedWorkers:Array.isArray(result.acceptedWorkers)?result.acceptedWorkers:[],acceptedCount:Number(result.acceptedCount)||0,workerId:(result.acceptedWorkerIds||[])[0]||uid,workerName:result.workerName||me.name||'Worker',status:result.status||'Partially Filled'};
+  if(cached>=0)local.bookings[cached]=updated;else local.bookings.unshift(updated);save(local);
+  try{
+   const snap=await fbDb.collection('workerBookings').doc(bookingId).get(),data=snap.exists?snap.data()||{}:{};
+   const recipients=[...new Set([data.companyId,data.requesterId,data.customerId].filter(x=>x&&x!==uid))];
+   await Promise.all(recipients.map(recipient=>createHireHubNotification(recipient,slotsLeft===0?'Work fully staffed':'Worker accepted your work',(me.name||'Worker')+' '+(data.category||'Work')+' ಕೆಲಸವನ್ನು ಸ್ವೀಕರಿಸಿದ್ದಾರೆ. '+(slotsLeft?slotsLeft+' Worker ಸ್ಥಾನಗಳು ಬಾಕಿ.':'ಅಗತ್ಯವಿರುವ ಎಲ್ಲಾ Worker ಸ್ಥಾನಗಳು ತುಂಬಿವೆ.'),{eventType:'worker_accepted',bookingId})));
+  }catch(notifyErr){console.warn('Acceptance notification follow-up failed',notifyErr);}
+  alert(slotsLeft?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ. ಇನ್ನೂ '+slotsLeft+' Worker ಬೇಕು.':'ಕೆಲಸಕ್ಕೆ ಬೇಕಾದ ಎಲ್ಲಾ Workers Confirm ಆಗಿದ್ದಾರೆ.');
+  startWorkerLocation().catch(err=>console.warn('GPS start after acceptance failed',err));render();
+ }catch(e){console.error('Worker booking accept failed',{bookingId:String(id||''),uid:String(me?.id||''),code:e?.code||'',message:e?.message||'',details:e?.details||null,error:e});const code=String(e?.code||'').replace(/^functions\//,'');const detail=e?.message||e?.details?.message||'Unknown error';alert((accepted?'ಕೆಲಸ ಸ್ವೀಕರಿಸಲಾಗಿದೆ; ಆದರೆ':'Accept ಆಗಲಿಲ್ಲ: ')+detail+'\nCode: '+(code||'unknown')+'\nBooking ID: '+String(id||''));}
+}
+async function workerSubmitCompletion(id){
+ if(!confirm('ಈ Booking‌ನ ಕೆಲಸವನ್ನು ನೀವು ಪೂರ್ಣಗೊಳಿಸಿದ್ದೀರಾ? Customer, Admin ಮತ್ತು Super Admin ಎಲ್ಲರಿಗೂ ಒಂದೇ ಬಾರಿ In-App Notification ಕಳುಹಿಸಬೇಕೇ?'))return;
+ try{
+  const ref=fbDb.collection('workerBookings').doc(String(id));
+  const snap=await ref.get();if(!snap.exists)throw new Error('Booking ಸಿಗಲಿಲ್ಲ.');
+  const b=snap.data(),ids=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);
+  if(!ids.includes(String(me.id)))throw new Error('ಈ Booking ನಿಮಗೆ ಸೇರಿಲ್ಲ.');
+  if(b.workerCompletionStatus==='submitted')throw new Error('ಈ ಕೆಲಸದ ಪೂರ್ಣತೆ ಮಾಹಿತಿ ಈಗಾಗಲೇ ಕಳುಹಿಸಲಾಗಿದೆ.');
+  const customerId=b.requesterId||b.customerId||b.companyId;
+  if(!customerId)throw new Error('ಈ Booking ಗೆ Customer / Company account ID ಲಭ್ಯವಿಲ್ಲ. Admin ಸಂಪರ್ಕಿಸಿ.');
+  // Write one authoritative completion event. Cloud Function fans out notifications
+  // to the requester/company and all active Admin/Super Admin accounts.
+  const now=firebase.firestore.FieldValue.serverTimestamp();
+  await ref.update({workerCompletionStatus:'submitted',workerCompletedAt:now,workerCompletedBy:me.id,updatedAt:now});
+  alert('ಕೆಲಸ ಪೂರ್ಣಗೊಂಡ ಮಾಹಿತಿ Serverಗೆ ಕಳುಹಿಸಲಾಗಿದೆ. Customer, Admin ಮತ್ತು Super Adminಗಳಿಗೆ Notifications ಕಳುಹಿಸಲಾಗುತ್ತಿದೆ.');
+  go('mybookings');
+ }catch(e){alert('ಮಾಹಿತಿ ಕಳುಹಿಸಲಾಗಲಿಲ್ಲ: '+(e.code||e.message))}
+}
+async function updateBookingStatus(id,status){try{const ref=fbDb.collection('workerBookings').doc(String(id));await ref.update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});const snap=await ref.get(),b=snap.data();const acceptedIds=Array.isArray(b.acceptedWorkerIds)?b.acceptedWorkerIds:(b.workerId?[b.workerId]:[]);if(['Completed','Rejected'].includes(status)&&acceptedIds.length){await Promise.all(acceptedIds.map(workerId=>fbDb.collection('workerActiveBookings').doc(String(workerId)).delete().catch(err=>console.warn('Worker booking lock release failed',err))))}if(status==='Confirmed'){await Promise.all(acceptedIds.map(workerId=>createHireHubNotification(workerId,'Booking Confirmed','ಕಂಪನಿ ನಿಮ್ಮ '+(b.category||'Work')+' Booking ಅನ್ನು Confirm ಮಾಡಿದ್ದಾರೆ.',{eventType:'booking_confirmed',bookingId:String(id)})))}else{await Promise.all(acceptedIds.map(workerId=>createHireHubNotification(workerId,'Worker request '+status,'ಕಂಪನಿ ನಿಮ್ಮ Request ಅನ್ನು '+status+' ಮಾಡಿದ್ದಾರೆ.',{eventType:'booking_status',bookingId:String(id)})))}alert('Request status updated: '+status)}catch(e){alert('Update ಆಗಲಿಲ್ಲ: '+e.message)}}
+function renderWorkerLocation(el){
+ const d=db(),saved=(d.liveLocations||[]).find(x=>x.worker===me.id);
+ el.innerHTML='<div class="card"><h3>My Live Location</h3><p>ನಿಮ್ಮ ಸ್ಪಷ್ಟ ಅನುಮತಿ ನೀಡಿದಾಗ ಮಾತ್ರ GPS ಹಂಚಲಾಗುತ್ತದೆ. Android APKನಲ್ಲಿ Background GPS plugin ಲಭ್ಯವಿದ್ದರೆ persistent notification ಜೊತೆಗೆ App minimize ಅಥವಾ screen lock ಆದರೂ location update ಆಗುತ್ತದೆ. Plugin ಇಲ್ಲದ ಹಳೆಯ APKನಲ್ಲಿ GPS App ತೆರೆದಿರುವಾಗ ಮಾತ್ರ ಕಾರ್ಯನಿರ್ವಹಿಸುತ್ತದೆ. Stop ಒತ್ತಿದರೆ tracking ನಿಲ್ಲುತ್ತದೆ.</p><div class="locbox" id="locStatus"><b>Location sharing: OFF</b><p class="muted">ನೀವು Start ಒತ್ತುವವರೆಗೆ location ಹಂಚುವುದಿಲ್ಲ.</p></div><button class="danger" onclick="stopWorkerLocation()">Stop Sharing</button><div id="myLocDetails"></div></div>';
+ if(saved){document.getElementById('myLocDetails').innerHTML='<p><b>Last location:</b> '+Number(saved.lat).toFixed(5)+', '+Number(saved.lng).toFixed(5)+'</p><p class="muted">Updated: '+new Date(saved.updatedAt).toLocaleString()+'</p><a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+saved.lat+'&mlon='+saved.lng+'#map=16/'+saved.lat+'/'+saved.lng+'">Open Map</a>'}
+}
+async function handleWorkerPosition(pos){
+ if(!me||me.role!=='worker'||!fbAuth.currentUser||String(fbAuth.currentUser.uid)!==String(me.id))throw new Error('GPS update ನಿಲ್ಲಿಸಲಾಗಿದೆ: Worker Firebase User ID ಹೊಂದಾಣಿಕೆಯಾಗಿಲ್ಲ. ಮತ್ತೆ Login ಮಾಡಿ.');
+ const d=db();d.liveLocations=d.liveLocations||[];
+ const lat=Number(pos?.coords?.latitude??pos?.latitude),lng=Number(pos?.coords?.longitude??pos?.longitude),rawAccuracy=Number(pos?.coords?.accuracy??pos?.accuracy??0);
+ if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180)throw new Error('GPS coordinates invalid');
+ const accuracy=Number.isFinite(rawAccuracy)&&rawAccuracy>=0?Math.round(rawAccuracy):null;
+ const now=Date.now();window.workerCurrentCoords={lat,lng,accuracy,updatedAt:now};
+ const item={worker:fbAuth.currentUser.uid,role:'worker',name:me.name,city:me.city,lat,lng,accuracy,updatedAt:now,sharing:true};
+ d.liveLocations=d.liveLocations.filter(x=>x.worker!==me.id);d.liveLocations.push(item);save(d);
+ const stamp=firebase.firestore.FieldValue.serverTimestamp();
+ await Promise.all([
+  fbDb.collection('workerPublicProfiles').doc(fbAuth.currentUser.uid).set({userId:fbAuth.currentUser.uid,name:me.name||'',photoURL:me.photoURL||'',city:me.city||'',area:me.area||'',pincode:me.pincode||'',mainSkill:me.mainSkill||'',secondSkill:me.secondSkill||'',skills:me.skills||[],experience:me.experience||'',dailyWage:me.dailyWage||0,hourlyRate:me.hourlyRate||0,rating:me.rating||0,availability:'available',lat:item.lat,lng:item.lng,accuracy:item.accuracy,lastSeen:stamp,updatedAt:stamp},{merge:true}),
+  fbDb.collection('locations').doc(fbAuth.currentUser.uid).set({uid:fbAuth.currentUser.uid,role:'worker',name:me.name,city:me.city,lat:item.lat,lng:item.lng,accuracy:item.accuracy,updatedAt:stamp,sharing:true},{merge:true})
+ ]);
+ const s=document.getElementById('locStatus');if(s)s.innerHTML='<b><span class="locdot"></span>Live location sharing ON</b><p>'+item.lat.toFixed(5)+', '+item.lng.toFixed(5)+' • Accuracy about '+item.accuracy+' m</p>';
+ const details=document.getElementById('myLocDetails');if(details)details.innerHTML='<a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+item.lat+'&mlon='+item.lng+'#map=16/'+item.lat+'/'+item.lng+'">Open My Location Map</a>';
+ // Write directly to the accepted booking first; local booking cache may still be stale just after Accept.
+ const bookingIds=new Set((d.bookings||[]).filter(b=>['Pending','Partially Filled','Confirmed'].includes(b.status||'')&&((Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.includes(me.id))||b.workerId===me.id)).map(b=>String(b.id)));
+ if(window.activeWorkerBookingId)bookingIds.add(String(window.activeWorkerBookingId));
+ const trackingResults=await Promise.allSettled([...bookingIds].map(bookingId=>fbDb.collection('workerBookings').doc(bookingId).collection('tracking').doc(fbAuth.currentUser.uid).set({workerId:fbAuth.currentUser.uid,workerName:me.name,lat:item.lat,lng:item.lng,accuracy:item.accuracy,sharing:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true})));
+ const failed=trackingResults.filter(x=>x.status==='rejected');
+ if(failed.length)console.warn('Booking GPS sync failed for',failed.length,'booking(s)',failed.map(x=>x.reason?.message||x.reason));
+}
+function hireHubDistanceKm(a,b){const r=x=>x*Math.PI/180,dLat=r(b.lat-a.lat),dLng=r(b.lng-a.lng),q=Math.sin(dLat/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(dLng/2)**2;return 6371*2*Math.asin(Math.sqrt(q))}async function notifyNearbyWorkersForBooking(booking){
+ try{
+  // Karnataka-wide broadcast: a customer can post from any Karnataka village, taluk, town or city.
+  // Worker discovery itself is global; notifications are sent to recently-online Karnataka profiles.
+  const snap=await fbDb.collection('workerPublicProfiles').where('availability','==','available').limit(500).get();
+  const now=Date.now();
+  const isAllowedRegion=value=>isSupportedState(value);
+  const activeKarnatakaWorkers=snap.docs.map(doc=>({id:doc.id,...doc.data()})).filter(w=>{
+   if(w.id===booking.requesterId)return false;
+   const seen=w.lastSeen?.toDate?w.lastSeen.toDate().getTime():0;
+   const stateMatch=isKarnataka(w.state)||isKarnataka(w.stateName);
+   return stateMatch&&seen>0&&now-seen<180000;
+  });
+  const recipients=[...new Set([...(booking.selectedWorkerId?[booking.selectedWorkerId]:[]),...activeKarnatakaWorkers.map(w=>w.id)])].filter(id=>id&&id!==booking.requesterId).slice(0,500);
+  const results=await Promise.all(recipients.map(async recipientId=>{
+   try{
+    await fbDb.collection('notifications').add({
+     actorId:booking.requesterId,recipientId,title:'ಕರ್ನಾಟಕದಲ್ಲಿ ಹೊಸ ಕೆಲಸದ Booking',
+     message:(booking.category||'ಹೊಸ ಕೆಲಸ')+' • '+(booking.location||'ಸ್ಥಳ ವಿವರ ನೋಡಿ')+' • '+(booking.pay||'ದರ ನೋಡಿ')+' — HireHub ತೆರೆಯಿರಿ ಮತ್ತು Accept ಮಾಡಿ.',
+     eventType:'nearby_booking',bookingId:String(booking.id),region:'Karnataka',createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false
+    });
+    return true;
+   }catch(err){console.warn('Karnataka booking notification failed for',recipientId,err.code||err.message);return false}
+  }));
+  const sent=results.filter(Boolean).length;
+  console.info('Karnataka booking notifications sent:',sent,'of',recipients.length);
+  return sent;
+ }catch(err){console.warn('Karnataka worker notification broadcast failed',err.code||err.message);return 0}
+}
+async function activateWorkerAutoOnline(){if(!me||me.role!=='worker'||!fbAuth.currentUser||locationWatchId!==null)return;try{const ref=fbDb.collection('users').doc(me.id);await ref.update({availability:'available',autoOnline:true,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});me.availability='available';me.autoOnline=true;await startWorkerLocation();if(locationWatchId===null){await ref.update({availability:'unavailable',updatedAt:firebase.firestore.FieldValue.serverTimestamp()});me.availability='unavailable';const st=document.getElementById('autoOnlineStatus');if(st)st.textContent='GPS ಅನುಮತಿ ಸಿಗಲಿಲ್ಲ. Location permission Allow ಮಾಡಿ.'}}catch(e){console.warn('Auto online failed',e);const st=document.getElementById('autoOnlineStatus');if(st)st.textContent='Online ಆಗಲಿಲ್ಲ: '+(e.code||e.message)}}
+async function startWorkerLocation(){
+ if(!fbAuth.currentUser)throw new Error('ದಯವಿಟ್ಟು ಮತ್ತೆ Login ಮಾಡಿ.');
+ if(locationWatchId!==null)return true;
+ const nativeGeo=window.NexGeolocation||window.Capacitor?.Plugins?.Geolocation;
+ const valid=p=>{const lat=Number(p?.coords?.latitude??p?.latitude),lng=Number(p?.coords?.longitude??p?.longitude);return Number.isFinite(lat)&&Number.isFinite(lng)&&Math.abs(lat)<=90&&Math.abs(lng)<=180};
+ const status=document.getElementById('locStatus');
+ const show=(title,message)=>{if(status)status.innerHTML='<b>'+esc(title)+'</b><p>'+esc(message)+'</p>'};
+ show('GPS ಪರಿಶೀಲಿಸಲಾಗುತ್ತಿದೆ…','Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ.');
+ try{
+  try{
+   const lock=await fbDb.collection('workerActiveBookings').doc(me.id).get();
+   window.activeWorkerBookingId=lock.exists?String(lock.data().bookingId||''):'';
+  }catch(err){console.warn('Active booking lookup failed',err)}
+  const backgroundGeo=window.NexBackgroundGeolocation;
+  if(backgroundGeo?.addWatcher){
+   let firstFixDone=false,firstFixTimer=null,resolveFirstFix,rejectFirstFix;
+   const firstFix=new Promise((resolve,reject)=>{resolveFirstFix=resolve;rejectFirstFix=reject;});
+   const watcherId=await backgroundGeo.addWatcher({
+    backgroundTitle:'NEXVADORAQ Worker GPS',
+    backgroundMessage:'HireHub live location is active. Open the app and tap Stop Sharing to stop.',
+    requestPermissions:true,
+    stale:false,
+    distanceFilter:10
+   },(position,error)=>{
+    if(error){console.error('Background GPS watcher error',error);show('GPS signal ಸಮಸ್ಯೆ',error.message||'GPS signal ಮತ್ತೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ.');if(!firstFixDone){firstFixDone=true;clearTimeout(firstFixTimer);rejectFirstFix(error);}return;}
+    if(position&&valid(position)){
+     handleWorkerPosition(position).then(()=>{
+      show('Live GPS Tracking ON','Foreground ಮತ್ತು background ಎರಡರಲ್ಲೂ GPS update ಆಗುತ್ತದೆ. Tracking ನಿಲ್ಲಿಸಲು Stop Sharing ಒತ್ತಿ.');
+      if(!firstFixDone){firstFixDone=true;clearTimeout(firstFixTimer);resolveFirstFix(true);}
+     }).catch(syncError=>{
+      console.error('Background GPS cloud sync failed',syncError);
+      show('GPS Sync ಸಮಸ್ಯೆ',syncError.message||'Cloud update ವಿಫಲವಾಗಿದೆ.');
+      if(!firstFixDone){firstFixDone=true;clearTimeout(firstFixTimer);rejectFirstFix(syncError);}
+     });
+    }
+   });
+   if(!watcherId)throw new Error('Background GPS watcher ಆರಂಭವಾಗಲಿಲ್ಲ.');
+   locationWatchId='background:'+watcherId;
+   firstFixTimer=setTimeout(()=>{if(!firstFixDone){firstFixDone=true;rejectFirstFix(new Error('30 ಸೆಕೆಂಡಿನೊಳಗೆ GPS fix ಸಿಗಲಿಲ್ಲ. Location ON ಮಾಡಿ ಮತ್ತು Permission Allow ಮಾಡಿ.'));}},30000);
+   try{await firstFix;}catch(firstError){await stopWorkerLocation().catch(console.warn);throw firstError;}
+   show('Live GPS Tracking ON','Background GPS ಸಕ್ರಿಯವಾಗಿದೆ. Android persistent notification ಕಾಣಿಸುತ್ತದೆ.');
+   return true;
+  }
+  if(nativeGeo?.getCurrentPosition&&nativeGeo?.watchPosition){
+   if(nativeGeo.requestPermissions){
+    const permission=await nativeGeo.requestPermissions();
+    if(permission.location!=='granted'&&permission.coarseLocation!=='granted')throw new Error('App Settings ನಲ್ಲಿ Location permission Allow ಮಾಡಿ.');
+   }
+   const first=await nativeGeo.getCurrentPosition({enableHighAccuracy:true,timeout:30000,maximumAge:0});
+   if(!valid(first))throw new Error('GPS coordinates ಸಿಗಲಿಲ್ಲ. ಫೋನ್ Location ON ಮಾಡಿ, ಹೊರಾಂಗಣದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+   await handleWorkerPosition(first);
+   const id=await nativeGeo.watchPosition({enableHighAccuracy:true,timeout:30000,maximumAge:0},(pos,err)=>{
+    if(err){console.error('Native GPS watch error',err);show('GPS signal ಸಮಸ್ಯೆ',err.message||'GPS signal ಮತ್ತೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ.');return;}
+    if(pos&&valid(pos)){handleWorkerPosition(pos).then(()=>show('Live GPS Tracking ON','Native GPS ಮೂಲಕ ಸ್ಥಳ update ಆಗುತ್ತಿದೆ.')).catch(syncErr=>show('GPS Sync ಸಮಸ್ಯೆ',syncErr.message||'Cloud update ವಿಫಲವಾಗಿದೆ.'));}
+   });
+   if(!id)throw new Error('GPS watcher ಆರಂಭವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+   locationWatchId='native:'+id;
+   show('Live GPS Tracking ON','Native GPS ಮೂಲಕ ಸ್ಥಳ update ಆಗುತ್ತಿದೆ.');
+   return true;
+  }
+  // Foreground-only fallback for WebView/browser builds without the native GPS plugin.
+  if(!navigator.geolocation)throw new Error('ಈ APKನಲ್ಲಿ Native GPS Plugin ಇಲ್ಲ ಮತ್ತು WebView GPS ಕೂಡ ಲಭ್ಯವಿಲ್ಲ. Native GPS Plugin ಇರುವ APK ಅಗತ್ಯ.');
+  const first=await new Promise((resolve,reject)=>navigator.geolocation.getCurrentPosition(resolve,reject,{enableHighAccuracy:true,timeout:30000,maximumAge:0}));
+  if(!valid(first))throw new Error('GPS coordinates ಸಿಗಲಿಲ್ಲ. ಫೋನ್ Location ON ಮಾಡಿ, ಹೊರಾಂಗಣದಲ್ಲಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.');
+  await handleWorkerPosition(first);
+  const id=navigator.geolocation.watchPosition(pos=>{
+   if(pos&&valid(pos)){handleWorkerPosition(pos).then(()=>show('Live GPS Tracking ON','WebView GPS ಮೂಲಕ App ತೆರೆದಿರುವಾಗ ಮಾತ್ರ ಸ್ಥಳ update ಆಗುತ್ತದೆ. Background GPSಗೆ Native APK ಅಗತ್ಯ.')).catch(syncErr=>show('GPS Sync ಸಮಸ್ಯೆ',syncErr.message||'Cloud update ವಿಫಲವಾಗಿದೆ.'));}
+  },err=>{console.error('WebView GPS watch error',err);show('GPS signal ಸಮಸ್ಯೆ',err.message||'GPS signal ಮತ್ತೆ ಪಡೆಯಲಾಗುತ್ತಿದೆ.');},{enableHighAccuracy:true,timeout:30000,maximumAge:0});
+  if(id===undefined||id===null)throw new Error('WebView GPS watcher ಆರಂಭವಾಗಲಿಲ್ಲ.');
+  locationWatchId=id;
+  show('Live GPS Tracking ON','WebView GPS ಮೂಲಕ App ತೆರೆದಿರುವಾಗ ಮಾತ್ರ ಸ್ಥಳ update ಆಗುತ್ತದೆ. Background GPSಗೆ Native APK ಅಗತ್ಯ.');
+  return true;
+ }catch(err){
+  console.error('Could not start worker GPS',err);
+  await stopWorkerLocation().catch(console.warn);
+  throw err;
+ }
+}
+async function stopWorkerLocation(){
+ const watch=locationWatchId;locationWatchId=null;
+ if(watch!==null){const value=String(watch);try{
+  if(value.startsWith('background:'))await window.NexBackgroundGeolocation?.removeWatcher({id:value.slice(11)});
+  else if(value.startsWith('native:'))await (window.NexGeolocation||window.Capacitor?.Plugins?.Geolocation)?.clearWatch({id:value.slice(7)});
+  else if(navigator.geolocation)navigator.geolocation.clearWatch(watch);
+ }catch(err){console.warn('GPS watcher stop failed',err);}}
+ const d=db();d.liveLocations=(d.liveLocations||[]).filter(x=>x.worker!==me.id);save(d);
+ if(fbAuth.currentUser){
+  const activeIds=new Set((d.bookings||[]).filter(b=>((Array.isArray(b.acceptedWorkerIds)&&b.acceptedWorkerIds.map(String).includes(String(me.id)))||String(b.workerId||'')===String(me.id))).map(b=>String(b.id)));
+  if(window.activeWorkerBookingId)activeIds.add(String(window.activeWorkerBookingId));
+  // Reconcile against Firestore so stale local cache cannot leave live tracking documents behind.
+  const [acceptedSnap,legacySnap]=await Promise.all([
+   fbDb.collection('workerBookings').where('acceptedWorkerIds','array-contains',String(me.id)).get(),
+   fbDb.collection('workerBookings').where('workerId','==',String(me.id)).get()
+  ]);
+  acceptedSnap.docs.concat(legacySnap.docs).forEach(doc=>activeIds.add(doc.id));
+  const cleanup=await Promise.allSettled([...activeIds].map(id=>fbDb.collection('workerBookings').doc(id).collection('tracking').doc(me.id).delete()));
+  cleanup.filter(x=>x.status==='rejected').forEach(x=>console.warn('Could not stop booking GPS',x.reason?.message||x.reason));
+  window.activeWorkerBookingId='';
+  const stamp=firebase.firestore.FieldValue.serverTimestamp();
+  const results=await Promise.allSettled([
+   fbDb.collection('locations').doc(me.id).delete(),
+   fbDb.collection('workerPublicProfiles').doc(me.id).set({availability:'unavailable',lat:firebase.firestore.FieldValue.delete(),lng:firebase.firestore.FieldValue.delete(),lastSeen:stamp,updatedAt:stamp},{merge:true}),
+   fbDb.collection('users').doc(me.id).set({availability:'unavailable',updatedAt:stamp},{merge:true})
+  ]);
+  results.filter(x=>x.status==='rejected').forEach(x=>console.warn('Worker offline cleanup failed',x.reason?.message||x.reason));
+  me.availability='unavailable';
+ }
+ const st=document.getElementById('locStatus');if(st)st.innerHTML='<b>Location sharing: OFF</b><p>ನಿಮ್ಮ GPS Tracking ನಿಲ್ಲಿಸಲಾಗಿದೆ.</p>';
+ const details=document.getElementById('myLocDetails');if(details)details.innerHTML='';
+}
+let companyLocationUnsub=null;
+function companyDistanceKm(lat1,lng1,lat2,lng2){const r=x=>x*Math.PI/180,R=6371,dl=r(lat2-lat1),dn=r(lng2-lng1),q=Math.sin(dl/2)**2+Math.cos(r(lat1))*Math.cos(r(lat2))*Math.sin(dn/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+let companyCoords=null;
+function locateCompany(){currentDevicePosition().then(p=>{if(!p){alert('Location ON ಮಾಡಿ ಮತ್ತು GPS Permission Allow ಮಾಡಿ.');return}companyCoords=p;if(window.lastWorkerRows)drawCompanyWorkers(window.lastWorkerRows)})}
+function drawCompanyWorkers(rows){const fresh=rows.filter(x=>x.sharing&&x.updatedAt&&Number.isFinite(Number(x.lat))&&Number.isFinite(Number(x.lng))&&Date.now()-(x.updatedAt.toMillis?x.updatedAt.toMillis():x.updatedAt)<120000).map(x=>({...x,distance:companyCoords?companyDistanceKm(companyCoords.lat,companyCoords.lng,Number(x.lat),Number(x.lng)):null})).sort((a,b)=>(a.distance??Infinity)-(b.distance??Infinity));const list=document.getElementById('workerMapList');if(!list)return;const radius=Number(document.getElementById('workerRadius')?.value||1000);const shown=fresh.filter(x=>x.distance===null||x.distance<=radius);list.innerHTML=shown.length?shown.map(x=>'<div class="card"><b>'+esc(x.name||'Worker')+'</b><p>'+esc(x.city||'')+' • '+(x.distance===null?'Distance unavailable':x.distance.toFixed(1)+' km away')+' • GPS accuracy '+Math.round(x.accuracy||0)+' m</p><a class="maplink" target="_blank" rel="noopener" href="https://www.google.com/maps/dir/?api=1&destination='+x.lat+','+x.lng+'">Navigate</a> <a class="maplink" target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+x.lat+'&mlon='+x.lng+'#map=16/'+x.lat+'/'+x.lng+'">Open Map</a></div>').join(''):'<div class="locbox">ಈ ವ್ಯಾಪ್ತಿಯಲ್ಲಿ ಈಗ Live Location share ಮಾಡುತ್ತಿರುವ Worker ಇಲ್ಲ.</div>';const m=document.getElementById('workerMap');if(!m)return;if(!window.L){m.textContent='Map unavailable; use Navigate links.';return}if(window.workerLiveMap)window.workerLiveMap.remove();const center=companyCoords?[companyCoords.lat,companyCoords.lng]:(shown.length?[shown[0].lat,shown[0].lng]:[12.9716,77.5946]);const map=L.map(m).setView(center,companyCoords?12:10);window.workerLiveMap=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);if(companyCoords)L.marker([companyCoords.lat,companyCoords.lng]).addTo(map).bindPopup('Company location');shown.forEach(x=>L.marker([x.lat,x.lng]).addTo(map).bindPopup(esc(x.name||'Worker')+(x.distance===null?'':' • '+x.distance.toFixed(1)+' km')));const pts=[...(companyCoords?[[companyCoords.lat,companyCoords.lng]]:[]),...shown.map(x=>[x.lat,x.lng])];if(pts.length>1)map.fitBounds(pts,{padding:[25,25]})}
+function renderCompanyLocations(el){if(companyLocationUnsub){companyLocationUnsub();companyLocationUnsub=null}el.innerHTML='<h3>Nearby Workers – Live Map</h3><p class="muted">Worker location ಕಾಣಲು ಅವರು ಸ್ವತಃ Start Live Location ಒತ್ತಿರಬೇಕು.</p><button class="primary" onclick="locateCompany()">My Company Location ಬಳಸಿ Nearby ಹುಡುಕಿ</button><div class="field"><label>Search radius</label><select id="workerRadius" onchange="drawCompanyWorkers(window.lastWorkerRows||[])"><option value="5">5 km</option><option value="10">10 km</option><option value="25">25 km</option><option value="50">50 km</option><option value="1000" selected>All available</option></select></div><div id="workerMap" class="mapcanvas"></div><div id="workerMapList"></div>';const draw=rows=>{window.lastWorkerRows=rows;drawCompanyWorkers(rows)};companyLocationUnsub=fbDb.collection('locations').where('sharing','==',true).onSnapshot(s=>draw(s.docs.map(d=>({id:d.id,...d.data()}))),e=>{el.innerHTML='<div class="locbox">Location sync error: '+esc(e.message)+'</div>'})}
+
+function renderCompanyLocationSelf(el){
+ el.innerHTML='<div class="card"><h3>Company Live GPS</h3><p>ನಿಮ್ಮ ಅನುಮತಿಯೊಂದಿಗೆ ಮಾತ್ರ ಕಂಪನಿ ಸ್ಥಳ ಹಂಚಲಾಗುತ್ತದೆ. Start ಮಾಡಿದಾಗ App ತೆರೆದಿರುವವರೆಗೆ update ಆಗುತ್ತದೆ. Stop ಮಾಡಿದಾಗ location ದಾಖಲೆಯನ್ನು ಅಳಿಸಲಾಗುತ್ತದೆ. Background tracking ಖಚಿತವಲ್ಲ.</p><div class="locbox" id="companyLocStatus"><b>Company location sharing: OFF</b><p>Start ಮಾಡುವವರೆಗೆ GPS ಹಂಚುವುದಿಲ್ಲ.</p></div><button class="primary" onclick="startCompanyLocation()">Start Company GPS</button><button class="danger" onclick="stopCompanyLocation()">Stop Sharing</button><div id="companyLocDetails"></div></div>';
+}
+function handleCompanyPosition(pos){
+ const item={uid:me.id,role:'company',name:me.name,city:me.city,lat:pos.coords.latitude,lng:pos.coords.longitude,accuracy:Math.round(pos.coords.accuracy),updatedAt:firebase.firestore.FieldValue.serverTimestamp(),sharing:true};
+ fbDb.collection('locations').doc(me.id).set(item,{merge:true}).then(()=>{
+  const st=document.getElementById('companyLocStatus');if(st)st.innerHTML='<b><span class="locdot"></span>Company GPS sharing ON</b><p>'+item.lat.toFixed(5)+', '+item.lng.toFixed(5)+' • Accuracy about '+item.accuracy+' m</p>';
+  const d=document.getElementById('companyLocDetails');if(d)d.innerHTML='<a class="maplink" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+item.lat+','+item.lng+'">Open Company Location</a>';
+ }).catch(err=>{const st=document.getElementById('companyLocStatus');if(st)st.innerHTML='<b>Cloud sync failed</b><p>'+esc(err.message)+'</p>'});
+}
+function startCompanyLocation(){
+ if(!fbAuth.currentUser){alert('ದಯವಿಟ್ಟು Login ಮಾಡಿ.');return}
+ if(companyWatchId!==null)return;
+ if(!navigator.geolocation){alert('ಈ ಸಾಧನದಲ್ಲಿ GPS support ಇಲ್ಲ.');return}
+ const st=document.getElementById('companyLocStatus');if(st)st.innerHTML='<b>GPS ಪಡೆಯಲಾಗುತ್ತಿದೆ…</b><p>Permission Allow ಮಾಡಿ.</p>';
+ companyWatchId=navigator.geolocation.watchPosition(handleCompanyPosition,err=>{companyWatchId=null;const x=document.getElementById('companyLocStatus');if(x)x.innerHTML='<b>GPS ಲಭ್ಯವಿಲ್ಲ</b><p>'+esc(err.message)+'</p>'}, {enableHighAccuracy:true,maximumAge:5000,timeout:20000});
+}
+function stopCompanyLocation(){
+ if(companyWatchId!==null){navigator.geolocation.clearWatch(companyWatchId);companyWatchId=null}
+ if(fbAuth.currentUser)fbDb.collection('locations').doc(me.id).delete().catch(err=>console.warn('Could not clear company location',err));
+ const st=document.getElementById('companyLocStatus');if(st)st.innerHTML='<b>Company location sharing: OFF</b><p>ಹಂಚಿಕೆ ನಿಲ್ಲಿಸಲಾಗಿದೆ.</p>';
+}
+let nearbyCompanyUnsub=null;
+function renderNearbyCompanies(el){
+ if(nearbyCompanyUnsub){nearbyCompanyUnsub();nearbyCompanyUnsub=null}
+ el.innerHTML='<h3>Nearby HR / Companies – Live Map</h3><p class="muted">ನಿಮ್ಮ GPS ಮತ್ತು ಕಂಪನಿಯ Live GPS ಆಧರಿಸಿ ದೂರ KM ನಲ್ಲಿ ತೋರಿಸಲಾಗುತ್ತದೆ.</p><button class="primary" onclick="refreshNearbyCompanyDistance()">ನನ್ನ Location ಬಳಸಿ Distance ತೋರಿಸಿ</button><div id="companyMap" class="mapcanvas"></div><div id="companyMapList"></div>';
+ window.nearbyCompanyCoords=null;
+ window.refreshNearbyCompanyDistance=()=>currentDevicePosition().then(p=>{window.nearbyCompanyCoords=p;if(window.lastNearbyCompanyRows)drawNearbyCompanyRows(window.lastNearbyCompanyRows)});
+ window.drawNearbyCompanyRows=drawNearbyCompanyRows;
+ function drawNearbyCompanyRows(rows){const list=document.getElementById('companyMapList');if(!list)return;const origin=window.nearbyCompanyCoords;const shown=rows.map(x=>({...x,distance:origin&&hasValidCoordinates(x.lat,x.lng)?distanceKm(origin,{lat:Number(x.lat),lng:Number(x.lng)}):null})).sort((a,b)=>(a.distance??Infinity)-(b.distance??Infinity));list.innerHTML=shown.length?shown.map(x=>'<div class="card"><b>'+esc(x.name||'Company')+'</b><p>'+esc(x.city||'')+' • '+(x.distance===null?'Distance unavailable':x.distance.toFixed(1)+' km away')+'</p><a class="maplink" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+x.lat+','+x.lng+'">Open Company Map</a></div>').join(''):'<div class="locbox">ಈಗ GPS ಹಂಚುತ್ತಿರುವ HR / Company ಇಲ್ಲ.</div>';const mapEl=document.getElementById('companyMap');if(!mapEl||!window.L)return;if(window.nearbyCompanyMap)window.nearbyCompanyMap.remove();const center=origin?[origin.lat,origin.lng]:(shown.length?[Number(shown[0].lat),Number(shown[0].lng)]:[12.9716,77.5946]);const map=L.map(mapEl).setView(center,origin?11:5);window.nearbyCompanyMap=map;L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);if(origin)L.marker([origin.lat,origin.lng]).addTo(map).bindPopup('ನಿಮ್ಮ Location');shown.filter(x=>hasValidCoordinates(x.lat,x.lng)).forEach(x=>L.marker([Number(x.lat),Number(x.lng)]).addTo(map).bindPopup(esc(x.name||'Company')+' • '+(x.distance===null?'':x.distance.toFixed(1)+' km')));const pts=[...(origin?[[origin.lat,origin.lng]]:[]),...shown.filter(x=>hasValidCoordinates(x.lat,x.lng)).map(x=>[Number(x.lat),Number(x.lng)])];if(pts.length>1)map.fitBounds(pts,{padding:[25,25]})}
+ nearbyCompanyUnsub=fbDb.collection('locations').where('sharing','==',true).where('role','==','company').onSnapshot(snap=>{const rows=snap.docs.map(x=>({id:x.id,...x.data()})).filter(x=>x.role==='company'&&hasValidCoordinates(x.lat,x.lng)&&Date.now()-(x.updatedAt?.toMillis?x.updatedAt.toMillis():Number(x.updatedAt||0))<120000);window.lastNearbyCompanyRows=rows;drawNearbyCompanyRows(rows)},err=>{const list=document.getElementById('companyMapList');if(list)list.textContent='GPS load error: '+err.message});
+ currentDevicePosition().then(p=>{window.nearbyCompanyCoords=p;if(window.lastNearbyCompanyRows)drawNearbyCompanyRows(window.lastNearbyCompanyRows)});
+}
+
+function filterHireHubJobs(){const q=(document.getElementById('jobSearch')?.value||'').trim().toLowerCase(),city=(document.getElementById('jobCity')?.value||'').trim().toLowerCase(),type=document.getElementById('jobTypeFilter')?.value||'';const rows=(window.hirehubJobRows||[]).filter(j=>(!q||[j.title,j.company,j.details,j.skills].join(' ').toLowerCase().includes(q))&&(!city||String(j.city||'').toLowerCase().includes(city))&&(!type||j.type===type));document.getElementById('jobResults').innerHTML=rows.map(j=>job(j,true)).join('');document.getElementById('jobEmpty').classList.toggle('hidden',rows.length>0)}
+function job(j,canApply,canDelete=false){return '<article class="job"><span class="pill">'+esc(j.type)+'</span><h3>'+esc(j.title)+'</h3><b>'+esc(j.company)+'</b><p>'+esc(j.city)+' • '+esc(j.pay)+'</p><p class="muted">'+esc(j.details||'')+'</p>'+(canApply?'<button class="primary" onclick="apply(\''+j.id+'\')">Apply Now</button>':canDelete?'<button class="danger" onclick="removeJob(\''+j.id+'\')">Delete</button>':'')+'</article>'}
+async function setApplicationStatus(id,status){try{const target=(db().apps||[]).find(x=>String(x.id)===String(id));await fbDb.collection('applications').doc(String(id)).update({status,updatedAt:firebase.firestore.FieldValue.serverTimestamp()});if(target?.workerId||target?.worker)await fbDb.collection('notifications').add({actorId:me.id,recipientId:target.workerId||target.worker,title:'Application status updated',message:'ನಿಮ್ಮ '+(target.title||'job')+' ಅರ್ಜಿಯ ಸ್ಥಿತಿ: '+status,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});const d=db();d.apps=(d.apps||[]).map(x=>String(x.id)===String(id)?{...x,status}:x);d.notifications=d.notifications||[];d.notifications.unshift({title:'Application updated',message:'Status: '+status,createdAt:Date.now()});saveLocal(d);render()}catch(err){alert('Status update failed: '+err.message)}}
+let notificationUnsub=null;let notificationSeenIds=new Set(),notificationFirstSnapshot=true;
+async function createHireHubNotification(recipientId,title,message,extra={}){if(!recipientId||recipientId===me?.id)return;try{await fbDb.collection('notifications').add({actorId:me?.id||'system',recipientId:String(recipientId),title,message,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false,...extra})}catch(err){console.warn('Notification write failed for',recipientId,err.code||err.message)}}
+async function notifyActiveWorkersAboutJob(jobId,job){
+ try{
+  let origin=null;
+  if(Number.isFinite(Number(job.requestLat))&&Number.isFinite(Number(job.requestLng))&&Math.abs(Number(job.requestLat))<=90&&Math.abs(Number(job.requestLng))<=180)origin={lat:Number(job.requestLat),lng:Number(job.requestLng)};
+  if(!origin){const companyLocation=await fbDb.collection('locations').doc(String(me.id)).get().catch(()=>null);const p=companyLocation?.exists?companyLocation.data():null;if(p&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng)))origin={lat:Number(p.lat),lng:Number(p.lng)}}
+  if(!origin)origin=await currentDevicePosition();
+  if(!origin||!Number.isFinite(Number(origin.lat))||!Number.isFinite(Number(origin.lng))){console.warn('Nearby job notifications skipped: company GPS unavailable');return 0}
+  const snap=await fbDb.collection('workerPublicProfiles').where('availability','==','available').limit(500).get();
+  const now=Date.now(),radiusKm=15;
+  const recipients=snap.docs.map(d=>({id:d.id,...d.data()})).filter(w=>{
+   if(w.id===me.id||!Number.isFinite(Number(w.lat))||!Number.isFinite(Number(w.lng)))return false;
+   const seen=w.lastSeen?.toDate?w.lastSeen.toDate().getTime():0;
+   return seen>0&&now-seen<180000&&hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)})<=radiusKm;
+  }).sort((a,b)=>hireHubDistanceKm(origin,{lat:Number(a.lat),lng:Number(a.lng)})-hireHubDistanceKm(origin,{lat:Number(b.lat),lng:Number(b.lng)})).slice(0,100);
+  const results=await Promise.all(recipients.map(async w=>{
+   try{await fbDb.collection('notifications').add({actorId:me.id,recipientId:w.id,title:'ಹೊಸ ಹತ್ತಿರದ Job: '+(job.title||'ಹೊಸ ಕೆಲಸ'),message:(job.city||'')+' • '+(job.pay||'ವೇತನ ವಿವರ ನೋಡಿ')+' • ನಿಮ್ಮಿಂದ '+hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)}).toFixed(1)+' km ದೂರ. HireHub ತೆರೆಯಿರಿ ಮತ್ತು Apply ಮಾಡಿ.',eventType:'job_posted',jobId:String(jobId),distanceKm:Number(hireHubDistanceKm(origin,{lat:Number(w.lat),lng:Number(w.lng)}).toFixed(2)),createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});return true}catch(err){console.warn('Nearby job notification failed for',w.id,err.code||err.message);return false}
+  }));
+  const sent=results.filter(Boolean).length;console.info('Nearby job notifications sent:',sent,'of',recipients.length);return sent;
+ }catch(err){console.warn('Nearby job notification broadcast failed',err.code||err.message);return 0}
+}
+async function enableBrowserNotifications(){
+ const el=document.getElementById('notificationPermissionStatus');
+ try{
+  const cap=window.Capacitor;
+  const nativePush=window.NexPushNotifications||cap?.Plugins?.PushNotifications||(typeof cap?.registerPlugin==='function'?cap.registerPlugin('PushNotifications'):null);
+  if(cap?.isNativePlatform?.()&&nativePush){
+   const permission=await nativePush.requestPermissions();
+   if(permission.receive!=='granted'){if(el)el.textContent='ಅನುಮತಿ ನಿರಾಕರಿಸಲಾಗಿದೆ. Android Settings → Apps → NEXVADORAQ → Notifications → Allow ಮಾಡಿ.';return}
+   if(!window.__nexPushListeners){
+     await nativePush.addListener('registration',async token=>{
+     try{
+      const uid=fbAuth.currentUser?.uid;
+      if(uid)await fbDb.collection('users').doc(uid).set({fcmToken:token.value,fcmTokens:firebase.firestore.FieldValue.arrayUnion(token.value),fcmTokenUpdatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
+      if(el)el.textContent='Push ಸಕ್ರಿಯವಾಗಿದೆ. Device token Firebase ನಲ್ಲಿ ಉಳಿಸಲಾಗಿದೆ.';
+     }catch(err){console.error('FCM token save failed',err);if(el)el.textContent='Token ಉಳಿಸಲು ಆಗಲಿಲ್ಲ: '+(err.code||err.message)}
+    });
+    await nativePush.addListener('registrationError',err=>{console.error('FCM registration error',err);if(el)el.textContent='FCM Registration error: '+(err.message||JSON.stringify(err))});
+    await nativePush.addListener('pushNotificationReceived',n=>{if(el)el.textContent='ಹೊಸ Push Notification ಬಂದಿದೆ';if(n?.title)alert((n.title||'NEXVADORAQ')+'\\n'+(n.body||''))});
+    await nativePush.addListener('pushNotificationActionPerformed',()=>{window.focus();go('notifications')});
+    window.__nexPushListeners=true;
+   }
+   await nativePush.register();
+   if(el)el.textContent='Android permission OK. FCM device token ಪಡೆಯಲಾಗುತ್ತಿದೆ…';
+   return;
+  }
+  if(el)el.textContent=cap?.isNativePlatform?.()?'Android Push plugin ಲೋಡ್ ಆಗಿಲ್ಲ. ಹೊಸ APK install ಮಾಡಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.':'Browser ನಲ್ಲಿ background Push ಬೆಂಬಲವಿಲ್ಲ; Android APK ಬಳಸಿ.';
+  if(!cap?.isNativePlatform?.()&&'Notification'in window){
+   const p=await Notification.requestPermission();
+   if(el)el.textContent=p==='granted'?'Browser alerts ಮಾತ್ರ ಸಕ್ರಿಯ (background FCM ಅಲ್ಲ).':'Browser permission: '+p;
+  }
+ }catch(e){console.error('Push setup failed',e);if(el)el.textContent='Push setup ವಿಫಲ: '+(e.code||e.message);alert('Push Notification setup ಆಗಲಿಲ್ಲ: '+e.message)}
+}
+function showAppNotification(n){
+ if(!('Notification'in window)||Notification.permission!=='granted'||document.visibilityState==='visible')return;
+ try{const notice=new Notification(n.title||'NEXVADORAQ Update',{body:n.message||'ನಿಮಗೆ ಹೊಸ ಮಾಹಿತಿ ಬಂದಿದೆ.',icon:'./icons/icon.svg',tag:String(n.id||Date.now())});notice.onclick=()=>{window.focus();go('notifications');notice.close()}}catch(e){console.warn('Browser notification unavailable',e)}
+}
+async function markNotificationRead(id){
+ try{const item=(db().notifications||[]).find(n=>String(n.id)===String(id));if(item?.audience==='admins')await fbDb.collection('notifications').doc(String(id)).update({readBy:firebase.firestore.FieldValue.arrayUnion(me.id)});else await fbDb.collection('notifications').doc(String(id)).update({read:true});const d=db();d.notifications=(d.notifications||[]).map(n=>String(n.id)===String(id)?(n.audience==='admins'?{...n,readBy:[...new Set([...(n.readBy||[]),me.id])]}:{...n,read:true}):n);saveLocal(d);render()}catch(e){alert('Notification update ಆಗಲಿಲ್ಲ: '+e.message)}
+}
+function startNotificationSync(){
+ if(notificationUnsub){notificationUnsub();notificationUnsub=null}
+ if(!me||!fbAuth.currentUser)return;
+ notificationFirstSnapshot=true;notificationSeenIds=new Set();
+ let personalRows=[],adminRows=[],initialPending=me.role==='admin'?2:1,initialized=false;
+ const publish=()=>{
+  const incoming=[...personalRows,...adminRows].sort((x,y)=>x.createdAt-y.createdAt).slice(-150);
+  if(initialized)incoming.forEach(n=>{if(!notificationSeenIds.has(String(n.id)))showAppNotification(n)});
+  incoming.forEach(n=>notificationSeenIds.add(String(n.id)));
+  const local=db();local.notifications=incoming;saveLocal(local);
+  if(page==='notifications'||page==='adminNotifications')render();
+ };
+ const convert=snap=>snap.docs.map(doc=>({id:doc.id,...doc.data(),createdAt:doc.data().createdAt?.toMillis?doc.data().createdAt.toMillis():Date.now()}));
+ const unsubs=[];
+ const attach=(query,setRows,label)=>unsubs.push(query.onSnapshot(snap=>{setRows(convert(snap));if(initialPending>0){initialPending--;if(initialPending===0){initialized=true;notificationFirstSnapshot=false;}}publish()},e=>console.warn(label+' notification sync failed',e)));
+ attach(fbDb.collection('notifications').where('recipientId','==',me.id),rows=>personalRows=rows,'Personal');
+ if(me.role==='admin')attach(fbDb.collection('notifications').where('audience','==','admins'),rows=>adminRows=rows,'Admin broadcast');
+ notificationUnsub=()=>unsubs.forEach(fn=>fn());
+}
+async function apply(id){const j=[...samples,...db().jobs].find(x=>String(x.id)===String(id));if(!j){alert('ಈ Job ಈಗ ಲಭ್ಯವಿಲ್ಲ. Refresh ಮಾಡಿ.');return}if(!fbAuth.currentUser||me.role!=='worker'){alert('Worker account ನಲ್ಲಿ Login ಮಾಡಿ.');return}const d=db();if(d.apps.some(x=>String(x.job)===String(id)&&x.worker===me.id)){alert('ಈ Job ಗೆ ಈಗಾಗಲೇ ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ್ದೀರಿ.');return}const employerId=j.ownerId||j.owner;if(!employerId){alert('ಈ Job ಕಂಪನಿ ಖಾತೆಗೆ ಸಂಪರ್ಕಗೊಂಡಿಲ್ಲ.');return}const appId=uid(),app={id:appId,job:String(id),worker:me.id,workerId:me.id,workerName:me.name,employerId,title:j.title,company:j.company,city:j.city,status:'Applied',createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await fbDb.collection('applications').doc(appId).set(app);d.apps.unshift({...app,createdAt:Date.now()});d.notifications=d.notifications||[];d.notifications.unshift({title:'Application submitted',message:'ನೀವು '+j.title+' ಕೆಲಸಕ್ಕೆ ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ್ದೀರಿ.',createdAt:Date.now()});saveLocal(d);await fbDb.collection('notifications').add({actorId:me.id,recipientId:employerId,title:'New job application',message:me.name+' applied for '+j.title,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});alert('ನಿಮ್ಮ ಅರ್ಜಿ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ.');go('applications')}catch(err){console.error('Application submit failed:',err);alert('ಅರ್ಜಿ ಸಲ್ಲಿಸಲು ಆಗಲಿಲ್ಲ: '+authError(err))}}async function removeJob(id){const j=db().jobs.find(x=>String(x.id)===String(id));if(!j|| (j.ownerId||j.owner)!==me.id){alert('ಈ Job ಅಳಿಸಲು ಅನುಮತಿ ಇಲ್ಲ.');return}if(!confirm('ಈ Job ಅನ್ನು ಅಳಿಸಬೇಕೇ?'))return;try{await fbDb.collection('jobs').doc(String(id)).delete();const d=db();d.jobs=d.jobs.filter(x=>String(x.id)!==String(id));saveLocal(d);render()}catch(err){alert('Job ಅಳಿಸಲು ಆಗಲಿಲ್ಲ: '+authError(err))}}
+function publicRender(){let d=db();document.getElementById('publicJobs').innerHTML=[...samples,...d.jobs.filter(j=>j.status==='published')].slice(0,6).map(j=>job(j,false)).join('')}
+let authRestoreInProgress=false;
+fbAuth.onAuthStateChanged(async user=>{
+ if(authSubmitting||authRestoreInProgress)return;
+ if(user){
+  authRestoreInProgress=true;
+  try{
+   await authReady;
+   const snap=await readUserProfileWithRetry(fbDb.collection('users').doc(user.uid));
+   if(snap.exists){
+    const profile=snap.data();
+    if(!['worker','company','customer','admin'].includes(profile.role)||profile.active===false)throw new Error('ಈ Account role/active ಸ್ಥಿತಿ ಸರಿಯಿಲ್ಲ. Support ಮೂಲಕ ಪರಿಶೀಲಿಸಿ.');
+    me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
+   }else{
+    if(authSubmitting)return;
+    me=null;localStorage.removeItem(SK);document.getElementById('dash').classList.add('hidden');document.getElementById('landing').classList.add('hidden');document.getElementById('auth').classList.remove('hidden');mode='repair';authSync();document.getElementById('email').value=user.email||'';document.getElementById('authMsg').textContent='ಈ Email Auth ನಲ್ಲಿ ಇದೆ; HireHub Profile ಪೂರ್ಣವಾಗಿಲ್ಲ. Name, City ನಮೂದಿಸಿ Complete profile ಒತ್ತಿ.';
+   }
+  }catch(err){
+   console.warn('Profile restore failed after retry:',err);
+   if(!authSubmitting){document.getElementById('dash').classList.add('hidden');document.getElementById('landing').classList.add('hidden');document.getElementById('auth').classList.remove('hidden');document.getElementById('authMsg').textContent='Android App Firebase ಸಂಪರ್ಕ ಮರುಸ್ಥಾಪಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ. '+authError(err)+' | ವಿವರ: '+(err?.message||'No additional error message')+' | Online: '+(navigator.onLine?'Yes':'No')+' | App: '+(window.Capacitor?.getPlatform?.()||'webview');}
+  }finally{authRestoreInProgress=false;}
+ }else{
+  me=null;localStorage.removeItem(SK);document.getElementById('dash').classList.add('hidden');
+  if(!document.getElementById('auth').classList.contains('hidden'))return;
+  document.getElementById('landing').classList.remove('hidden');
+ }
+});
+window.addEventListener('online',()=>{fbDb.enableNetwork().then(()=>console.info('Firestore network restored')).catch(e=>console.warn('Firestore network restore failed',e))});
+window.addEventListener('offline',()=>console.warn('Device went offline; Firestore will reconnect when network returns'));
+publicRender();
+// Expose handlers and bind the three landing choices directly for mobile browsers.
+window.authOpen=authOpen;window.authOpenAdmin=authOpenAdmin;window.closeAuth=closeAuth;window.setMode=setMode;
+[['openCustomerAuth','customer'],['openWorkerAuth','worker'],['openCompanyAuth','company']].forEach(([id,r])=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('click',e=>{e.preventDefault();authOpen(r);document.getElementById('auth').scrollIntoView({behavior:'smooth',block:'start'})})}});
+if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{reg.update().catch(()=>{});if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'})}).catch(err=>console.warn('Offline app setup unavailable:',err.message)))}
+</script></body></html>
+).test(assigned))throw new Error('Numeric User ID format ಸರಿಯಿಲ್ಲ.');
+     const fields={displayId:assigned,...(pendingRole==='worker'?{workerId:assigned}:{}),...(pendingRole==='company'?{companyId:assigned}:{}),...(pendingRole==='customer'?{customerId:assigned}:{})};
+     await userRef.set(fields,{merge:true});
+     if(me?.id===user.uid)me={...me,...fields};
+    }).catch(err=>console.warn('Public User ID remains pending; login is not blocked:',err.code||err.message));
    }
   }
   me={id:user.uid,...profile};localStorage.setItem(SK,user.uid);enter();
