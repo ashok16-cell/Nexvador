@@ -115,6 +115,7 @@ exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
 );
 
 
+// Deployment marker: ensure getOrCreateHireHubDisplayId is deployed to asia-south1 with the current HireHub backend.
 // Assign a unique numeric public HireHub ID to newly registered Worker, Company and Customer accounts.
 exports.getOrCreateHireHubDisplayId = onCall({ region: "asia-south1" }, async (request) => {
   if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Login ಅಗತ್ಯ.");
