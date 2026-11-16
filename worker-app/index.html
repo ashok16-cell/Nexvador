@@ -316,12 +316,13 @@ function decodeFirestoreValue(v){
 async function readUserProfileViaRest(userRef,lastSdkError){
  const user=fbAuth.currentUser;
  if(!user)throw lastSdkError||new Error('Firebase session ಇಲ್ಲ. ಮತ್ತೆ Login ಮಾಡಿ.');
- const token=await user.getIdToken();
+ const token=await withAuthTimeout(user.getIdToken(),'Firebase ID token',8000);
  const project=window.NEXVADORAQ_FIREBASE.projectId;
  const url='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(project)+'/databases/(default)/documents/users/'+encodeURIComponent(user.uid);
  let response;
- try{response=await fetch(url,{method:'GET',headers:{Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'});}
- catch(networkError){const e=new Error('Firestore REST network failure: '+(networkError.message||'fetch failed')+'; SDK: '+(lastSdkError?.message||lastSdkError?.code||'unknown'));e.code='firestore-rest-network';throw e;}
+ try{
+  response=await withAuthTimeout(fetch(url,{method:'GET',headers:{Authorization:'Bearer '+token,Accept:'application/json'},cache:'no-store'}),'Firestore REST ಸಂಪರ್ಕ',8000);
+ }catch(networkError){const e=new Error('Firestore REST network failure: '+(networkError.message||'fetch failed')+'; SDK: '+(lastSdkError?.message||lastSdkError?.code||'unknown'));e.code='firestore-rest-network';throw e;}
  if(response.status===404)return {exists:false,data:()=>undefined};
  const body=await response.json().catch(()=>({}));
  if(!response.ok){const e=new Error('Firestore REST HTTP '+response.status+': '+(body.error?.message||'Request failed')+'; SDK: '+(lastSdkError?.message||lastSdkError?.code||'unknown'));e.code='firestore-rest-'+response.status;throw e;}
@@ -329,21 +330,23 @@ async function readUserProfileViaRest(userRef,lastSdkError){
  return {exists:true,data:()=>data};
 }
 async function readUserProfileWithRetry(userRef){
- const delays=[0,1200,2500,5000,8000];
+ // Bound each SDK attempt. A stalled Android WebView request must not consume
+ // the entire login timeout before the authenticated REST fallback can run.
+ const delays=[0,900,1800];
  let lastError=null;
  for(let attempt=0;attempt<delays.length;attempt++){
   if(delays[attempt]) await new Promise(resolve=>setTimeout(resolve,delays[attempt]));
-  try{return await userRef.get();}
+  try{return await withAuthTimeout(userRef.get(),'Firestore SDK Profile ಓದು',4500);}
   catch(err){
    lastError=err;
-   const code=err&&err.code||'';
-   const retryable=['unavailable','deadline-exceeded','resource-exhausted','cancelled'].includes(code);
+   const code=String(err&&err.code||'');
+   const retryable=!code||['unavailable','deadline-exceeded','resource-exhausted','cancelled','unknown'].includes(code)||/ಸಮಯ ಮೀರಿದೆ|timed out/i.test(err?.message||'');
    if(!retryable||attempt===delays.length-1)break;
    if(typeof navigator!=='undefined'&&navigator.onLine===false)break;
    try{await fbDb.enableNetwork()}catch(networkErr){console.warn('Firestore reconnect attempt failed:',networkErr)}
   }
  }
- console.warn('Firestore SDK read failed; trying authenticated REST fallback:',lastError);
+ console.warn('Firestore SDK read failed or stalled; trying authenticated REST fallback:',lastError);
  try{return await readUserProfileViaRest(userRef,lastError);}
  catch(restError){console.error('Firestore REST fallback failed:',restError);throw restError;}
 }
