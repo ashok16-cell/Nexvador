@@ -329,6 +329,25 @@ async function readUserProfileViaRest(userRef,lastSdkError){
  const data={};Object.entries(body.fields||{}).forEach(([k,v])=>data[k]=decodeFirestoreValue(v));
  return {exists:true,data:()=>data};
 }
+async function writeUserProfileViaRest(userRef,profile){
+ const user=fbAuth.currentUser;
+ if(!user)throw new Error('Firebase session ಇಲ್ಲ. ಮತ್ತೆ Login ಮಾಡಿ.');
+ const token=await withAuthTimeout(user.getIdToken(),'Firebase ID token',8000);
+ const project=window.NEXVADORAQ_FIREBASE.projectId;
+ const url='https://firestore.googleapis.com/v1/projects/'+encodeURIComponent(project)+'/databases/(default)/documents/users/'+encodeURIComponent(user.uid);
+ const fields={};
+ Object.entries(profile).forEach(([key,value])=>{
+  if(value===undefined||value===null)return;
+  if(typeof value==='string')fields[key]={stringValue:value};
+  else if(typeof value==='boolean')fields[key]={booleanValue:value};
+  else if(typeof value==='number'&&Number.isFinite(value))fields[key]={doubleValue:value};
+  else if(value instanceof Date)fields[key]={timestampValue:value.toISOString()};
+ });
+ const response=await withAuthTimeout(fetch(url,{method:'PATCH',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify({fields}),cache:'no-store'}),'Firestore REST Profile Save',12000);
+ const body=await response.json().catch(()=>({}));
+ if(!response.ok){const e=new Error('Firestore REST Save HTTP '+response.status+': '+(body.error?.message||'Request failed'));e.code='firestore-rest-'+response.status;throw e;}
+ return true;
+}
 async function readUserProfileWithRetry(userRef){
  const isAndroid=window.Capacitor?.getPlatform?.()==='android';
  let lastError=null;
@@ -412,11 +431,19 @@ const authForm=document.getElementById('authForm');if(authForm)authForm.onsubmit
     profile=snap.data();
     if(profile.role!==selectedRole)throw new Error('ಈ Email ಬೇರೆ account type ಗೆ ಸೇರಿದೆ. ಸರಿಯಾದ Worker / Company ಆಯ್ಕೆಮಾಡಿ.');
    }else{
-    profile={uid:user.uid,name,mobile:document.getElementById('mobile').value.trim(),city:city||'',email,role:selectedRole,active:true,createdAt:firebase.firestore.FieldValue.serverTimestamp()};
+    profile={uid:user.uid,name,mobile:document.getElementById('mobile').value.trim(),city:city||'',email,role:selectedRole,active:true,createdAt:new Date()};
     setAuthStage('Firestore profile save');
-    // A resolved Firestore set() is the server acknowledgement. Avoid an
-    // unnecessary second read round-trip on slower Android WebViews.
-    await withAuthTimeout(userRef.set(profile,{merge:false}),'Firestore Profile ಉಳಿಸುವಿಕೆ');
+    // Android WebView uses authenticated Firestore REST first; SDK writes can
+    // stall on WebChannel even when Firebase Auth has already succeeded.
+    if(window.Capacitor?.getPlatform?.()==='android'){
+     try{await writeUserProfileViaRest(userRef,profile);}
+     catch(restWriteError){
+      console.warn('Android Firestore REST profile write failed; trying SDK:',restWriteError);
+      await withAuthTimeout(userRef.set({...profile,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:false}),'Firestore SDK Profile Save',12000);
+     }
+    }else{
+     await withAuthTimeout(userRef.set({...profile,createdAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:false}),'Firestore Profile ಉಳಿಸುವಿಕೆ');
+    }
    }
   }
     if(action==='register'){
