@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://ashok16-cell.github.io/Nexvador/sitemap.xml
