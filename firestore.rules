@@ -125,6 +125,33 @@ match /workerBookings/{id}{
    allow create:if active()&&profile(request.auth.uid).role=='customer'&&request.resource.data.customerId==request.auth.uid&&request.resource.data.workerId is string&&request.resource.data.rating is number&&request.resource.data.rating>=1&&request.resource.data.rating<=5&&request.resource.data.bookingId is string;
    allow update,delete:if false;
   }
+  // HR operations: company-owned records; worker salary access is restricted to their UID.
+  match /hireRequirements/{id}{
+   allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.title is string&&request.resource.data.count is int&&request.resource.data.count>=1&&request.resource.data.count<=500;
+   allow read:if admin()||staffCan('jobs')||(company()&&resource.data.companyId==request.auth.uid);
+   allow update,delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
+  }
+  match /hireAttendance/{id}{
+   allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.workerId is string&&request.resource.data.date is string&&request.resource.data.status in ['Present','Absent','Half Day','Leave'];
+   allow read:if admin()||staffCan('users')||(company()&&resource.data.companyId==request.auth.uid)||(worker()&&resource.data.workerId==request.auth.uid);
+   allow update,delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
+  }
+  match /hireLeaveRequests/{id}{
+   allow create:if worker()&&request.resource.data.workerId==request.auth.uid&&request.resource.data.status=='Pending'&&request.resource.data.fromDate is string&&request.resource.data.toDate is string;
+   allow read:if admin()||staffCan('users')||(worker()&&resource.data.workerId==request.auth.uid)||(company()&&resource.data.companyId==request.auth.uid);
+   allow update:if admin()||(company()&&resource.data.companyId==request.auth.uid&&request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','reviewNote','updatedAt'])&&request.resource.data.status in ['Approved','Rejected']);
+   allow delete:if admin();
+  }
+  match /hireSalarySlips/{id}{
+   allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.workerId is string&&request.resource.data.month is string&&request.resource.data.gross is number&&request.resource.data.net is number&&request.resource.data.pf is number&&request.resource.data.esi is number;
+   allow read:if admin()||staffCan('payroll')||(worker()&&resource.data.workerId==request.auth.uid)||(company()&&resource.data.companyId==request.auth.uid);
+   allow update,delete:if admin();
+  }
+  match /hireInvoices/{id}{
+   allow create:if company()&&request.resource.data.companyId==request.auth.uid&&request.resource.data.clientName is string&&request.resource.data.amount is number&&request.resource.data.total is number;
+   allow read:if admin()||staffCan('payroll')||(company()&&resource.data.companyId==request.auth.uid);
+   allow update,delete:if admin()||(company()&&resource.data.companyId==request.auth.uid);
+  }
   match /{document=**}{allow read,write:if false;}
  }
 }
