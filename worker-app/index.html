@@ -1326,7 +1326,7 @@ render=function(){
  const nav=document.getElementById('nav');
  if(nav){
   [['workerAttendance','Attendance'],['workerLeave','Leave Request'],['workerSalary','Salary Slips']].forEach(([key,label])=>{
-   if(!nav.querySelector('[data-worker-hr="'+key+'"]'))nav.insertAdjacentHTML('beforeend','<button data-worker-hr="'+key+'" class="'+(page===key?'tab active':'tab')+'" onclick="go(\\''+key+'\\')">'+label+'</button>');
+   if(!nav.querySelector('[data-worker-hr="'+key+'"]'))nav.insertAdjacentHTML('beforeend','<button data-worker-hr="'+key+'" class="'+(page===key?'tab active':'tab')+'" onclick="go(&quot;'+key+'&quot;)">'+label+'</button>');
   });
  }
  const panel=document.getElementById('panel');
