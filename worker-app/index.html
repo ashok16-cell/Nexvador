@@ -1317,6 +1317,58 @@ function startNotificationSync(){
 }
 async function apply(id){const j=[...samples,...db().jobs].find(x=>String(x.id)===String(id));if(!j){alert('ಈ Job ಈಗ ಲಭ್ಯವಿಲ್ಲ. Refresh ಮಾಡಿ.');return}if(!fbAuth.currentUser||me.role!=='worker'){alert('Worker account ನಲ್ಲಿ Login ಮಾಡಿ.');return}const d=db();if(d.apps.some(x=>String(x.job)===String(id)&&x.worker===me.id)){alert('ಈ Job ಗೆ ಈಗಾಗಲೇ ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ್ದೀರಿ.');return}const employerId=j.ownerId||j.owner;if(!employerId){alert('ಈ Job ಕಂಪನಿ ಖಾತೆಗೆ ಸಂಪರ್ಕಗೊಂಡಿಲ್ಲ.');return}const appId=uid(),app={id:appId,job:String(id),worker:me.id,workerId:me.id,workerName:me.name,employerId,title:j.title,company:j.company,city:j.city,status:'Applied',createdAt:firebase.firestore.FieldValue.serverTimestamp()};try{await fbDb.collection('applications').doc(appId).set(app);d.apps.unshift({...app,createdAt:Date.now()});d.notifications=d.notifications||[];d.notifications.unshift({title:'Application submitted',message:'ನೀವು '+j.title+' ಕೆಲಸಕ್ಕೆ ಅರ್ಜಿ ಸಲ್ಲಿಸಿದ್ದೀರಿ.',createdAt:Date.now()});saveLocal(d);await fbDb.collection('notifications').add({actorId:me.id,recipientId:employerId,title:'New job application',message:me.name+' applied for '+j.title,createdAt:firebase.firestore.FieldValue.serverTimestamp(),read:false});alert('ನಿಮ್ಮ ಅರ್ಜಿ ಯಶಸ್ವಿಯಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ.');go('applications')}catch(err){console.error('Application submit failed:',err);alert('ಅರ್ಜಿ ಸಲ್ಲಿಸಲು ಆಗಲಿಲ್ಲ: '+authError(err))}}async function removeJob(id){const j=db().jobs.find(x=>String(x.id)===String(id));if(!j|| (j.ownerId||j.owner)!==me.id){alert('ಈ Job ಅಳಿಸಲು ಅನುಮತಿ ಇಲ್ಲ.');return}if(!confirm('ಈ Job ಅನ್ನು ಅಳಿಸಬೇಕೇ?'))return;try{await fbDb.collection('jobs').doc(String(id)).delete();const d=db();d.jobs=d.jobs.filter(x=>String(x.id)!==String(id));saveLocal(d);render()}catch(err){alert('Job ಅಳಿಸಲು ಆಗಲಿಲ್ಲ: '+authError(err))}}
 function publicRender(){let d=db();document.getElementById('publicJobs').innerHTML=[...samples,...d.jobs.filter(j=>j.status==='published')].slice(0,6).map(j=>job(j,false)).join('')}
+
+/* Worker HR self-service: attendance, leave and salary records */
+const nexWorkerBaseRender=render;
+render=function(){
+ nexWorkerBaseRender();
+ if(!me||me.role!=='worker')return;
+ const nav=document.getElementById('nav');
+ if(nav){
+  [['workerAttendance','Attendance'],['workerLeave','Leave Request'],['workerSalary','Salary Slips']].forEach(([key,label])=>{
+   if(!nav.querySelector('[data-worker-hr="'+key+'"]'))nav.insertAdjacentHTML('beforeend','<button data-worker-hr="'+key+'" class="'+(page===key?'tab active':'tab')+'" onclick="go(\\''+key+'\\')">'+label+'</button>');
+  });
+ }
+ const panel=document.getElementById('panel');
+ if(!panel)return;
+ if(page==='workerAttendance'){
+  panel.innerHTML='<div class="card"><h3>ನನ್ನ Attendance</h3><p class="muted">ನಿಮ್ಮ Worker IDಗೆ ಸಂಬಂಧಿಸಿದ ಹಾಜರಾತಿ ದಾಖಲೆಗಳು.</p><div id="workerAttendanceRows">Loading…</div></div>';
+  nexLoadWorkerRecords('hireAttendance','workerAttendanceRows');return;
+ }
+ if(page==='workerLeave'){
+  panel.innerHTML='<div class="card"><h3>Leave Request</h3><form class="form" onsubmit="nexSubmitWorkerLeave(event)"><div class="field"><label>From date</label><input id="nexLeaveFrom" type="date" required></div><div class="field"><label>To date</label><input id="nexLeaveTo" type="date" required></div><div class="field"><label>Reason</label><textarea id="nexLeaveReason" required maxlength="500" placeholder="Leave reason"></textarea></div><button class="primary">Submit Leave Request</button></form><hr><h3>ನನ್ನ Leave Requests</h3><div id="workerLeaveRows">Loading…</div></div>';
+  nexLoadWorkerRecords('hireLeaveRequests','workerLeaveRows');return;
+ }
+ if(page==='workerSalary'){
+  panel.innerHTML='<div class="card"><h3>ನನ್ನ Salary Slips</h3><p class="muted">ಕಂಪನಿ ಪ್ರಕಟಿಸಿದ ನಿಮ್ಮ ಸಂಬಳದ ವಿವರಗಳು ಮಾತ್ರ ಇಲ್ಲಿ ಕಾಣಿಸುತ್ತವೆ.</p><div id="workerSalaryRows">Loading…</div></div>';
+  nexLoadWorkerRecords('hireSalarySlips','workerSalaryRows');return;
+ }
+};
+async function nexLoadWorkerRecords(collectionId,targetId){
+ const box=document.getElementById(targetId);if(!box||!me||me.role!=='worker')return;
+ try{
+  const snap=await fbDb.collection(collectionId).where('workerId','==',me.id).limit(100).get();
+  if(!document.getElementById(targetId))return;
+  const rows=snap.docs.map(x=>({id:x.id,...x.data()})).sort((a,b)=>String(b.month||b.date||b.fromDate||'').localeCompare(String(a.month||a.date||a.fromDate||'')));
+  if(!rows.length){box.innerHTML='<p class="muted">ಇನ್ನೂ ದಾಖಲೆಗಳು ಲಭ್ಯವಿಲ್ಲ.</p>';return;}
+  box.innerHTML=rows.map(x=>{
+   if(collectionId==='hireAttendance')return '<article class="card"><b>'+esc(x.date||'Date not set')+'</b><p>Status: <strong>'+esc(x.status||'—')+'</strong></p><p class="muted">'+esc(x.notes||'')+'</p></article>';
+   if(collectionId==='hireLeaveRequests')return '<article class="card"><b>'+esc(x.fromDate||'')+' – '+esc(x.toDate||'')+'</b><p>'+esc(x.reason||'')+'</p><span class="pill">'+esc(x.status||'Pending')+'</span><p class="muted">'+esc(x.reviewNote||'')+'</p></article>';
+   return '<article class="card"><b>'+esc(x.month||'Salary period')+'</b><p>Gross: ₹'+Number(x.gross||0).toLocaleString('en-IN')+'</p><p>PF: ₹'+Number(x.pf||0).toLocaleString('en-IN')+' • ESI: ₹'+Number(x.esi||0).toLocaleString('en-IN')+' • Other: ₹'+Number(x.other||0).toLocaleString('en-IN')+'</p><h3>Net Pay: ₹'+Number(x.net||0).toLocaleString('en-IN')+'</h3></article>';
+  }).join('');
+ }catch(e){box.textContent='ದಾಖಲೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ: '+(e.code||e.message);}
+}
+async function nexSubmitWorkerLeave(e){
+ e.preventDefault();const fromDate=document.getElementById('nexLeaveFrom').value,toDate=document.getElementById('nexLeaveTo').value,reason=document.getElementById('nexLeaveReason').value.trim();
+ if(toDate<fromDate)return alert('To date, From dateಗಿಂತ ಹಿಂದಿನದಾಗಿರಬಾರದು.');
+ try{
+  await fbDb.collection('hireLeaveRequests').add({workerId:me.id,workerName:me.name||'',companyId:me.companyId||'',fromDate,toDate,reason,status:'Pending',createdAt:firebase.firestore.FieldValue.serverTimestamp()});
+  alert('Leave request ಕಳುಹಿಸಲಾಗಿದೆ.');go('workerLeave');
+ }catch(e){alert('Leave request ವಿಫಲ: '+(e.code||e.message));}
+}
+window.nexSubmitWorkerLeave=nexSubmitWorkerLeave;
+window.nexLoadWorkerRecords=nexLoadWorkerRecords;
+
 let authRestoreInProgress=false;
 fbAuth.onAuthStateChanged(async user=>{
  if(authSubmitting||authRestoreInProgress)return;
