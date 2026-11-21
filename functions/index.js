@@ -234,7 +234,10 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
   } catch (error) {
     console.error("acceptWorkerBooking failed", { uid, bookingId, stage, code: error?.code || "unknown", message: error?.message || String(error), stack: error?.stack });
     if (error instanceof HttpsError) throw error;
-    // Return a safe diagnostic stage to the authenticated app; full stack remains in Cloud Logging.
-    throw new HttpsError("internal", "Booking ಸ್ವೀಕರಿಸುವಾಗ ಸರ್ವರ್ ದೋಷ ಉಂಟಾಗಿದೆ.", { stage, cause: String(error?.message || error).slice(0, 300) });
+    // Preserve a safe, actionable diagnostic for the authenticated worker client.
+    // Keep the full stack in Cloud Logging; expose only stage and a bounded cause.
+    const cause = String(error?.message || error || "Unknown server error").slice(0, 300);
+    console.error("acceptWorkerBooking diagnostic", JSON.stringify({ uid, bookingId, stage, code: error?.code || "unknown", cause }));
+    throw new HttpsError("internal", "Booking ಸ್ವೀಕರಿಸುವಾಗ ಸರ್ವರ್ ದೋಷ ಉಂಟಾಗಿದೆ.", { stage, cause });
   }
 });
