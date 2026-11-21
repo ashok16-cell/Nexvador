@@ -202,7 +202,7 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
           const oldSnap = await tx.get(db.collection("workerBookings").doc(oldId));
           const old = oldSnap.exists ? oldSnap.data() || {} : null;
           const oldIds = Array.isArray(old?.acceptedWorkerIds) ? old.acceptedWorkerIds.map(String) : (old?.workerId ? [String(old.workerId)] : []);
-          if (old && ["Pending", "Partially Filled", "Confirmed"].includes(String(old.status || "Pending")) && oldIds.includes(uid) && String(old.workerCompletionStatus || "").toLowerCase() !== "submitted") {
+          if (old && ["Pending", "Partially Filled", "Confirmed"].includes(String(old.status || "Pending")) && oldIds.includes(uid) && !(String(old.status || "").toLowerCase() === "completed" && old.customerCompletionConfirmed === true)) {
             throw new HttpsError("failed-precondition", "ನೀವು ಈಗಾಗಲೇ ಮತ್ತೊಂದು Booking ಸ್ವೀಕರಿಸಿದ್ದೀರಿ (" + oldId + "). ಅದನ್ನು Completed, Rejected ಅಥವಾ Cancelled ಮಾಡಿದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.");
           }
         }
@@ -240,4 +240,47 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
     console.error("acceptWorkerBooking diagnostic", JSON.stringify({ uid, bookingId, stage, code: error?.code || "unknown", cause }));
     throw new HttpsError("internal", "Booking ಸ್ವೀಕರಿಸುವಾಗ ಸರ್ವರ್ ದೋಷ ಉಂಟಾಗಿದೆ.", { stage, cause });
   }
+});
+
+
+// Customer confirms the worker's submitted completion. Only then is the worker's active lock released.
+exports.confirmWorkerCompletion = onCall({ region: "asia-south1", memory: "256MiB" }, async (request) => {
+  if (!request.auth?.uid) throw new HttpsError("unauthenticated", "Customer login ಅಗತ್ಯ.");
+  const uid = String(request.auth.uid);
+  const bookingId = String(request.data?.bookingId || "").trim();
+  if (!bookingId || bookingId.length > 160) throw new HttpsError("invalid-argument", "Booking ID ಸರಿಯಾಗಿಲ್ಲ.");
+  const db = getFirestore();
+  const bookingRef = db.collection("workerBookings").doc(bookingId);
+  return db.runTransaction(async (tx) => {
+    const bookingSnap = await tx.get(bookingRef);
+    if (!bookingSnap.exists) throw new HttpsError("not-found", "Booking ಸಿಗಲಿಲ್ಲ.");
+    const booking = bookingSnap.data() || {};
+    const customerId = String(booking.requesterId || booking.customerId || booking.companyId || "");
+    if (customerId !== uid) throw new HttpsError("permission-denied", "ಈ Booking‌ನ Customer ಮಾತ್ರ ಕೆಲಸ ಪೂರ್ಣಗೊಂಡಿದೆ ಎಂದು ದೃಢೀಕರಿಸಬಹುದು.");
+    if (String(booking.workerCompletionStatus || "").toLowerCase() !== "submitted") {
+      throw new HttpsError("failed-precondition", "Worker ಇನ್ನೂ Work Complete ಸಲ್ಲಿಸಿಲ್ಲ.");
+    }
+    if (booking.customerCompletionConfirmed === true && String(booking.status || "").toLowerCase() === "completed") {
+      return { bookingId, status: "Completed", alreadyConfirmed: true };
+    }
+    const workerIds = Array.isArray(booking.acceptedWorkerIds)
+      ? booking.acceptedWorkerIds.map(String)
+      : (booking.workerId ? [String(booking.workerId)] : []);
+    const lockRefs = workerIds.map(workerId => db.collection("workerActiveBookings").doc(workerId));
+    const lockSnaps = [];
+    for (const lockRef of lockRefs) lockSnaps.push(await tx.get(lockRef));
+    const now = FieldValue.serverTimestamp();
+    tx.update(bookingRef, {
+      status: "Completed",
+      customerCompletionConfirmed: true,
+      customerCompletionConfirmedBy: uid,
+      customerCompletionConfirmedAt: now,
+      completedAt: now,
+      updatedAt: now
+    });
+    lockSnaps.forEach((snap, index) => {
+      if (snap.exists && String(snap.data()?.bookingId || "") === bookingId) tx.delete(lockRefs[index]);
+    });
+    return { bookingId, status: "Completed", releasedWorkerCount: lockSnaps.filter((snap, index) => snap.exists && String(snap.data()?.bookingId || "") === bookingId).length };
+  });
 });
