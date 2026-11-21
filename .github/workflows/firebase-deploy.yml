@@ -89,7 +89,7 @@ jobs:
             # Hosting-only updates must not trigger unrelated Cloud Billing/API enablement.
             if echo "$CHANGED" | grep -q '^functions/'; then
               echo "Deploying Firebase Cloud Functions..."
-              firebase deploy --project nexvadoraq --only functions --non-interactive
+              firebase deploy --project nexvadoraq --only functions --force --non-interactive
             fi
             if echo "$CHANGED" | grep -q '^firebase.json$'; then
               firebase deploy --project nexvadoraq --only hosting,firestore:rules --non-interactive
