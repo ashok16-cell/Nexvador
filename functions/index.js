@@ -7,7 +7,7 @@ const { getMessaging } = require("firebase-admin/messaging");
 
 initializeApp();
 
-exports.sendHireHubPush = onDocumentCreated(
+exports.sendHireHubPushOnNotificationCreated = onDocumentCreated(
   { document: "notifications/{notificationId}", region: "asia-south1" },
   async (event) => {
     const notification = event.data?.data();
@@ -61,7 +61,7 @@ exports.sendHireHubPush = onDocumentCreated(
 
 // One completion event fans out to the booking customer/requester and every active Admin,
 // including Super Admin accounts (role=admin/adminLevel=super or legacy superadmin roles).
-exports.notifyAllOnWorkerCompletion = onDocumentUpdated(
+exports.notifyAllOnWorkerCompletionUpdated = onDocumentUpdated(
   { document: "workerBookings/{bookingId}", region: "asia-south1" },
   async (event) => {
     const before = event.data?.before?.data() || {};
