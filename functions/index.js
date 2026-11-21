@@ -202,7 +202,7 @@ exports.acceptWorkerBooking = onCall({ region: "asia-south1", memory: "256MiB" }
           const oldSnap = await tx.get(db.collection("workerBookings").doc(oldId));
           const old = oldSnap.exists ? oldSnap.data() || {} : null;
           const oldIds = Array.isArray(old?.acceptedWorkerIds) ? old.acceptedWorkerIds.map(String) : (old?.workerId ? [String(old.workerId)] : []);
-          if (old && ["Pending", "Partially Filled", "Confirmed"].includes(String(old.status || "Pending")) && oldIds.includes(uid)) {
+          if (old && ["Pending", "Partially Filled", "Confirmed"].includes(String(old.status || "Pending")) && oldIds.includes(uid) && String(old.workerCompletionStatus || "").toLowerCase() !== "submitted") {
             throw new HttpsError("failed-precondition", "ನೀವು ಈಗಾಗಲೇ ಮತ್ತೊಂದು Booking ಸ್ವೀಕರಿಸಿದ್ದೀರಿ (" + oldId + "). ಅದನ್ನು Completed, Rejected ಅಥವಾ Cancelled ಮಾಡಿದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.");
           }
         }
