@@ -1,3 +1,4 @@
+// Deployment revision: remove obsolete deployed function exports with the Firebase CLI --force cleanup.
 const { onCall, HttpsError } = require('firebase-functions/v2/https');
 const { onDocumentCreated, onDocumentUpdated } = require("firebase-functions/v2/firestore");
 const { initializeApp } = require("firebase-admin/app");
