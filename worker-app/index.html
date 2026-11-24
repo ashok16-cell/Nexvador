@@ -1403,3 +1403,5 @@ window.authOpen=authOpen;window.authOpenAdmin=authOpenAdmin;window.closeAuth=clo
 [['openCustomerAuth','customer'],['openWorkerAuth','worker'],['openCompanyAuth','company']].forEach(([id,r])=>{const el=document.getElementById(id);if(el&&!el.dataset.bound){el.dataset.bound='1';el.addEventListener('click',e=>{e.preventDefault();authOpen(r);document.getElementById('auth').scrollIntoView({behavior:'smooth',block:'start'})})}});
 if('serviceWorker' in navigator && location.protocol==='https:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>{reg.update().catch(()=>{});if(reg.waiting)reg.waiting.postMessage({type:'SKIP_WAITING'})}).catch(err=>console.warn('Offline app setup unavailable:',err.message)))}
 </script></body></html>
+
+<!-- Rebuild trigger after rollback: 2026-11-24 -->
